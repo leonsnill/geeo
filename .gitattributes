@@ -1,0 +1,17 @@
+*.min.js linguist-generated
+*.css.map linguist-generated
+*.svg linguist-generated
+*.csv linguist-generated
+
+vendor/** linguist-vendored
+node_modules/** linguist-vendored
+
+*.md linguist-documentation
+*.rst linguist-documentation
+
+*.py linguist-language=Python
+*.js linguist-language=JavaScript
+*.html linguist-language=HTML
+*.ipynb linguist-language=Jupyter Notebook
+*.yml linguist-language=YAML
+*.yaml linguist-language=YAML
