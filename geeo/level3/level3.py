@@ -235,7 +235,7 @@ def run_level3(prm):
             imgcol_pbc = ee.ImageCollection(imgcol_pbc.map(composite_nlcd))
 
         else:
-            raise ValueError(f"Unknown composite method: {PBC}")
+            raise ValueError(f"Unknown composite method: {PBC}. Or {PBC} not in FEATURES.")
 
         prm['PBC'] = imgcol_pbc.select(FEATURES)
 
