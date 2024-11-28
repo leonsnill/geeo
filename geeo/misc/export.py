@@ -235,6 +235,7 @@ def run_export(params):
     EXPORT_TABLE_REDUCER = prm.get('EXPORT_TABLE_REDUCER')
     EXPORT_TABLE_DROP_NODATA = prm.get('EXPORT_TABLE_DROP_NODATA')
     EXPORT_PER_FEATURE = prm.get('EXPORT_PER_FEATURE')
+    EXPORT_PER_TIME = prm.get('EXPORT_PER_TIME')
 
     # outname general settings
     time_desc = prm.get('TIME_DESC')
