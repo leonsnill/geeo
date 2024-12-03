@@ -159,7 +159,7 @@ def run_level3(prm):
             # calculate STMs globally for entire time series
             # set system:time_start property for table export
             img_first = stm_base_imgcol.first()
-            img_stm = ee.Image(stm_base_imgcol.select(FEATURES).reduce(stm_reducer)).set('system:index', , 'system:time_start', img_first.get('system:time_start'))
+            img_stm = ee.Image(stm_base_imgcol.select(FEATURES).reduce(stm_reducer)).set('system:index', time_desc, 'system:time_start', img_first.get('system:time_start'))
             # return STM image
             prm['STM_reducer'] = STM
             prm['STM'] = img_stm
