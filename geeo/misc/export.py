@@ -276,6 +276,7 @@ def run_export(params):
             # subset to desired features
             TSS = TSS.select(FEATURES)
             if EXPORT_IMAGE:
+                
                 # user requested separate export for each feature
                 if EXPORT_PER_FEATURE:
                     for feature in FEATURES:
@@ -285,6 +286,19 @@ def run_export(params):
                         export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                
+                # user requested separate export for each time
+                elif EXPORT_PER_TIME:
+                    for i in range(TSS.size().getInfo()):
+                        img = ee.Image(TSS.toList(TSS.size()).get(i)).select(FEATURES)  # .select() because 'mask' still in TSS
+                        img_time_desc = img.date().format('YYYYMMdd').getInfo()
+                        outfile = 'TSS_' + desc + img_time_desc + '_' + SATELLITE  # since this is a single date image "TSS" is a weird wording
+                        print("->  "+outfile)
+                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
+                            scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                
+                # user requested single export for entire TSS
                 else:
                     img = imgcol_to_img(TSS, date_to_bandname=False) # False, because duplicate feature+date exist in TSS 
                     outfile = 'TSS_' + desc + time_desc + '_' + SATELLITE
@@ -322,6 +336,18 @@ def run_export(params):
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
+                    # user requested separate export for each time
+                    elif EXPORT_PER_TIME:
+                        for i in range(TSM.size().getInfo()):
+                            img = ee.Image(TSM.toList(TSM.size()).get(i))
+                            img_time_desc = img.date().format('YYYYMMdd').getInfo()
+                            outfile = 'TSM_' + desc + img_time_desc + '_' + SATELLITE
+                            print("->  "+outfile)
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                                px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
+                                scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
                     else:
                         img = imgcol_to_img(TSM)
                         outfile = 'TSM_' + desc + time_desc + '_' + SATELLITE
@@ -359,6 +385,18 @@ def run_export(params):
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
+                    # user requested separate export for each time
+                    elif EXPORT_PER_TIME:
+                        for i in range(TSI.size().getInfo()):
+                            img = ee.Image(TSI.toList(TSI.size()).get(i))
+                            img_time_desc = img.date().format('YYYYMMdd').getInfo()
+                            outfile = 'TSI_' + desc + img_time_desc + '_' + SATELLITE
+                            print("->  "+outfile)
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                                px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
+                                scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
                     else:
                         img = imgcol_to_img(TSI)
                         outfile = 'TSI_' + desc + time_desc + '_' + SATELLITE
@@ -401,6 +439,18 @@ def run_export(params):
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
+                    # user requested separate export for each time (only possible if STM is an ImageCollection, i.e. FOLDING)
+                    elif EXPORT_PER_TIME and isinstance(STM, ee.imagecollection.ImageCollection):
+                        for i in range(STM.size().getInfo()):
+                            img = ee.Image(STM.toList(STM.size()).get(i))
+                            img_time_desc = img.get('system:index').getInfo()
+                            outfile = 'STM_' + desc + img_time_desc + '_' + SATELLITE
+                            print("->  "+outfile)
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                                px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
+                                scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
                     else:
                         if isinstance(STM, ee.imagecollection.ImageCollection):
                             img = imgcol_to_img(STM, date_to_bandname=False)
@@ -441,6 +491,18 @@ def run_export(params):
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
+                    # user requested separate export for each time 
+                    elif EXPORT_PER_TIME:
+                        for i in range(PBC.size().getInfo()):
+                            img = ee.Image(PBC.toList(PBC.size()).get(i))
+                            img_time_desc = img.get('system:index').getInfo()
+                            outfile = 'PBC_' + desc + img_time_desc + '_' + SATELLITE
+                            print("->  "+outfile)
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                                px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
+                                scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                    
                     else:
                         img = imgcol_to_img(PBC)
                         outfile = 'PBC_' + desc + time_desc + '_' + SATELLITE

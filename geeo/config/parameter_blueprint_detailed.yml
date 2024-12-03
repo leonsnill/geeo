@@ -236,6 +236,8 @@ EXPORT_TABLE_TILE_SCALE: 1               # Compute tile size [0.1, 16]
 EXPORT_TABLE_BUFFER: null                # Buffer features before reduction (meters)
 EXPORT_TABLE_REDUCER: first              # Reducer used to extract values
 EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
+# ATTENTION: The folllowing can result in many exports and be highly inefficient!
 EXPORT_PER_FEATURE: false                # Export separate img per feature/band
+EXPORT_PER_TIME: false                   # Export separate img per time
 
 # EOF

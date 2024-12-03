@@ -54,20 +54,16 @@ def run_level3(prm):
     PBC_BAP_WEIGHT_DOY = prm.get('PBC_BAP_WEIGHT_DOY')
     PBC_BAP_WEIGHT_YEAR = prm.get('PBC_BAP_WEIGHT_YEAR')
     PBC_BAP_WEIGHT_CLOUD = prm.get('PBC_BAP_WEIGHT_CLOUD')
-    # TREND
-    TREND = prm.get('TREND')
-    EXPORT_TREND = prm.get('EXPORT_TREND')
-    
+    # General
     EXPORT_DESC_DETAIL_TIME = prm.get('EXPORT_DESC_DETAIL_TIME')
 
+    # outname general settings
+    # time description (already needed here to name STMs system_index property)
     # Time Of Interest (TOI)
     # get parameters
     # check if DATE_MIN and DATE_MAX are provided
     if DATE_MIN and DATE_MAX:
         YEAR_MIN, YEAR_MAX = int(str(DATE_MIN)[:4]), int(str(DATE_MAX)[:4])
-
-    # outname general settings
-    # time description (already needed here to name STMs system_index property)
     if EXPORT_DESC_DETAIL_TIME:
         if DATE_MIN and DATE_MAX:
             time_start = str(DATE_MIN)
@@ -82,6 +78,7 @@ def run_level3(prm):
 
     prm['TIME_DESC'] = time_desc    
     
+
     # TIME SERIES INTERPOLATION (TSI)
     if TSI:
         tsi_base_imgcol = prm.get(TSI_BASE_IMGCOL)
@@ -162,7 +159,7 @@ def run_level3(prm):
             # calculate STMs globally for entire time series
             # set system:time_start property for table export
             img_first = stm_base_imgcol.first()
-            img_stm = ee.Image(stm_base_imgcol.select(FEATURES).reduce(stm_reducer)).set('system:index', time_desc, 'system:time_start', img_first.get('system:time_start'))
+            img_stm = ee.Image(stm_base_imgcol.select(FEATURES).reduce(stm_reducer)).set('system:index', , 'system:time_start', img_first.get('system:time_start'))
             # return STM image
             prm['STM_reducer'] = STM
             prm['STM'] = img_stm
