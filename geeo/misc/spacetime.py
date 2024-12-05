@@ -739,7 +739,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
 
         # Clip to ROI if provided
-        if vector_roi:
+        if vector_roi is not None:
             if isinstance(vector_roi, str):
                 user_gdf = gpd.read_file(vector_roi)
             elif isinstance(vector_roi, gpd.geodataframe.GeoDataFrame):
