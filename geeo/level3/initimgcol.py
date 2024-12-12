@@ -153,7 +153,7 @@ def init_imgcol(imgcol, interval=5, interval_unit='day', day_offset=0,
     # initialize empty image
     initImage = ee.Image()
 
-    n_days_to_interpolate = ee.List.sequence(day_offset, delta_days, interval)
+    n_intervals_to_interpolate = ee.List.sequence(day_offset, delta_days, interval)
 
     def advance_interval(interval):
         img = initImage.set({'system:index': ee.Number(interval).format('%d'),
@@ -161,7 +161,7 @@ def init_imgcol(imgcol, interval=5, interval_unit='day', day_offset=0,
                             'type': type_key})
         return img
     
-    initImages = n_days_to_interpolate.map(advance_interval)
+    initImages = n_intervals_to_interpolate.map(advance_interval)
 
     # create ImageCollection from Images
     init_imgcol = ee.ImageCollection.fromImages(initImages)
