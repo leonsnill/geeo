@@ -31,6 +31,7 @@ def run_level3(prm):
     TSI = prm.get('TSI')
     TSI_BASE_IMGCOL = prm.get('TSI_BASE_IMGCOL')
     INTERVAL = prm.get('INTERVAL')
+    INTERVAL_UNIT = prm.get('INTERVAL_UNIT')
     INIT_JANUARY_1ST = prm.get('INIT_JANUARY_1ST')
     SIGMA1 = prm.get('SIGMA1')
     SIGMA2 = prm.get('SIGMA2')
@@ -120,7 +121,8 @@ def run_level3(prm):
             raise ValueError(f"Unknown interpolation method: {TSI}")
         # initialize image collection for interpolation
         imgcol_tsi = init_imgcol(
-            imgcol=tsi_base_imgcol, interval=INTERVAL, timeband=True,
+            imgcol=tsi_base_imgcol, interval=INTERVAL, interval_unit=INTERVAL_UNIT,
+            timeband=True,
             join_window=WINDOW, january_first = INIT_JANUARY_1ST,
             split_window=split_window
         )
