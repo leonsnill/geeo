@@ -117,7 +117,7 @@ def join_collections_from_dict(new_img_col, existing_img_col, time_dict):
 
 
 # create empty ImageCollection from exisiting imgcol and interval
-def init_imgcol(imgcol=None, interval=5, day_offset=0,
+def init_imgcol(imgcol, interval=5, interval_unit='day', day_offset=0,
                 timeband=False, join_window=None, split_window=False,
                 january_first=True, type_key='interpolated'):
     """
@@ -147,19 +147,21 @@ def init_imgcol(imgcol=None, interval=5, day_offset=0,
         
         # total number of days in interval (interval defined by imgcol)
         delta_days = time_end.difference(time_start, 'day')
+    else:
+        raise ValueError("No ImageCollection provided to initialize from.")
 
     # initialize empty image
     initImage = ee.Image()
 
-    n_days_to_interpolate = ee.List.sequence(day_offset, delta_days, interval)
+    n_intervals_to_interpolate = ee.List.sequence(day_offset, delta_days, interval)
 
-    def fun(day):
-        img = initImage.set({'system:index': ee.Number(day).format('%d'),
-                            'system:time_start': time_start.advance(day, 'day').millis(),
+    def advance_interval(interval):
+        img = initImage.set({'system:index': ee.Number(interval).format('%d'),
+                            'system:time_start': time_start.advance(interval, interval_unit).millis(),
                             'type': type_key})
         return img
     
-    initImages = n_days_to_interpolate.map(fun)
+    initImages = n_intervals_to_interpolate.map(advance_interval)
 
     # create ImageCollection from Images
     init_imgcol = ee.ImageCollection.fromImages(initImages)

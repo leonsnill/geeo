@@ -149,13 +149,14 @@ TSI_BASE_IMGCOL: TSS                     # (TSS, TSM)
 
 # Interpolation settings
 INTERVAL: 16                             # Interpolation interval (days)
+INTERVAL_UNIT: day                       # day, month, year
 INIT_JANUARY_1ST: false                  # Initialize interval on Jan 1st
-SIGMA1: 16                               # Sigma1 of RBF function
-SIGMA2: 32                               # Sigma2 of RBF function
-SIGMA3: 64                               # Sigma3 of RBF function
-WIN1: 16                                 # Window1 for RBF
-WIN2: 32                                 # Window2 for RBF
-WIN3: 64                                 # Window3 for RBF
+SIGMA1: 16                               # Sigma1 of RBF function (in days)
+SIGMA2: 32                               # Sigma2 of RBF function (in days)
+SIGMA3: 64                               # Sigma3 of RBF function (in days)
+WIN1: 16                                 # Window1 for RBF (in days)
+WIN2: 32                                 # Window2 for RBF (in days)
+WIN3: 64                                 # Window3 for RBF (in days)
 BW1: 4                                   # Weight for WIN1
 BW2: 8                                   # Weight for WIN2
 
@@ -236,7 +237,8 @@ EXPORT_TABLE_TILE_SCALE: 1               # Compute tile size [0.1, 16]
 EXPORT_TABLE_BUFFER: null                # Buffer features before reduction (meters)
 EXPORT_TABLE_REDUCER: first              # Reducer used to extract values
 EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
+# ATTENTION: The folllowing can result in many exports and be highly inefficient!
 EXPORT_PER_FEATURE: false                # Export separate img per feature/band
-EXPORT_PER_TIME: false                   # Export separate img per time (WARNING!)
+EXPORT_PER_TIME: false                   # Export separate img per time
 
 # EOF

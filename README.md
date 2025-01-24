@@ -1,10 +1,10 @@
-# Geographic and Ecological Earth Observation (GEEO)
+# Geographical and Ecological Earth Observation (GEEO)
 GEEO is a processing pipeline and collection of algorithms for obtaining Analysis-Ready-Data (ARD) from Landsat and Sentinel-2 using the Google Earth Engine Python API.
 The modules are organized along different hierarchical levels, and processing instructions are readily defined by the user via a parameter file (.yml) or Python dictionary:
 
 ![sample SVG image](geeo/data/fig/geeo_workflow.svg)
 
-GEEO includes processing routines frequently applied in geographic and ecological studies that use satellite remote sensing. The selection of routines is primarily influenced by work conducted in the [Biogeography Lab](https://pages.cms.hu-berlin.de/biogeo/website/) and [Earth Observation Lab](https://eolab.geographie.hu-berlin.de/) at Humboldt-University of Berlin. Inspiration for structuring the module along a parameter file comes from David Frantz' [Framework for Operational Radiometric Correction for Environmental monitoring (FORCE)](https://force-eo.readthedocs.io/en/latest/index.html).
+GEEO includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. The selection of routines is primarily influenced by work conducted in the [Biogeography Lab](https://pages.cms.hu-berlin.de/biogeo/website/) and [Earth Observation Lab](https://eolab.geographie.hu-berlin.de/) at Humboldt-University of Berlin. Inspiration for structuring the module along a parameter file comes from David Frantz' [Framework for Operational Radiometric Correction for Environmental monitoring (FORCE)](https://force-eo.readthedocs.io/en/latest/index.html).
 
 ---
 

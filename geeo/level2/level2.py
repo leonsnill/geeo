@@ -230,7 +230,7 @@ def run_level2(params):
         imgcol = imgcol.map(lambda img: img.resample(RESAMPLING_METHOD))
 
     # bands / indices / transformations
-    existing_feat = ['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2', 'RE1', 'RE2', 'RE3', 'RE4', 'mask']
+    existing_feat = ['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2', 'RE1', 'RE2', 'RE3', 'RE4', 'LST', 'mask']
     additional_feat = [feat for feat in FEATURES if feat not in existing_feat]
     for feat in additional_feat:
         imgcol = imgcol.map(dict_features[feat])  # dict_features from indices.py contains functions

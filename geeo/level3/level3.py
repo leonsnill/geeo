@@ -31,6 +31,7 @@ def run_level3(prm):
     TSI = prm.get('TSI')
     TSI_BASE_IMGCOL = prm.get('TSI_BASE_IMGCOL')
     INTERVAL = prm.get('INTERVAL')
+    INTERVAL_UNIT = prm.get('INTERVAL_UNIT')
     INIT_JANUARY_1ST = prm.get('INIT_JANUARY_1ST')
     SIGMA1 = prm.get('SIGMA1')
     SIGMA2 = prm.get('SIGMA2')
@@ -54,20 +55,16 @@ def run_level3(prm):
     PBC_BAP_WEIGHT_DOY = prm.get('PBC_BAP_WEIGHT_DOY')
     PBC_BAP_WEIGHT_YEAR = prm.get('PBC_BAP_WEIGHT_YEAR')
     PBC_BAP_WEIGHT_CLOUD = prm.get('PBC_BAP_WEIGHT_CLOUD')
-    # TREND
-    TREND = prm.get('TREND')
-    EXPORT_TREND = prm.get('EXPORT_TREND')
-    
+    # General
     EXPORT_DESC_DETAIL_TIME = prm.get('EXPORT_DESC_DETAIL_TIME')
 
+    # outname general settings
+    # time description (already needed here to name STMs system_index property)
     # Time Of Interest (TOI)
     # get parameters
     # check if DATE_MIN and DATE_MAX are provided
     if DATE_MIN and DATE_MAX:
         YEAR_MIN, YEAR_MAX = int(str(DATE_MIN)[:4]), int(str(DATE_MAX)[:4])
-
-    # outname general settings
-    # time description (already needed here to name STMs system_index property)
     if EXPORT_DESC_DETAIL_TIME:
         if DATE_MIN and DATE_MAX:
             time_start = str(DATE_MIN)
@@ -82,6 +79,7 @@ def run_level3(prm):
 
     prm['TIME_DESC'] = time_desc    
     
+
     # TIME SERIES INTERPOLATION (TSI)
     if TSI:
         tsi_base_imgcol = prm.get(TSI_BASE_IMGCOL)
@@ -123,7 +121,8 @@ def run_level3(prm):
             raise ValueError(f"Unknown interpolation method: {TSI}")
         # initialize image collection for interpolation
         imgcol_tsi = init_imgcol(
-            imgcol=tsi_base_imgcol, interval=INTERVAL, timeband=True,
+            imgcol=tsi_base_imgcol, interval=INTERVAL, interval_unit=INTERVAL_UNIT,
+            timeband=True,
             join_window=WINDOW, january_first = INIT_JANUARY_1ST,
             split_window=split_window
         )
@@ -235,7 +234,7 @@ def run_level3(prm):
             imgcol_pbc = ee.ImageCollection(imgcol_pbc.map(composite_nlcd))
 
         else:
-            raise ValueError(f"Unknown composite method: {PBC}")
+            raise ValueError(f"Unknown composite method: {PBC}. Or {PBC} not in FEATURES.")
 
         prm['PBC'] = imgcol_pbc.select(FEATURES)
 

@@ -763,7 +763,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
 
         # Clip to ROI if provided
-        if vector_roi:
+        if vector_roi is not None:
             if isinstance(vector_roi, str):
                 user_gdf = gpd.read_file(vector_roi)
             elif isinstance(vector_roi, gpd.geodataframe.GeoDataFrame):
@@ -1173,6 +1173,16 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
                 months = generate_month_list(month_range)
                 time_start = calculate_time_start(years[0], months[0])
                 add_to_result_dict(years, months, None, custom_year_range[0], custom_year_range[1], 0, 0, time_start, (custom_year_range[0] + custom_year_range[1]) // 2, (custom_year_range[1] - custom_year_range[0]) // 2, None, None)
+
+    # 5. Custom years + custom months
+    elif custom_years and custom_months:
+        for custom_year_range in custom_years:
+            years = generate_year_list(custom_year_range)
+            year_center, year_offset = get_center_offset(custom_year_range[0], custom_year_range[1])
+            for month_range in custom_months:
+                months = generate_month_list(month_range)
+                time_start = calculate_time_start(years[0], months[0])
+                add_to_result_dict(years, months, None, custom_year_range[0], custom_year_range[1], 0, 0, time_start, year_center, year_offset, None, None)
 
     # 14. Custom years + fold year + custom DOY
     elif custom_years and custom_doys and FOLD_YEAR :
