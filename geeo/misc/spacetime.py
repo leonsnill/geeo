@@ -323,9 +323,7 @@ def get_crs_transform_and_img_dimensions(input_roi, pix_res):
     crs_transform = [pix_res, 0, xmin, 0, pix_res, ymin]
 
     # calculate image dimensions
-    img_width = int(math.ceil((xmax - xmin) / pix_res))
-    img_height = int(math.ceil((ymax - ymin) / pix_res))
-    img_dimensions = f"{img_width}x{img_height}"
+    img_dimensions = str(int(math.ceil((xmax - xmin) // pix_res)))+"x"+str(int(math.ceil((ymax - ymin) // pix_res)))
     
     return crs_transform, img_dimensions
 
