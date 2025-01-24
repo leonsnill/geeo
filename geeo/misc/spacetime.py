@@ -1,6 +1,7 @@
 import ee
 ee.Initialize()
 import os
+import math
 from datetime import datetime, timedelta
 from geopandas import gpd
 from shapely.geometry import Point, Polygon, box
@@ -304,6 +305,29 @@ def geom_to_bounds(geometry):
     lon_max = bounds[2][0]
     lat_max = bounds[2][1]
     return [lon_min, lat_min, lon_max, lat_max]
+
+
+def get_crs_transform_and_img_dimensions(input_roi, pix_res):
+    if isinstance(input_roi, str):
+        roi_gdf = gpd.read_file(input_roi)
+    elif isinstance(input_roi, gpd.GeoDataFrame):
+        roi_gdf = input_roi
+    elif isinstance(input_roi, list) and len(input_roi) == 4:
+        xmin, ymin, xmax, ymax = input_roi
+        roi_gdf = gpd.GeoDataFrame({'geometry': [gpd.box(xmin, ymin, xmax, ymax)]})
+    else:
+        raise ValueError("Invalid input_roi format. Must be a file path, GeoDataFrame, or list of [xmin, ymin, xmax, ymax].")
+    
+    # get bounding box coordinates and calc CRS transform
+    xmin, ymin, xmax, ymax = float(roi_gdf.geometry.bounds.minx[0]), float(roi_gdf.geometry.bounds.miny[0]), float(roi_gdf.geometry.bounds.maxx[0]), float(roi_gdf.geometry.bounds.maxy[0])
+    crs_transform = [pix_res, 0, xmin, 0, pix_res, ymin]
+
+    # calculate image dimensions
+    img_width = int(math.ceil((xmax - xmin) / pix_res))
+    img_height = int(math.ceil((ymax - ymin) / pix_res))
+    img_dimensions = f"{img_width}x{img_height}"
+    
+    return crs_transform, img_dimensions
 
 
 def find_utm(lon):

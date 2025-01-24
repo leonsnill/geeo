@@ -1,7 +1,7 @@
 import ee
 import math
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
-from geeo.misc.spacetime import create_roi, int_to_datestring, find_utm, wkt_dict
+from geeo.misc.spacetime import create_roi, int_to_datestring, find_utm, wkt_dict, get_crs_transform_and_img_dimensions
 from geeo.level2.masking import mask_landsat, blu_filter, mask_landsat_erodil, mask_sentinel2_prob_erodil, \
                                 mask_sentinel2_cplus_erodil, mask_sentinel2_prob_shadow, mask_sentinel2_cplus, \
                                 mask_sentinel2_prob
@@ -121,11 +121,12 @@ def run_level2(params):
         ROI_BBOX_GDF = prm.get('ROI_BBOX_GDF')
         # convert origin to output CRS and retrieve x and y translation
         ROI_BBOX_GDF = ROI_BBOX_GDF.to_crs(CRS)
-        xmin, ymin, xmax, ymax = float(ROI_BBOX_GDF.geometry.bounds.minx[0]), float(ROI_BBOX_GDF.geometry.bounds.miny[0]), float(ROI_BBOX_GDF.geometry.bounds.maxx[0]), float(ROI_BBOX_GDF.geometry.bounds.maxy[0])
+        CRS_TRANSFORM, IMG_DIMENSIONS = get_crs_transform_and_img_dimensions(ROI_BBOX_GDF, PIX_RES)
+        #xmin, ymin, xmax, ymax = float(ROI_BBOX_GDF.geometry.bounds.minx[0]), float(ROI_BBOX_GDF.geometry.bounds.miny[0]), float(ROI_BBOX_GDF.geometry.bounds.maxx[0]), float(ROI_BBOX_GDF.geometry.bounds.maxy[0])
         # calculate img dimensions
-        IMG_DIMENSIONS = str(int(math.ceil((xmax - xmin) // PIX_RES)))+"x"+str(int(math.ceil((ymax - ymin) // PIX_RES)))
+        #IMG_DIMENSIONS = str(int(math.ceil((xmax - xmin) // PIX_RES)))+"x"+str(int(math.ceil((ymax - ymin) // PIX_RES)))
         # construct geotransform
-        CRS_TRANSFORM = [PIX_RES, 0, xmin, 0, PIX_RES, ymin]
+        #CRS_TRANSFORM = [PIX_RES, 0, xmin, 0, PIX_RES, ymin]
         # setting PIX_RES to None no longer needed because check wihtin export_img; if CRS != WGS84, then table export scale falsely specified
         #PIX_RES = None
     else:
