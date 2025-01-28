@@ -320,7 +320,7 @@ def get_crs_transform_and_img_dimensions(input_roi, pix_res):
     
     # get bounding box coordinates and calc CRS transform
     xmin, ymin, xmax, ymax = float(roi_gdf.geometry.bounds.minx[0]), float(roi_gdf.geometry.bounds.miny[0]), float(roi_gdf.geometry.bounds.maxx[0]), float(roi_gdf.geometry.bounds.maxy[0])
-    crs_transform = [pix_res, 0, xmin, 0, pix_res, ymin]
+    crs_transform = [pix_res, 0, xmin, 0, -pix_res, ymin]
 
     # calculate image dimensions
     img_dimensions = str(int(round((xmax - xmin) / pix_res)))+"x"+str(int(round((ymax - ymin) / pix_res)))
