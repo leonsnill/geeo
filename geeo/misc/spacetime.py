@@ -672,7 +672,7 @@ GLANCE_GRIDS_LIMITS = {
 }
 # --------------------------------------------------------------------------------------------
 
-def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, output_dir=None, land_mask=False):
+def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, output_dir=None, zone_mask=False, land_mask=False):
     """
     Create grid GeoPackage files based on continent code and grid parameters with explicit ID naming.
     Optionally restrict the grid to land surfaces using a land mask.
@@ -695,10 +695,23 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
     if tile_size not in valid_sizes:
         raise ValueError(f"Invalid tile size. Must be one of {valid_sizes}.")
 
+    if zone_mask:
+        # Load zone mask GeoDataFrame
+        zone_mask_gdf = gpd.read_file(
+            os.path.join(os.path.dirname(__file__), f'../data/GLANCE-tiles/GLANCE_V01_{continent_code}_PROJ_ZONE.gpkg')
+        )
+        zone_mask_gdf = zone_mask_gdf.to_crs(GLANCE_GRID_CRS_WKT[continent_code])
+        zone_mask_gdf = zone_mask_gdf.dissolve()
+
     if land_mask:
+        '''
         # Load land mask GeoDataFrame
-        natural_earth_land = gpd.read_file(
+        land_mask_gdf = gpd.read_file(
             os.path.join(os.path.dirname(__file__), '../data/ne_10m_land.gpkg')
+        )
+        '''
+        land_mask_gdf = gpd.read_file(
+            os.path.join(os.path.dirname(__file__), '../data/GLANCE-tiles/GLANCE_V01_{continent_code}_PROJ_LAND.gpkg')
         )
 
     if continent_code == "ALL":
@@ -753,11 +766,18 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
 
         grid_gdf = gpd.GeoDataFrame(grid_data, crs=crs_wkt)
 
+        # apply zone mask if required
+        if zone_mask:
+            print("Filtering grid tiles using the zone mask...")
+            zone_mask_gdf = zone_mask_gdf.to_crs(crs_wkt)
+            grid_gdf = gpd.sjoin(grid_gdf, zone_mask_gdf, how="inner", predicate="intersects")
+            grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
+
         # Apply land mask if required
         if land_mask:
             print("Filtering grid tiles using the land mask...")
-            natural_earth_land = natural_earth_land.to_crs(crs_wkt)
-            grid_gdf = gpd.sjoin(grid_gdf, natural_earth_land, how="inner", predicate="intersects")
+            land_mask_gdf = land_mask_gdf.to_crs(crs_wkt)
+            grid_gdf = gpd.sjoin(grid_gdf, land_mask_gdf, how="inner", predicate="intersects")
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
 
         # Clip to ROI if provided
