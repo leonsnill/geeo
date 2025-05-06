@@ -711,7 +711,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
         )
         '''
         land_mask_gdf = gpd.read_file(
-            os.path.join(os.path.dirname(__file__), '../data/GLANCE-tiles/GLANCE_V01_{continent_code}_PROJ_LAND.gpkg')
+            os.path.join(os.path.dirname(__file__), f'../data/GLANCE-tiles/GLANCE_V01_{continent_code}_PROJ_LAND.gpkg')
         )
 
     if continent_code == "ALL":
