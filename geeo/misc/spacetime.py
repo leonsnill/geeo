@@ -702,6 +702,8 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
         )
         zone_mask_gdf = zone_mask_gdf.to_crs(GLANCE_GRID_CRS_WKT[continent_code])
         zone_mask_gdf = zone_mask_gdf.dissolve()
+        # get column names and remove from final gpkg later
+        zone_mask_colnames = zone_mask_gdf.columns.tolist()
 
     if land_mask:
         '''
@@ -713,6 +715,8 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
         land_mask_gdf = gpd.read_file(
             os.path.join(os.path.dirname(__file__), f'../data/GLANCE-tiles/GLANCE_V01_{continent_code}_PROJ_LAND.gpkg')
         )
+        # get column names and remove from final gpkg later
+        land_mask_colnames = land_mask_gdf.columns.tolist()
 
     if continent_code == "ALL":
         continents = CONTINENTS
@@ -772,6 +776,8 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             zone_mask_gdf = zone_mask_gdf.to_crs(crs_wkt)
             grid_gdf = gpd.sjoin(grid_gdf, zone_mask_gdf, how="inner", predicate="intersects")
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
+            # drop zone mask columns from final gpkg
+            grid_gdf = grid_gdf.drop(columns=zone_mask_colnames)
 
         # Apply land mask if required
         if land_mask:
@@ -779,6 +785,8 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             land_mask_gdf = land_mask_gdf.to_crs(crs_wkt)
             grid_gdf = gpd.sjoin(grid_gdf, land_mask_gdf, how="inner", predicate="intersects")
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
+            # drop land mask columns from final gpkg
+            grid_gdf = grid_gdf.drop(columns=land_mask_colnames)
 
         # Clip to ROI if provided
         if vector_roi is not None:

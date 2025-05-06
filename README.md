@@ -20,7 +20,7 @@ conda activate geeo_env
 Once created and activated, you can directly install the package using `pip`:
 
 ```bash
-pip install https://github.com/leonsnill/geeo.git
+pip install git+https://github.com/leonsnill/geeo.git
 ```
 
 ---
