@@ -777,7 +777,8 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             grid_gdf = gpd.sjoin(grid_gdf, zone_mask_gdf, how="inner", predicate="intersects")
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
             # drop zone mask columns from final gpkg
-            grid_gdf = grid_gdf.drop(columns=zone_mask_colnames)
+            grid_gdf = grid_gdf.drop(columns=zone_mask_colnames, errors='ignore')
+            grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry='geometry', crs=zone_mask_gdf.crs)
 
         # Apply land mask if required
         if land_mask:
@@ -787,6 +788,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
             # drop land mask columns from final gpkg
             grid_gdf = grid_gdf.drop(columns=land_mask_colnames)
+            grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry='geometry', crs=land_mask_gdf.crs)
 
         # Clip to ROI if provided
         if vector_roi is not None:
