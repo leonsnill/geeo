@@ -7,7 +7,7 @@ setup(
     author_email='leon.nill@geo.hu-berlin.de',
     packages=find_packages(),
     package_data={
-        'geeo': ['config/*.yml'],
+        'geeo': ['config/*.yml', 'data/GLANCE-tiles/*.gpkg', 'data/ne_10m_land.gpkg'],
     },
     install_requires=['ipykernel', 'earthengine-api', 'pyyaml', 
                       'pandas', 'geopandas', 'matplotlib', 'tqdm',
