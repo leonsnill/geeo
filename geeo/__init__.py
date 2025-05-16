@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 import sys
-from .utils import create_parameter_file, calculate_image_size
+from .utils import create_parameter_file, calculate_image_size, load_parameters, merge_parameters
 from .misc.vis import VisMap
 from .main import run_param
 from geeo.level2.level2 import run_level2
