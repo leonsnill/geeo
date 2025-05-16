@@ -27,6 +27,6 @@ pip install git+https://github.com/leonsnill/geeo.git
 
 ### Getting started
 
-To become familiar with the module design and handling we have prepared short examples to instruct certain processing chains, visualize ouputs and request exports. You can find them in the folder `sandbox-examples`. 
+To become familiar with the module design and handling we have prepared short examples to instruct certain processing chains, visualize ouputs and request exports. You can find them in the folder [docs](docs). Here you also find the [documentation to the parameter file](docs/documentation.md).
 
 
