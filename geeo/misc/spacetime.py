@@ -1005,6 +1005,13 @@ def add_date_property_to_img(img):
     return img.set('date', formatted_date)
 
 
+# Helper function to generate filter keys
+def generate_key(year_range, month_range, doy_range):
+    year_part = f"Y{year_range[0]:04d}-{year_range[1]:04d}"
+    month_part = f"M{month_range[0]:02d}-{month_range[1]:02d}"
+    doy_part = f"D{doy_range[0]:03d}-{doy_range[1]:03d}"
+    return f"{year_part}_{month_part}_{doy_part}"
+
 # generate folds for folding using ee.Filter.listContains() and subsequent ee.Join.saveAll()
 def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN, DOY_MAX, DATE_MIN, DATE_MAX, FOLD_YEAR, FOLD_MONTH, FOLD_CUSTOM):
     
