@@ -1,5 +1,4 @@
 import ee
-import math
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
 from geeo.misc.spacetime import create_roi, int_to_datestring, find_utm, wkt_dict, get_crs_transform_and_img_dimensions
 from geeo.level2.masking import mask_landsat, blu_filter, mask_landsat_erodil, mask_sentinel2_prob_erodil, \
@@ -68,8 +67,10 @@ def run_level2(params):
     TSM = prm.get('TSM')
     RESAMPLING_METHOD = prm.get('RESAMPLING_METHOD')
     # CRS
-    CRS = prm.get('CRS')
     PIX_RES = prm.get('PIX_RES')
+    CRS = prm.get('CRS')
+    CRS_TRANSFORM = prm.get('CRS_TRANSFORM')
+    IMG_DIMENSIONS = prm.get('IMG_DIMENSIONS')
 
     # Time Of Interest (TOI)
     # get parameters
@@ -106,6 +107,7 @@ def run_level2(params):
     else:
         CRS = CRS
     prm['CRS'] = CRS
+    
     # verify that EE accepts projection
     try:
         if ee.Projection(CRS).getInfo():
@@ -116,23 +118,19 @@ def run_level2(params):
     # explicitly specify CRS and IMG_DIMENSIONS, and CRS_TRANSFORM for export to match grid
     # https://developers.google.com/earth-engine/guides/exporting_images
     # "to get a block of pixels precisely aligned to another data source, specify dimensions, crs and crsTransform"
-    if CRS != 'EPSG:4326':
-        # make sure the origin is used
-        ROI_BBOX_GDF = prm.get('ROI_BBOX_GDF')
-        # convert origin to output CRS and retrieve x and y translation
-        ROI_BBOX_GDF = ROI_BBOX_GDF.to_crs(CRS)
-        CRS_TRANSFORM, IMG_DIMENSIONS = get_crs_transform_and_img_dimensions(ROI_BBOX_GDF, PIX_RES)
-        #xmin, ymin, xmax, ymax = float(ROI_BBOX_GDF.geometry.bounds.minx[0]), float(ROI_BBOX_GDF.geometry.bounds.miny[0]), float(ROI_BBOX_GDF.geometry.bounds.maxx[0]), float(ROI_BBOX_GDF.geometry.bounds.maxy[0])
-        # calculate img dimensions
-        #IMG_DIMENSIONS = str(int(math.ceil((xmax - xmin) // PIX_RES)))+"x"+str(int(math.ceil((ymax - ymin) // PIX_RES)))
-        # construct geotransform
-        #CRS_TRANSFORM = [PIX_RES, 0, xmin, 0, PIX_RES, ymin]
-        # setting PIX_RES to None no longer needed because check wihtin export_img; if CRS != WGS84, then table export scale falsely specified
-        #PIX_RES = None
-    else:
-        IMG_DIMENSIONS = None
+    # Set CRS_TRANSFORM and IMG_DIMENSIONS based on CRS and ROI
+    if CRS == 'EPSG:4326':
+        # Geographic coordinates: pixel matching not supported
         CRS_TRANSFORM = None
-    
+        IMG_DIMENSIONS = None
+    else:
+        # Project ROI_BBOX_GDF to output CRS and compute transform/dimensions
+        roi_bbox_gdf_proj = prm['ROI_BBOX_GDF'].to_crs(CRS)
+        crs_transform, img_dimensions = get_crs_transform_and_img_dimensions(roi_bbox_gdf_proj, PIX_RES)
+        CRS_TRANSFORM = CRS_TRANSFORM or crs_transform
+        IMG_DIMENSIONS = IMG_DIMENSIONS or img_dimensions
+
+    # Update parameters
     prm['IMG_DIMENSIONS'] = IMG_DIMENSIONS
     prm['CRS_TRANSFORM'] = CRS_TRANSFORM
     prm['PIX_RES'] = PIX_RES
