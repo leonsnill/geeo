@@ -818,6 +818,132 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
     # Return grid(s)
     return result_grids if len(result_grids) > 1 else result_grids[0]
 
+# --------------------------------------------------------------------------------------------
+# general creat_tile funciton
+def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=None,
+                 output_dir=None, land_mask=False, land_mask_path=None
+):
+    """
+    Create a grid of tiles for any projection and bounding box or ROI.
+
+    Parameters:
+    - crs: CRS string or pyproj.CRS object for the grid.
+    - extent: (xmin, ymin, xmax, ymax) in WGS84 (lon/lat) defining the extent. If None, uses vector_roi extent.
+    - tile_size: Size of each tile in CRS units (default 150000).
+    - origin: (x, y) tuple in CRS units for the upper-left corner (optional).
+              If None, uses (xmin, ymax) of extent (projected to CRS).
+    - vector_roi: Path to shapefile or GeoDataFrame to clip the grid or define extent if extent is None.
+    - output_dir: Directory to save the grid GeoPackage (optional).
+    - land_mask: Whether to restrict grid to land surfaces (default False).
+    - land_mask_path: Path to land mask file (optional, defaults to GLANCE land mask).
+
+    Returns:
+    - GeoDataFrame of grid tiles.
+    """
+    import geopandas as gpd
+    from shapely.geometry import Polygon
+    import os
+    from pyproj import Transformer
+
+    DEFAULT_LAND_MASK_PATH = os.path.join(
+        os.path.dirname(__file__), "../data/ne_10m_land.gpkg"
+    )
+
+    # determine extent in WGS84
+    if extent is None:
+        if vector_roi is None:
+            raise ValueError("Either extent or vector_roi must be provided.")
+        if isinstance(vector_roi, str):
+            roi_gdf = gpd.read_file(vector_roi)
+        elif isinstance(vector_roi, gpd.geodataframe.GeoDataFrame):
+            roi_gdf = vector_roi
+        else:
+            raise ValueError("vector_roi must be a file path or a GeoDataFrame")
+        if roi_gdf.crs is None:
+            raise ValueError("vector_roi must have a valid CRS.")
+        roi_gdf_wgs84 = roi_gdf.to_crs("EPSG:4326")
+        xmin, ymin, xmax, ymax = roi_gdf_wgs84.total_bounds
+    else:
+        xmin, ymin, xmax, ymax = extent
+
+    # project extent to target CRS
+    transformer = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
+    x0, y0 = transformer.transform(xmin, ymax)
+    x1, y1 = transformer.transform(xmax, ymin)
+
+    if origin is None:
+        ul_x, ul_y = x0, y0
+    else:
+        ul_x, ul_y = origin
+
+    # calculate grid limits in CRS units
+    n_cols = int((x1 - ul_x) // tile_size) + 1
+    n_rows = int((ul_y - y1) // tile_size) + 1
+
+    grid_list = []
+    id_list = []
+    x_list = []
+    y_list = []
+
+    bbox_poly = Polygon([
+        (x0, y1), (x0, y0), (x1, y0), (x1, y1)
+    ])
+
+    for row in range(n_rows):
+        for col in range(n_cols):
+            x_min = ul_x + (col * tile_size)
+            y_max = ul_y - (row * tile_size)
+            x_max = x_min + tile_size
+            y_min = y_max - tile_size
+
+            tile_poly = Polygon([(x_min, y_min), (x_min, y_max), (x_max, y_max), (x_max, y_min)])
+            if not tile_poly.intersects(bbox_poly):
+                continue
+
+            grid_list.append(tile_poly)
+            id_list.append(f"X{col:03d}-Y{row:03d}")
+            x_list.append(col)
+            y_list.append(row)
+
+    grid_data = {
+        "geometry": grid_list,
+        "ID": id_list,
+        "X": x_list,
+        "Y": y_list
+    }
+    grid_gdf = gpd.GeoDataFrame(grid_data, crs=crs)
+
+    # land mask if required
+    if land_mask:
+        mask_path = land_mask_path if land_mask_path is not None else DEFAULT_LAND_MASK_PATH
+        land_mask_gdf = gpd.read_file(mask_path)
+        land_mask_gdf = land_mask_gdf.to_crs(grid_gdf.crs)
+        grid_gdf = gpd.sjoin(grid_gdf, land_mask_gdf, how="inner", predicate="intersects")
+        grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
+
+    if vector_roi is not None and extent is not None:
+        if isinstance(vector_roi, str):
+            user_gdf = gpd.read_file(vector_roi)
+        elif isinstance(vector_roi, gpd.geodataframe.GeoDataFrame):
+            user_gdf = vector_roi
+        else:
+            raise ValueError("vector_roi must be a file path or a GeoDataFrame")
+        if user_gdf.crs != grid_gdf.crs:
+            user_gdf = user_gdf.to_crs(grid_gdf.crs)
+        grid_gdf = grid_gdf[grid_gdf.geometry.intersects(user_gdf.unary_union)]
+        grid_gdf = grid_gdf.drop_duplicates(subset="geometry")
+    
+    # reomve columns: featurcla, scalerank, min_zoom
+    grid_gdf = grid_gdf.drop(columns=['featurecla', 'scalerank', 'min_zoom'], errors='ignore')
+
+    if output_dir:
+        output_filename = os.path.join(output_dir, f"tiles_{tile_size // 1000}km.gpkg")
+        grid_gdf.to_file(output_filename, driver="GPKG")
+        print(f"Grid saved to {output_filename}")
+
+    return grid_gdf
+
+
 # -------------------------------------------------------------------------------
 #                                Temporal Functions                               
 # -------------------------------------------------------------------------------
@@ -829,13 +955,6 @@ def int_to_datestring(x):
     formatted_date = date_obj.strftime('%Y-%m-%d')
     return formatted_date
 
-'''
-def add_timeband(img):
-    img = ee.Image(img)
-    timeImage = img.get('system:time_start')
-    timeImageMasked = timeImage.updateMask(img.select(0).mask())
-    return img.addBands(timeImageMasked.rename('time')).toFloat()
-'''
 def add_timeband(img):
     img_time = ee.Image.constant(img.get('system:time_start')).updateMask(img.select(0).mask())
     return img.addBands(img_time.rename('time')).toFloat()
@@ -870,111 +989,6 @@ def imgcol_dates_to_featcol(imgcol, format='YYYYMMdd'):
     )
     return ee.FeatureCollection(dates)
 
-# OLD code to generate folds for folding using ee.List.map()
-# Helper function to generate filter keys
-def generate_key(year_range, month_range, doy_range):
-    year_part = f"Y{year_range[0]:04d}-{year_range[1]:04d}"
-    month_part = f"M{month_range[0]:02d}-{month_range[1]:02d}"
-    doy_part = f"D{doy_range[0]:03d}-{doy_range[1]:03d}"
-    return f"{year_part}_{month_part}_{doy_part}"
-
-# Function to create a list of filters used for folding ImageCollections
-def create_folds(fold_custom=None, fold_year=False, fold_month=False, year_start=None, year_end=None):
-    filters_list = []
-    
-    # Determine the global ranges if not specified
-    global_year_range = [year_start, year_end] if year_start is not None and year_end is not None else [0, 0]
-    global_month_range = [1, 12] if fold_month else [0, 0]
-    global_doy_range = [1, 366]
-
-    # Define a utility function to add filters based on provided ranges
-    def add_filters(year_ranges, month_ranges, doy_ranges, date_ranges):
-        if year_ranges:
-            for year_pair in year_ranges:
-                start_year, end_year = map(int, year_pair.split('-'))
-                if month_ranges:
-                    for month_pair in month_ranges:
-                        start_month, end_month = map(int, month_pair.split('-'))
-                        filter_key = generate_key([start_year, end_year], [start_month, end_month], global_doy_range)
-                        filter_value = ee.Filter.And(
-                            ee.Filter.calendarRange(start_year, end_year, 'year'),
-                            ee.Filter.calendarRange(start_month, end_month, 'month')
-                        )
-                        filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-                if doy_ranges:
-                    for doy_pair in doy_ranges:
-                        start_doy, end_doy = map(int, doy_pair.split('-'))
-                        filter_key = generate_key([start_year, end_year], global_month_range, [start_doy, end_doy])
-                        filter_value = ee.Filter.And(
-                            ee.Filter.calendarRange(start_year, end_year, 'year'),
-                            ee.Filter.calendarRange(start_doy, end_doy, 'day_of_year')
-                        )
-                        filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-                if date_ranges:
-                    for date_pair in date_ranges:
-                        start_date, end_date = map(str, date_pair.split('-'))
-                        filter_key = generate_key([start_year, end_year], global_month_range, global_doy_range)
-                        filter_value = ee.Filter.date(start_date, end_date)
-                        filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-
-        elif month_ranges:
-            for month_pair in month_ranges:
-                start_month, end_month = map(int, month_pair.split('-'))
-                if doy_ranges:
-                    for doy_pair in doy_ranges:
-                        start_doy, end_doy = map(int, doy_pair.split('-'))
-                        filter_key = generate_key(global_year_range, [start_month, end_month], [start_doy, end_doy])
-                        filter_value = ee.Filter.And(
-                            ee.Filter.calendarRange(start_month, end_month, 'month'),
-                            ee.Filter.calendarRange(start_doy, end_doy, 'day_of_year')
-                        )
-                        filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-                if date_ranges:
-                    for date_pair in date_ranges:
-                        start_date, end_date = map(str, date_pair.split('-'))
-                        filter_key = generate_key(global_year_range, [start_month, end_month], global_doy_range)
-                        filter_value = ee.Filter.date(start_date, end_date)
-                        filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-                else:
-                    filter_key = generate_key(global_year_range, [start_month, end_month], global_doy_range)
-                    filter_value = ee.Filter.calendarRange(start_month, end_month, 'month')
-                    filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-
-        elif doy_ranges:
-            for doy_pair in doy_ranges:
-                start_doy, end_doy = map(int, doy_pair.split('-'))
-                filter_key = generate_key(global_year_range, global_month_range, [start_doy, end_doy])
-                filter_value = ee.Filter.calendarRange(start_doy, end_doy, 'day_of_year')
-                filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-
-        elif date_ranges:
-            for date_pair in date_ranges:
-                start_date, end_date = map(str, date_pair.split('-'))
-                filter_key = generate_key(global_year_range, global_month_range, global_doy_range)
-                filter_value = ee.Filter.date(start_date, end_date)
-                filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-
-    # Apply year ranges and/or month ranges and/or custom ranges
-    if fold_year and year_start is not None and year_end is not None:
-        add_filters([f"{year_start}-{year_end}"], None, None, None)
-    if fold_month:
-        add_filters(None, [f"{month:02d}-{month:02d}" for month in range(1, 13)], None, None)
-    if fold_custom:
-        add_filters(
-            fold_custom.get('year', None),
-            fold_custom.get('month', None),
-            fold_custom.get('doy', None),
-            fold_custom.get('date', None)
-        )
-
-    # If no specific fold is applied, use the global timeframe if provided
-    if not filters_list:
-        filter_key = generate_key(global_year_range, global_month_range, global_doy_range)
-        filter_value = ee.Filter()
-        filters_list.append(ee.Dictionary({'key': filter_key, 'filter': filter_value}))
-
-    return ee.List(filters_list)
-
 
 def add_time_properties_to_img(img):
     date = ee.Date(img.get('system:time_start'))
@@ -991,7 +1005,7 @@ def add_date_property_to_img(img):
     return img.set('date', formatted_date)
 
 
-# 'NEW' code to generate folds for folding using ee.Filter.listContains() and subsequent ee.Join.saveAll()
+# generate folds for folding using ee.Filter.listContains() and subsequent ee.Join.saveAll()
 def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN, DOY_MAX, DATE_MIN, DATE_MAX, FOLD_YEAR, FOLD_MONTH, FOLD_CUSTOM):
     
     def generate_custom_ranges(custom_range, unit_min, unit_max, cyclic=False):
@@ -1356,8 +1370,6 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
         return None
 
     return result_dict
-
-
 
 
 # EOF
