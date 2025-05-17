@@ -33,7 +33,7 @@ def bandnames_from_img(ds):
 def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
                   nodata=None, dtype=None, delete_old=True,
                   calc_stats=True, compress=True, pyramids=False,
-                  num_threads='1'):  # Set default to 2 threads for safer shared server usage
+                  num_threads='1'):  # [ALL_CPUS​/​<integer>]
 
     # Check if input_path is a directory or a file
     input_path = Path(input_path)
