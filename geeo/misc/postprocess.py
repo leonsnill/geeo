@@ -33,7 +33,7 @@ def bandnames_from_img(ds):
 def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
                   nodata=None, dtype=None, delete_old=True,
                   calc_stats=True, compress=True, pyramids=False,
-                  num_threads='ALL_CPUS'):
+                  num_threads='1'):  # Set default to 2 threads for safer shared server usage
 
     # Check if input_path is a directory or a file
     input_path = Path(input_path)
@@ -58,9 +58,11 @@ def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
     print(f"    * Data type: {dtype_print}")
     print(f"    * No data value: {nodata_print}")
     print(f"    * Pyramids: {pyramids}")
+    print(f"    * Num threads: {num_threads}")
     print("********************************************************")
     
-    gdal.SetConfigOption('GDAL_NUM_THREADS', str(num_threads))
+    if num_threads != '1':
+        gdal.SetConfigOption('GDAL_NUM_THREADS', str(num_threads))
 
     for f in tqdm(l_files):
         temp_file = f.replace(".tif", "_TEMP.tif")
