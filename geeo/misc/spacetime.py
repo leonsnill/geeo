@@ -1112,28 +1112,30 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
 
     # Check validity of custom ranges against global settings
     if FOLD_CUSTOM is not None:
+        
         custom_years = generate_custom_ranges(FOLD_CUSTOM.get('year'), YEAR_MIN, YEAR_MAX)
-        if not custom_years:
-            raise ValueError("Custom year range outside bounds of global YEAR_MIN and YEAR_MAX.")
-    
-    custom_years = generate_custom_ranges(FOLD_CUSTOM.get('year'), YEAR_MIN, YEAR_MAX)
-    if custom_years:
-        check_custom_within_global(custom_years, YEAR_MIN, YEAR_MAX, "year")
-    
-    custom_months = generate_custom_ranges(FOLD_CUSTOM.get('month'), 1, 12, cyclic=True)
-    if custom_months:
-        check_custom_within_global(custom_months, MONTH_MIN, MONTH_MAX, "month")
-    
-    custom_doys = generate_custom_ranges(FOLD_CUSTOM.get('doy'), 1, 366, cyclic=True)
-    if custom_doys:
-        check_custom_within_global(custom_doys, DOY_MIN, DOY_MAX, "day of year")
-    
-    custom_date_ranges = generate_custom_ranges(FOLD_CUSTOM.get('date'), global_start_date_int, global_end_date_int)
-    if custom_date_ranges:
-        for start, end in custom_date_ranges:
-            if int(start) < global_start_date_int or int(end) > global_end_date_int:
-                raise ValueError(f"Custom date range [{start}, {end}] is outside the global date range [{global_start_date}, {global_end_date}].")
-    
+        if custom_years:
+            check_custom_within_global(custom_years, YEAR_MIN, YEAR_MAX, "year")
+        
+        custom_months = generate_custom_ranges(FOLD_CUSTOM.get('month'), 1, 12, cyclic=True)
+        if custom_months:
+            check_custom_within_global(custom_months, MONTH_MIN, MONTH_MAX, "month")
+        
+        custom_doys = generate_custom_ranges(FOLD_CUSTOM.get('doy'), 1, 366, cyclic=True)
+        if custom_doys:
+            check_custom_within_global(custom_doys, DOY_MIN, DOY_MAX, "day of year")
+        
+        custom_date_ranges = generate_custom_ranges(FOLD_CUSTOM.get('date'), global_start_date_int, global_end_date_int)
+        if custom_date_ranges:
+            for start, end in custom_date_ranges:
+                if int(start) < global_start_date_int or int(end) > global_end_date_int:
+                    raise ValueError(f"Custom date range [{start}, {end}] is outside the global date range [{global_start_date}, {global_end_date}].")
+    else:
+        custom_years = None
+        custom_months = None
+        custom_doys = None
+        custom_date_ranges = None
+
     # Initialize the result dictionary
     result_dict = {}
 
