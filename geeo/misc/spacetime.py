@@ -1113,7 +1113,10 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
     # Check validity of custom ranges against global settings
     if FOLD_CUSTOM is not None:
         custom_years = generate_custom_ranges(FOLD_CUSTOM.get('year'), YEAR_MIN, YEAR_MAX)
+        if not custom_years:
+            raise ValueError("Custom year range outside bounds of global YEAR_MIN and YEAR_MAX.")
     
+    custom_years = generate_custom_ranges(FOLD_CUSTOM.get('year'), YEAR_MIN, YEAR_MAX)
     if custom_years:
         check_custom_within_global(custom_years, YEAR_MIN, YEAR_MAX, "year")
     
