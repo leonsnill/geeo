@@ -1,5 +1,4 @@
 import ee
-ee.Initialize()
 from geeo.misc.spacetime import add_timeband, days_to_milli, add_time_properties_to_img, construct_time_subwindows
 
 

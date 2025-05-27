@@ -1,5 +1,4 @@
 import ee
-ee.Initialize()
 import os
 import math
 from datetime import datetime, timedelta
