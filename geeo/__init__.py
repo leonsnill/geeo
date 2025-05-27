@@ -2,12 +2,16 @@ from .utils import LazyLoader
 
 # global single import for earthengine + authenticate
 import ee
+
+# do not init and/or auth; let user do it; maybe in future find robust way to set project
+'''
 try:
     ee.Initialize()
 except Exception as e:
     ee.Authenticate()
     ee.Initialize()
-
+'''
+    
 # Define lazy imports for submodules
 misc = LazyLoader('geeo.misc')
 level2 = LazyLoader('geeo.level2')
