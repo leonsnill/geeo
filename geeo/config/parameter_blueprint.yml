@@ -76,7 +76,7 @@ MASKS_S2_NIR_THRESH_SHADOW: 0.2          # PROB: Threshold NIR-based shadow mask
 ERODE_DILATE: false                      # Erode an dilate mask
 ERODE_RADIUS: 60                         # Erosion radius (meters)
 DILATE_RADIUS: 120                       # Dilation radius (meters)
-ERODE_DILATE_SCALE: 90                   # Pixel scale for erode/dilate operations
+ERODE_DILATE_SCALE: 60                   # Pixel scale for erode/dilate operations
 BLUE_MAX_MASKING: null                   # Maximum blue reflectance to mask [0, 1]
 
 # -------------------------------------------------------------------------------
