@@ -64,17 +64,17 @@ def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
     if num_threads != '1':
         gdal.SetConfigOption('GDAL_NUM_THREADS', str(num_threads))
 
-    for f in tqdm(l_files):
-        temp_file = f.replace(".tif", "_TEMP.tif")
-        os.rename(f, temp_file)
+    for file in tqdm(l_files):
+        outfile = file.replace(".tif", "_TEMP.tif")
+        #os.rename(f, temp_file)
         
         # Infer data type if not specified
         if dtype is None:
-            ds = gdal.Open(temp_file)
+            ds = gdal.Open(file)
             dtype = ds.GetRasterBand(1).DataType
             ds = None
         if nodata is None:
-            ds = gdal.Open(temp_file)
+            ds = gdal.Open(file)
             nodata = ds.GetRasterBand(1).GetNoDataValue()
             ds = None
 
@@ -84,18 +84,18 @@ def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
         )
         
         # Translate
-        ds = gdal.Open(temp_file)
-        ds = gdal.Translate(f, ds, options=opt)
+        ds = gdal.Open(file)
+        ds = gdal.Translate(outfile, ds, options=opt)
         ds = None
         
         if bandname_file:
-            f_bandnames = f.replace('.tif', '_bandnames.csv')
+            f_bandnames = file.replace('.tif', '_bandnames.csv')
             bandnames = bandames_from_csv(f_bandnames)
         else:
-            bandnames = bandnames_from_img(gdal.Open(temp_file))
+            bandnames = bandnames_from_img(gdal.Open(file))
         
         # Rename bands and calculate statistics
-        img = gdal.Open(f)
+        img = gdal.Open(outfile)
         for i in range(img.RasterCount):
             band = img.GetRasterBand(i + 1)
             band.SetDescription(bandnames[i])
@@ -109,12 +109,17 @@ def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
         
         # Add pyramids
         if pyramids:
-            ds = gdal.Open(f)
+            ds = gdal.Open(outfile)
             ds.BuildOverviews("NEAREST", [2, 4, 8, 16, 32, 64, 128])
             ds = None
 
+        # rename the temporary file to the original file name
+        oldfile = file.replace('.tif', '_preTranslate.tif')
+        os.rename(file, oldfile)
+        os.rename(outfile, file)
+
         if delete_old:
-            os.remove(temp_file)
+            os.remove(oldfile)
 
 # Command-line interface (CLI) handling
 if __name__ == "__main__":
