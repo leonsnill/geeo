@@ -10,6 +10,7 @@ GEEO includes processing routines frequently applied in geographical and ecologi
 
 ### Installation
 
+#### Local
 Make sure you have a Python 3 distribution of our choice installed (e.g. Anaconda). Prior to installing `geeo`, you preferably want to set up a new virtual environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing `geeo`):
 
 ```bash
@@ -21,6 +22,25 @@ Once created and activated, you can directly install the package using `pip`:
 
 ```bash
 pip install git+https://github.com/leonsnill/geeo.git
+```
+
+#### Google Colab
+You can also quite quickly get started using a Google Colab hosted Jupyter Notebook.
+
+Simply install `geeo` in the first code chunk.
+
+```python
+!pip install git+https://github.com/leonsnill/geeo.git
+```
+
+Import, authenticate and initialize the Earth Engine python API, then import `geeo`.
+
+```python
+import ee
+ee.Authenticate()
+ee.Initialize(project='your-project-name')
+
+import geeo
 ```
 
 ---
