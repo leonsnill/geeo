@@ -12,42 +12,47 @@ import json
 #                                           Reducers                               
 # --------------------------------------------------------------------------------------------
 # Define common reducers
-dict_reducers = {
-    'mean': ee.Reducer.mean(),
-    'median': ee.Reducer.median(),
-    'sum': ee.Reducer.sum(),
-    'min': ee.Reducer.min(),
-    'max': ee.Reducer.max(),
-    'stdDev': ee.Reducer.stdDev(),
-    'variance': ee.Reducer.variance(),
-    'p5': ee.Reducer.percentile([5]),
-    'p10': ee.Reducer.percentile([10]),
-    'p15': ee.Reducer.percentile([15]),
-    'p20': ee.Reducer.percentile([20]),
-    'p25': ee.Reducer.percentile([25]),
-    'p30': ee.Reducer.percentile([30]),
-    'p35': ee.Reducer.percentile([35]),
-    'p40': ee.Reducer.percentile([40]),
-    'p45': ee.Reducer.percentile([45]),
-    'p50': ee.Reducer.percentile([50]),
-    'p55': ee.Reducer.percentile([55]),
-    'p60': ee.Reducer.percentile([60]),
-    'p65': ee.Reducer.percentile([65]),
-    'p70': ee.Reducer.percentile([70]),
-    'p75': ee.Reducer.percentile([75]),
-    'p80': ee.Reducer.percentile([80]),
-    'p85': ee.Reducer.percentile([85]),
-    'p90': ee.Reducer.percentile([90]),
-    'p95': ee.Reducer.percentile([95]),
-    'skew': ee.Reducer.skew(),
-    'kurtosis': ee.Reducer.kurtosis(),
-    'count': ee.Reducer.count(),
-    'first': ee.Reducer.first(),
-    'last': ee.Reducer.last()
-}
+
+def get_dict_reducers():
+
+    dict_reducers = {
+        'mean': ee.Reducer.mean(),
+        'median': ee.Reducer.median(),
+        'sum': ee.Reducer.sum(),
+        'min': ee.Reducer.min(),
+        'max': ee.Reducer.max(),
+        'stdDev': ee.Reducer.stdDev(),
+        'variance': ee.Reducer.variance(),
+        'p5': ee.Reducer.percentile([5]),
+        'p10': ee.Reducer.percentile([10]),
+        'p15': ee.Reducer.percentile([15]),
+        'p20': ee.Reducer.percentile([20]),
+        'p25': ee.Reducer.percentile([25]),
+        'p30': ee.Reducer.percentile([30]),
+        'p35': ee.Reducer.percentile([35]),
+        'p40': ee.Reducer.percentile([40]),
+        'p45': ee.Reducer.percentile([45]),
+        'p50': ee.Reducer.percentile([50]),
+        'p55': ee.Reducer.percentile([55]),
+        'p60': ee.Reducer.percentile([60]),
+        'p65': ee.Reducer.percentile([65]),
+        'p70': ee.Reducer.percentile([70]),
+        'p75': ee.Reducer.percentile([75]),
+        'p80': ee.Reducer.percentile([80]),
+        'p85': ee.Reducer.percentile([85]),
+        'p90': ee.Reducer.percentile([90]),
+        'p95': ee.Reducer.percentile([95]),
+        'skew': ee.Reducer.skew(),
+        'kurtosis': ee.Reducer.kurtosis(),
+        'count': ee.Reducer.count(),
+        'first': ee.Reducer.first(),
+        'last': ee.Reducer.last()
+    }
+    return dict_reducers
 
 # Function to combine reducers from list
 def combine_reducers(reducers_list):
+    dict_reducers = get_dict_reducers()
     combined_reducer = dict_reducers[reducers_list[0]]
     for reducer_name in reducers_list[1:]:
         if reducer_name in dict_reducers:
@@ -423,6 +428,8 @@ def reduce_region_img(img, scale=30, reducer=ee.Reducer.first(), tileScale=1, **
 # reduce
 def reduction(img_or_imgcol, featcol, reduceRegions=True, buffer=None, 
            scale=30, reducer='first', tileScale=1, **kwargs):
+    
+    dict_reducers = get_dict_reducers()
     
     # check if input is imgcol or img
     if isinstance(img_or_imgcol, ee.imagecollection.ImageCollection):
