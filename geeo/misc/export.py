@@ -442,9 +442,12 @@ def run_export(params):
                     
                     # user requested separate export for each time (only possible if STM is an ImageCollection, i.e. FOLDING)
                     elif EXPORT_PER_TIME and isinstance(STM, ee.imagecollection.ImageCollection):
+                        # time description list
+                        time_desc_list = [STM.map(lambda img: img.get('system:index').getInfo())]
                         for i in range(STM.size().getInfo()):
                             img = ee.Image(STM.toList(STM.size()).get(i))
-                            img_time_desc = img.get('system:index').getInfo()
+                            #img_time_desc = img.get('system:index').getInfo()
+                            img_time_desc = time_desc_list[i]
                             outfile = 'STM_' + desc + img_time_desc + '_' + SATELLITE
                             print("->  "+outfile)
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
