@@ -2,7 +2,7 @@
 import ee
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
 from geeo.misc.formatting import scale_and_dtype
-from geeo.misc.spacetime import imgcol_to_img, create_roi, reduction
+from geeo.misc.spacetime import imgcol_to_img, create_roi, reduction, get_time_dict_subwindows
 
 # ----------------------------------------------------------------------------
 
@@ -443,9 +443,12 @@ def run_export(params):
                     # user requested separate export for each time (only possible if STM is an ImageCollection, i.e. FOLDING)
                     elif EXPORT_PER_TIME and isinstance(STM, ee.imagecollection.ImageCollection):
                         # time description list
-                        for i in range(STM.size().getInfo()):
-                            img = ee.Image(STM.toList(STM.size()).get(i))
-                            img_time_desc = img.get('system:index').getInfo()
+                        time_dict_subwindows = get_time_dict_subwindows(prm)
+                        n_subwindows = len(time_dict_subwindows)
+                        for i in range(n_subwindows):
+                            img = ee.Image(STM.toList(n_subwindows).get(i))
+                            #img_time_desc = img.get('system:index').getInfo()
+                            img_time_desc = list(time_dict_subwindows.keys())[i]
                             outfile = 'STM_' + desc + img_time_desc + '_' + SATELLITE
                             print("->  "+outfile)
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 

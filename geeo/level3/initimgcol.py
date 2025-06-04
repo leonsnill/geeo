@@ -1,31 +1,16 @@
 import ee
-from geeo.misc.spacetime import add_timeband, days_to_milli, add_time_properties_to_img, construct_time_subwindows
+from geeo.misc.spacetime import add_timeband, days_to_milli, add_time_properties_to_img, get_time_dict_subwindows
 
 
 # combine functions to create imgcol from dict and join
 def init_and_join(prm, imgcol_secondary=None):
-    # create time_dict from parameter file / dict
-    time_dict_raw = {
-        "YEAR_MIN": prm.get('YEAR_MIN'),
-        "YEAR_MAX": prm.get('YEAR_MAX'),
-        "MONTH_MIN": prm.get('MONTH_MIN'),
-        "MONTH_MAX": prm.get('MONTH_MAX'),
-        "DOY_MIN": prm.get('DOY_MIN'),
-        "DOY_MAX": prm.get('DOY_MAX'),
-        "DATE_MIN": prm.get('DATE_MIN'),
-        "DATE_MAX": prm.get('DATE_MAX'),
-        "FOLD_YEAR": prm.get('FOLD_YEAR'),
-        "FOLD_MONTH": prm.get('FOLD_MONTH'),
-        "FOLD_CUSTOM": prm.get('FOLD_CUSTOM')
-    }
-    # create time dict from time_dict_raw
-    time_dict = construct_time_subwindows(**time_dict_raw)
+    time_dict_subwindows = get_time_dict_subwindows(prm)
     # initialize imgcol from time_dict
-    imgcol = init_imgcol_from_time(time_dict)
+    imgcol = init_imgcol_from_time(time_dict_subwindows)
     # add properties to secondary imgcol
     imgcol_secondary = imgcol_secondary.map(add_time_properties_to_img)
     # join imgcols
-    imgcol = join_collections_from_dict(imgcol, imgcol_secondary, time_dict)
+    imgcol = join_collections_from_dict(imgcol, imgcol_secondary, time_dict_subwindows)
     return imgcol
 
 

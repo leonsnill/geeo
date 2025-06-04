@@ -1391,4 +1391,23 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
     return result_dict
 
 
+# create time_dict helper function
+def get_time_dict_subwindows(prm):
+    # create time_dict from parameter file / dict
+    time_dict_raw = {
+        "YEAR_MIN": prm.get('YEAR_MIN'),
+        "YEAR_MAX": prm.get('YEAR_MAX'),
+        "MONTH_MIN": prm.get('MONTH_MIN'),
+        "MONTH_MAX": prm.get('MONTH_MAX'),
+        "DOY_MIN": prm.get('DOY_MIN'),
+        "DOY_MAX": prm.get('DOY_MAX'),
+        "DATE_MIN": prm.get('DATE_MIN'),
+        "DATE_MAX": prm.get('DATE_MAX'),
+        "FOLD_YEAR": prm.get('FOLD_YEAR'),
+        "FOLD_MONTH": prm.get('FOLD_MONTH'),
+        "FOLD_CUSTOM": prm.get('FOLD_CUSTOM')
+    }
+    time_dict = construct_time_subwindows(**time_dict_raw)
+    return time_dict
+
 # EOF
