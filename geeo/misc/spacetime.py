@@ -1147,9 +1147,9 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
 
     # Helper function to add an entry to the result_dict
     def add_to_result_dict(years, months, doys, start_year, end_year, start_doy, end_doy, time_start, year_center, year_offset, doy_center, doy_offset):
-        year_str = f"{years[0]}-{years[-1]}" if years else "0000-0000"
-        month_str = f"{months[0]:02d}-{months[-1]:02d}" if months else "00-00"
-        doy_str = f"{start_doy:03d}-{end_doy:03d}" if doys else "000-000"
+        year_str = f"{years[0]}-{years[-1]}" if years else f'{start_year}-{end_year}' #"0000-0000"
+        month_str = f"{months[0]:02d}-{months[-1]:02d}" if months else '01-12'
+        doy_str = f"{start_doy:03d}-{end_doy:03d}" if doys else '001-366'
         key = f"Y{year_str}_M{month_str}_D{doy_str}"
         result_dict[key] = {
             "year": years if years else None,
@@ -1371,13 +1371,14 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
                 time_start = calculate_time_start(year, month)
                 add_to_result_dict([year], [month], None, year, year, 0, 0, time_start, year, 0, None, None)
 
-    # 13. Fold year + fold month
+    # 14. Fold year 
     elif FOLD_YEAR:
         years = generate_year_list((YEAR_MIN, YEAR_MAX))
         for year in years:
             time_start = calculate_time_start(year, MONTH_MIN)
             add_to_result_dict([year], None, None, year, year, 0, 0, time_start, year, 0, None, None)
 
+    # 15. Fold month
     elif FOLD_MONTH:
         months = generate_month_list((MONTH_MIN, MONTH_MAX))
         for month in months:
