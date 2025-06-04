@@ -1,6 +1,6 @@
 import ee
 import os
-import math
+import pandas as pd
 from datetime import datetime, timedelta
 from geopandas import gpd
 from shapely.geometry import Point, Polygon, box
@@ -74,6 +74,30 @@ def cso(imgcol, band=None):
 # --------------------------------------------------------------------------------------------
 #                                 General Spatial Functions                               
 # --------------------------------------------------------------------------------------------
+
+def getRegion(imgcol, roi, scale=30):
+    """
+    Get region data from an ImageCollection for a specified region of interest (ROI).
+
+    Parameters:
+    imgcol (ee.ImageCollection): The Earth Engine ImageCollection to query.
+    roi (ee.Geometry or list): The region of interest as an ee.Geometry object or a lat/lon point.
+    scale (int): Scale in meters for the region extraction.
+
+    Returns:
+    pd.DataFrame: A DataFrame containing the region data.
+    """
+    if isinstance(roi, (list, tuple)) and len(roi) == 2:
+        roi = ee.Geometry.Point(roi)
+    if not isinstance(roi, ee.Geometry):
+        raise ValueError("roi must be a lat/lon point or an ee.Geometry object")
+    region_data = imgcol.getRegion(roi, scale=scale).getInfo()
+    df = pd.DataFrame(region_data[1:], columns=region_data[0])
+    df['datetime'] = pd.to_datetime(df['time'], unit='ms')
+    df = df.set_index('datetime')
+    
+    return df
+
 
 def input_to_gdf(input_data):
     if isinstance(input_data, list):

@@ -3,7 +3,7 @@ from geeo.misc.spacetime import add_timeband, days_to_milli
 from geeo.level3.initimgcol import join_imgs_one_window
 
 # ----------------------------------------------------------------------------------------------------------
-# crude outlier detection and removal
+# crude outlier detection and removal (CURRENTLY NOT USED)
 def moving_average(std_multi=3, band=['*']):
     def wrap(img):
         img = ee.Image(img)

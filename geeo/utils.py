@@ -184,5 +184,73 @@ def calculate_image_size(pixels=None, width=None, height=None, width_m=None, hei
         "size_gb": size_gb
     }
 
+
+import pandas as pd
+import numpy as np
+
+def rbf_interpolation(
+    df, 
+    value_col='NDVI',
+    mode='1RBF',  # '1RBF', '2RBF', '3RBF'
+    step_days=16,
+    sigma1=16, win1=16, 
+    sigma2=32, win2=32, 
+    sigma3=64, win3=64, 
+    bw1=4, bw2=8
+):
+    """
+    RBF interpolation for pandas DataFrame with windowing and blending.
+    User specifies the interpolation step in days.
+    """
+    df = df.dropna(subset=[value_col])
+    times = df.index.values.astype('datetime64[ns]')
+    values = df[value_col].values
+
+    t_min, t_max = times.min(), times.max()
+    target_times = pd.date_range(t_min, t_max, freq=f'{step_days}D')
+    target_times_np = target_times.values.astype('datetime64[ns]')
+
+    def rbf_interp_window(times, values, target_time, sigma, window):
+        deltas = (times - target_time) / np.timedelta64(1, 'D')
+        mask = np.abs(deltas) <= window
+        if not np.any(mask):
+            return np.nan, 0
+        weights = np.exp(-0.5 * (deltas[mask] / sigma) ** 2)
+        if np.all(weights == 0):
+            return np.nan, 0
+        return np.sum(values[mask] * weights) / np.sum(weights), np.count_nonzero(mask)
+
+    results = []
+    for t in target_times_np:
+        if mode == '1RBF':
+            interp, _ = rbf_interp_window(times, values, t, sigma1, win1)
+        elif mode == '2RBF':
+            interp1, count1 = rbf_interp_window(times, values, t, sigma1, win1)
+            interp2, count2 = rbf_interp_window(times, values, t, sigma2, win2)
+            w1 = min(count1 / bw1, 1.0)
+            w2 = 1.0 - w1
+            weighted = [interp1 * w1, interp2 * w2]
+            if np.all(np.isnan(weighted)):
+                interp = np.nan
+            else:
+                interp = np.nansum(weighted)
+        elif mode == '3RBF':
+            interp1, count1 = rbf_interp_window(times, values, t, sigma1, win1)
+            interp2, count2 = rbf_interp_window(times, values, t, sigma2, win2)
+            interp3, count3 = rbf_interp_window(times, values, t, sigma3, win3)
+            w1 = min(count1 / bw1, 1.0)
+            remainder1 = 1.0 - w1
+            w2 = min(count2 / bw2, 1.0) * remainder1
+            w3 = 1.0 - (w1 + w2)
+            weighted = [interp1 * w1, interp2 * w2, interp3 * w3]
+            if np.all(np.isnan(weighted)):
+                interp = np.nan
+            else:
+                interp = np.nansum(weighted)
+        else:
+            raise ValueError("mode must be '1RBF', '2RBF', or '3RBF'")
+        results.append(interp)
+    return pd.DataFrame({'time': target_times, 'rbf_interp': results}).set_index('time')
+
 # EOF
 

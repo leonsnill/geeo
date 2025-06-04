@@ -4,26 +4,15 @@ import ee
 from ipywidgets import HTML
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import pandas as pd
+from geeo.misc.spacetime import getRegion
 import geopandas as gpd
+
 
 
 # plot time series from getRegion
 def plot_getRegion(imgcol, band, roi, scale=30, axis=None, style='.', color="k", label='', legend=True):
-    # Convert ROI to ee.Geometry if it's a lat/lon point
-    if isinstance(roi, (list, tuple)) and len(roi) == 2:
-        roi = ee.Geometry.Point(roi)
     
-    # Ensure ROI is an ee.Geometry object
-    if not isinstance(roi, ee.Geometry):
-        raise ValueError("roi must be a lat/lon point or an ee.Geometry object")
-    
-    # Get region data from the ImageCollection
-    region_data = imgcol.getRegion(roi, scale=scale).getInfo()
-    
-    # Convert the region data to a DataFrame
-    df = pd.DataFrame(region_data[1:], columns=region_data[0])
-    df['datetime'] = pd.to_datetime(df['time'], unit='ms')
+    df = getRegion(imgcol, roi, scale=scale)
     
     # Plotting
     if axis is None:
@@ -45,6 +34,34 @@ def plot_getRegion(imgcol, band, roi, scale=30, axis=None, style='.', color="k",
         plt.show()
 
     return ax
+
+
+def plot_rbf_interpolation(df, interp, value_col='NDVI', ax=None, label='RBF', **kwargs):
+    """
+    Plot observed values and a single RBF interpolation.
+
+    Args:
+        df (pd.DataFrame): Original data with datetime index and value_col.
+        interp (pd.DataFrame): RBF interpolation result.
+        value_col (str): Name of the observed value column.
+        ax (matplotlib.axes.Axes, optional): Axis to plot on. If None, creates a new figure.
+        label (str): Label for the interpolation line.
+        **kwargs: Additional keyword arguments for the interpolation plot (e.g., color, linestyle).
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(20, 5))
+    ax.plot(df.index, df[value_col], 'kx', label='Observed')
+    ax.plot(interp.index, interp['rbf_interp'], label=label, **kwargs)
+    ax.set_title('RBF Interpolation')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Value')
+    ax.grid(True)
+    ax.legend()
+    if ax is None:
+        plt.tight_layout()
+        plt.show()
+    return ax
+
 
 # visualization using ipyleaflet
 class VisMap:
