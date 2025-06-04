@@ -36,7 +36,7 @@ def plot_getRegion(imgcol, band, roi, scale=30, axis=None, style='.', color="k",
     return ax
 
 
-def plot_rbf_interpolation(df, interp, value_col='NDVI', ax=None, label='RBF', **kwargs):
+def plot_rbf_interpolation(df, interp, value_col='NDVI', observed=False, ax=None, label='RBF', **kwargs):
     """
     Plot observed values and a single RBF interpolation.
 
@@ -50,7 +50,8 @@ def plot_rbf_interpolation(df, interp, value_col='NDVI', ax=None, label='RBF', *
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 5))
-    ax.plot(df.index, df[value_col], 'kx', label='Observed')
+    if observed:
+        ax.plot(df.index, df[value_col], 'kx', label='Observed')
     ax.plot(interp.index, interp['rbf_interp'], label=label, **kwargs)
     ax.set_title('RBF Interpolation')
     ax.set_xlabel('Date')
