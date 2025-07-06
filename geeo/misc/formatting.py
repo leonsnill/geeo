@@ -81,6 +81,10 @@ def scale_and_dtype(inp, scale=None, dtype=None, nodata=None):
                 inp = inp.int32()
             elif dtype == 'uint32':
                 inp = inp.uint32()
+            elif dtype == 'int64':
+                inp = inp.int64()
+            elif dtype == 'uint64':
+                inp = inp.uint64()
             elif dtype == 'float':
                 inp = inp.float()
             elif dtype == 'double':
