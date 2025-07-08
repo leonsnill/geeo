@@ -20,7 +20,7 @@ def plot_getRegion(imgcol, band, roi, scale=30, axis=None, style='.', color="k",
     else:
         ax = axis
 
-    ax.plot(df['datetime'],
+    ax.plot(df.index,
             df[band],
             style, color=color,
             label=label, lw=1.5)
