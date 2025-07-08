@@ -1,5 +1,7 @@
 import ee
-from geeo.misc.formatting import scale_bands, rename_bands_l4, rename_bands_l5, rename_bands_l7, rename_bands_l8, rename_bands_l9, rename_bands_s2
+from geeo.misc.formatting import scale_bands, rename_bands_l4, rename_bands_l5, \
+                                rename_bands_l7, rename_bands_l8, rename_bands_l9, \
+                                rename_bands_s2, rename_bands_hlss30, rename_bands_hlsl30
 from geeo.misc.spacetime import create_roi
 
 # --------------------------------------------------------------------------------------------------------------
@@ -220,6 +222,59 @@ def get_copernicus_dem(roi=None, crs='EPSG:4326', crs_transform=None, scale=None
         dem = dem.mosaic()
 
     return dem
+
+# --------------------------------------------------------------------------------------------------------------
+# HLSS30: HLS Sentinel-2 Multi-spectral Instrument Surface Reflectance Daily Global 30m
+# https://developers.google.com/earth-engine/datasets/catalog/NASA_HLS_HLSS30_v002
+# Dataset Availability 2015-11-28T00:00:00Z–
+
+def get_hls(roi, collection='HLS', cloudmax=75, time=None):
+    
+    # check if time and roi are provided, otherwise set defaults
+    if time is None:
+        time = ee.Filter.date('1980-01-01', '2025-01-01')
+    # check if roi is provided
+    if roi is not None:
+        if not isinstance(roi, ee.Geometry) or not isinstance(roi, ee.featurecollection.FeatureCollection):
+            dict_roi = create_roi(roi)
+            roi_geom = dict_roi['roi_geom']
+        else:
+            roi_geom = roi
+    else:
+        # throw an error if roi is not provided
+        raise ValueError("Region of Interest (roi) must be provided.")
+    
+    dict_imgcols = {
+        'HLSL30': (ee.ImageCollection("NASA/HLS/HLSL30/v002") \
+                   .filterBounds(roi_geom) \
+                   .filter(ee.Filter.lte('CLOUD_COVERAGE', cloudmax)) \
+                   .filter(time) \
+                   .map(rename_bands_hlsl30)),
+        
+        'HLSS30': (ee.ImageCollection("NASA/HLS/HLSS30/v002") \
+                   .filterBounds(roi_geom) \
+                   .filter(ee.Filter.lte('CLOUD_COVERAGE', cloudmax)) \
+                   .filter(time) \
+                   .map(rename_bands_hlss30))
+    }
+    
+    # if multiple sensors are chosen, merge selected collections
+    if collection == 'HLS':
+        sensors = ['HLSL30', 'HLSS30']
+    elif collection == 'HLSL30':
+        sensors = ['HLSL30']
+    elif collection == 'HLSS30':
+        sensors = ['HLSS30']
+    else:
+        raise ValueError("Invalid collection specified. Choose from 'HLS', 'HLSL30', or 'HLSS30'.")
+
+    imgcol = dict_imgcols[sensors[0]]
+    if len(sensors) > 1:
+        for i in range(len(sensors)-1):
+            imgcol = imgcol.merge(dict_imgcols[sensors[i+1]])
+        imgcol = imgcol.sort("system:time_start")  # sorting is a very costly operation!
+
+    return imgcol
 
 
 # EOF

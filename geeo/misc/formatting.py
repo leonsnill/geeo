@@ -42,6 +42,22 @@ def rename_bands_s2(img):
     return img.select(bands).rename(new_bands).set('satellite', 'S2')
 
 
+def rename_bands_hlss30(img):
+    bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9',
+             'B11', 'B12', 'Fmask']  
+    new_bands = ['AER', 'BLU', 'GRN', 'RED', 'RE1', 'RE2', 'RE3', 'NIR', 'RE4', 'WV',
+                 'SW1', 'SW2', 'Fmask']
+    return img.select(bands).rename(new_bands).set('satellite', 'HLSS30')
+
+
+def rename_bands_hlsl30(img):
+    bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 
+    'B10', 'Fmask']
+    new_bands = ['CLU', 'BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2',
+    'LST', 'Fmask']
+    return img.select(bands).rename(new_bands).set('satellite', 'HLSL30')
+
+
 def rename_bands_s2_l1c(img):
     bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9',
              'B11', 'B12', 'QA60']  

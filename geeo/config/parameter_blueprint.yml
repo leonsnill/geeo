@@ -47,7 +47,7 @@ ROI_SIMPLIFY_GEOM_TO_BBOX: false         # Simplify geometry to bounding box
 # Landsat 4-9 Level 2, Collection 2, Tier 1
 # Sentinel-2 Level-2A
 # Choosing >1 results in a merge of sensor constellations. 
-SENSORS:                                 # Options: L9, L8, L7, L5, L4, S2
+SENSORS:                                 # Options: L9, L8, L7, L5, L4, S2, HLS, HLSL30, HLSS30
 - L9
 - L8
 - L7
@@ -71,6 +71,12 @@ MASKS_S2: CPLUS                          # S2 masking (null, CPLUS, PROB, SCL)
 MASKS_S2_CPLUS: 0.6                      # S2 CPLUS: Threshold for mask
 MASKS_S2_PROB: 30                        # PROB: Probability threshold for mask
 MASKS_S2_NIR_THRESH_SHADOW: 0.2          # PROB: Threshold NIR-based shadow mask
+
+# HLS masking (Fmask)
+MASKS_HLS:
+- cloud                                  # snow, fill, dilated, saturated)
+- cshadow
+- snow
 
 # Advanced masking
 ERODE_DILATE: false                      # Erode an dilate mask

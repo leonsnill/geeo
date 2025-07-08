@@ -189,4 +189,65 @@ def mask_sentinel2_prob_shadow(nir_drk_thresh=0.2, cld_prj_dst=5, proj_scale=120
         return wrap
 
 
+# --------------------------------------------------------------------------------------------------
+# NASA HLS
+
+def mask_hls(masks):
+    dict_mask = {'cloud': ee.Number(2).pow(1).int(),
+                 'cshadow': ee.Number(2).pow(3).int(),
+                 'snow': ee.Number(2).pow(4).int()}
+    
+    sel_masks = [dict_mask[x] for x in masks if x in dict_mask]
+    bits = ee.Number(1)
+
+    for m in sel_masks:
+        bits = ee.Number(bits.add(m))
+
+    def wrap(img):
+        # clouds, cloud shadows, snow, fill, dilated clouds
+        qa = img.select('Fmask')
+        mask = qa.bitwiseAnd(bits).eq(0)
+        # radiometric saturation
+        # in/valid minima and maxima
+        valid_min = img.select(['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2']).reduce(ee.Reducer.min()).gt(0)
+        valid_max = img.select(['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2']).reduce(ee.Reducer.max()).lt(1)
+        # final mask
+        mask = mask.And(valid_min).And(valid_max)
+        mask = mask.rename('mask')
+        return img.updateMask(mask).addBands(mask).copyProperties(source=img).set('system:time_start', img.get('system:time_start'))
+    return wrap
+
+def mask_hls_erodil(masks, 
+                    kernel_erode=ee.Kernel.circle(radius=120, units='meters'),
+                    kernel_dilate=ee.Kernel.circle(radius=100, units='meters'),
+                    scale=30):
+    
+    dict_mask = {'cloud': ee.Number(2).pow(1).int(),
+                 'cshadow': ee.Number(2).pow(3).int(),
+                 'snow': ee.Number(2).pow(4).int()}
+    
+    sel_masks = [dict_mask[x] for x in masks if x in dict_mask]
+    bits = ee.Number(1)
+
+    for m in sel_masks:
+        bits = ee.Number(bits.add(m))
+
+    def wrap(img):
+        # clouds, cloud shadows, snow, fill, dilated clouds
+        qa = img.select('Fmask')
+        mask = qa.bitwiseAnd(bits).eq(0)
+        # radiometric saturation
+        # in/valid minima and maxima
+        valid_min = img.select(['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2']).reduce(ee.Reducer.min()).gt(0)
+        valid_max = img.select(['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2']).reduce(ee.Reducer.max()).lt(1)
+        # final mask
+        mask = mask.And(valid_min).And(valid_max)
+        mask = (mask.focalMax(kernel=kernel_erode).focalMin(kernel=kernel_dilate)
+        .reproject(**{'crs': img.select([0]).projection(), 'scale': scale})
+        .rename('mask'))
+        return img.updateMask(mask).addBands(mask).copyProperties(source=img).set('system:time_start', img.get('system:time_start'))
+    return wrap
+
+
+
 # EOF

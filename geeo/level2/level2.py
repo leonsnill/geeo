@@ -3,8 +3,8 @@ from geeo.utils import load_parameters, merge_parameters, load_blueprint
 from geeo.misc.spacetime import create_roi, int_to_datestring, find_utm, wkt_dict, get_crs_transform_and_img_dimensions
 from geeo.level2.masking import mask_landsat, blu_filter, mask_landsat_erodil, mask_sentinel2_prob_erodil, \
                                 mask_sentinel2_cplus_erodil, mask_sentinel2_prob_shadow, mask_sentinel2_cplus, \
-                                mask_sentinel2_prob
-from geeo.level2.collection import get_landsat_imgcol, get_sentinel2_imgcol, get_copernicus_dem
+                                mask_sentinel2_prob, mask_hls, mask_hls_erodil
+from geeo.level2.collection import get_landsat_imgcol, get_sentinel2_imgcol, get_copernicus_dem, get_hls
 from geeo.level2.indices import dict_features, unmix
 from geeo.level2.mosaic import mosaic_imgcol
 
@@ -52,6 +52,7 @@ def run_level2(params):
     MASKS_S2_CPLUS = prm.get('MASKS_S2_CPLUS')
     MASKS_S2_PROB = prm.get('MASKS_S2_PROB')
     MASKS_S2_NIR_THRESH_SHADOW = prm.get('MASKS_S2_NIR_THRESH_SHADOW')
+    MASKS_HLS = prm.get('MASKS_HLS')
     ERODE_DILATE = prm.get('ERODE_DILATE')
     ERODE_RADIUS = prm.get('ERODE_RADIUS')
     DILATE_RADIUS = prm.get('DILATE_RADIUS')
@@ -209,6 +210,29 @@ def run_level2(params):
             if (BLUE_MAX_MASKING < 1) and (BLUE_MAX_MASKING > 0):
                 sentinel2 = sentinel2.map(blu_filter(threshold=BLUE_MAX_MASKING))
 
+    # HLS (HLSL30 and HLSS30)
+    sensors_hls = [i for i in ['HLS', 'HLSL30', 'HLSS30'] if i in SENSORS]
+    if sensors_hls:
+        # get HLS ImageCollection
+        hls = get_hls(roi=ROI_GEOM, collection=sensors_hls[0], cloudmax=MAX_CLOUD, time=TOI)
+        
+        # create user-defined masking function if masking is requested
+        if MASKS_HLS is not None:
+            if ERODE_DILATE:
+                mask_function = mask_hls_erodil(MASKS_HLS, conf=MASKS_LANDSAT_CONF,
+                                                kernel_erode=ee.Kernel.circle(radius=ERODE_RADIUS, units='meters'),
+                                                kernel_dilate=ee.Kernel.circle(radius=DILATE_RADIUS, units='meters'),
+                                                scale=ERODE_DILATE_SCALE)
+            else:
+                mask_function = mask_hls(MASKS_HLS, conf=MASKS_LANDSAT_CONF)
+            # apply masking function to the HLS ImageCollection
+            hls = hls.map(mask_function)
+
+        # additional masking based on blue band reflectance
+        if BLUE_MAX_MASKING is not None:
+            if (BLUE_MAX_MASKING < 1) and (BLUE_MAX_MASKING > 0):
+                hls = hls.map(blu_filter(threshold=BLUE_MAX_MASKING))
+
     # merge Landsat and Sentinel-2 ImageCollections
     if sensors_landsat and sensors_sentinel2:
         imgcol = landsat.merge(sentinel2).set('satellite', 'LSS2')
@@ -220,6 +244,9 @@ def run_level2(params):
     elif sensors_sentinel2:
         imgcol = sentinel2.set('satellite', 'SEN2')
         prm['SATELLITE'] = 'SEN2'
+    elif sensors_hls:
+        imgcol = hls.set('satellite', sensors_hls[0])
+        prm['SATELLITE'] = sensors_hls[0]
     else:
         raise ValueError("Unknown sensor selection: Please select at least one valid sensor.")
 
