@@ -85,7 +85,7 @@ def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
         
         # Translate
         ds = gdal.Open(file)
-        ds = gdal.Translate(outfile, ds, options=opt)
+        ds = gdal.Translate(outfile, ds, options=opt, createOptions=['TILED=YES', 'BLOCKXSIZE=256', 'BLOCKYSIZE=256'])
         ds = None
         
         if bandname_file:
