@@ -429,11 +429,11 @@ def run_export(params):
                     if EXPORT_PER_FEATURE:
                         for feature in FEATURES:
                             # need to construct new feature names, i.e. orginal feature name + reducer name
-                            feature_stm = [feature + '_' + r for r in STM_reducer]
+                            features_stm = [feature + '_' + r for r in STM_reducer]
                             if isinstance(STM, ee.imagecollection.ImageCollection):
-                                img = imgcol_to_img(STM.select(feature_stm), date_to_bandname=False)
+                                img = imgcol_to_img(STM.select(features_stm), date_to_bandname=False)
                             else:
-                                img = STM.select(feature_stm)
+                                img = STM.select(features_stm)
                             outfile = 'STM_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                             print("->  "+outfile)
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
@@ -466,11 +466,13 @@ def run_export(params):
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 if EXPORT_TABLE:
+                    # need to construct new feature names, i.e. orginal feature name + reducer name
+                    features_stm = [feature + '_' + r for r in STM_reducer for feature in FEATURES]
                     outfile = 'STM_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
                     export_table(img_or_imgcol=STM, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
                                 tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
-                                nodata=NODATA_VALUE, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=FEATURES, 
+                                nodata=NODATA_VALUE, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=features_stm, 
                                 scale=DATATYPE_SCALE, dtype=DATATYPE)
                 print("")
                 print("---------------------------------------------------------")
