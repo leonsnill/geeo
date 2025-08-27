@@ -25,7 +25,7 @@ def get_landsat_imgcol(roi, sensors=['L9', 'L8', 'L7','L5', 'L4'], cloudmax=75, 
     """
     # check if time and roi are provided, otherwise set defaults
     if time is None:
-        time = ee.Filter.date('1980-01-01', '2025-01-01')
+        time = ee.Filter.date('1970-01-01', '2070-01-01')
     # check if roi is provided
     if roi is not None:
         if not isinstance(roi, ee.Geometry) or not isinstance(roi, ee.featurecollection.FeatureCollection):
@@ -142,7 +142,7 @@ def get_sentinel2_imgcol(roi, cloudmax=75, link_mask_collection='CPLUS', time=No
     """
     # check if time and roi are provided, otherwise set defaults for Sentinel-2
     if time is None:
-        time = ee.Filter.date('2014-01-01', '2030-01-01')
+        time = ee.Filter.date('1970-01-01', '2070-01-01')
 
     # check if roi is provided
     if roi is not None:
@@ -232,7 +232,7 @@ def get_hls(roi, collection='HLS', cloudmax=75, time=None):
     
     # check if time and roi are provided, otherwise set defaults
     if time is None:
-        time = ee.Filter.date('1980-01-01', '2025-01-01')
+        time = ee.Filter.date('1970-01-01', '2070-01-01')
     # check if roi is provided
     if roi is not None:
         if not isinstance(roi, ee.Geometry) or not isinstance(roi, ee.featurecollection.FeatureCollection):
@@ -276,5 +276,28 @@ def get_hls(roi, collection='HLS', cloudmax=75, time=None):
 
     return imgcol
 
+
+# --------------------------------------------------------------------------------------------------------------
+# Custom ImageCollection (CIC)
+
+def get_custom_imgcol(cic, roi=None, time=None):
+    imgcol = ee.ImageCollection(cic)
+    
+    if time is None:
+        time = ee.Filter.date('1970-01-01', '2070-01-01')
+    
+    if roi is not None:
+        if not isinstance(roi, ee.Geometry) or not isinstance(roi, ee.featurecollection.FeatureCollection):
+            dict_roi = create_roi(roi)
+            roi_geom = dict_roi['roi_geom']
+        else:
+            roi_geom = roi
+    else:
+        # throw an error if roi is not provided
+        raise ValueError("Region of Interest (roi) must be provided.")
+    
+    imgcol = imgcol.filterBounds(roi_geom).filter(time)
+
+    return imgcol
 
 # EOF

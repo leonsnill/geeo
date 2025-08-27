@@ -40,10 +40,11 @@ ROI: [12.9, 52.2, 13.9, 52.7]
 ROI_SIMPLIFY_GEOM_TO_BBOX: false         # Simplify geometry to bounding box
 
 # -------------------------------------------------------------------------------
+#                            TIME SERIES STACK (TSS)
 #                        SENSOR AND DATA QUALITY SETTINGS                          
 # -------------------------------------------------------------------------------
 
-# Sensors
+# Time Series Stack (TSS) is the raw (preprocessed) ImageCollection 
 # Landsat 4-9 Level 2, Collection 2, Tier 1
 # Sentinel-2 Level-2A
 # Choosing >1 results in a merge of sensor constellations. 
@@ -53,11 +54,11 @@ SENSORS:                                 # Options: L9, L8, L7, L5, L4, S2, HLS,
 - L7
 - L5
 - L4
-MAX_CLOUD: 75                            # Maximum cloud cover percentage
+MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
+
+# Landsat settings
 EXCLUDE_SLCOFF: false                    # Exclude Landsat-7 ETM+ SLC-off
 GCP_MIN_LANDSAT: 1                       # Min Ground Control Points for Landsat
-
-# Landsat masking
 MASKS_LANDSAT:                           # Landsat masks (null, cloud, cshadow,
 - cloud                                  # snow, fill, dilated, saturated)
 - cshadow
@@ -66,7 +67,7 @@ MASKS_LANDSAT:                           # Landsat masks (null, cloud, cshadow,
 - dilated
 MASKS_LANDSAT_CONF: Medium               # Confidence level for Landsat masks (Medium, High)
 
-# Sentinel-2 masking
+# Sentinel-2 settings
 MASKS_S2: CPLUS                          # S2 masking (null, CPLUS, PROB, SCL)
 MASKS_S2_CPLUS: 0.6                      # S2 CPLUS: Threshold for mask
 MASKS_S2_PROB: 30                        # PROB: Probability threshold for mask
@@ -118,11 +119,21 @@ UMX_NON_NEGATIVE: true                   # Non-negative constraint
 UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
 
 # -------------------------------------------------------------------------------
-#                      TIME SERIES STACK (TSS) and MOSAIC (TSM)
+#                           CUSTOM IMAGE COLLECTION (CIC)
 # -------------------------------------------------------------------------------
-# Time Series Stack (TSS) is the raw (preprocessed) ImageCollection 
+
+# Custom ImageCollection (TSS from above will not be used!)
+CIC: null                                # path to ee.ImageCollection in catalogue 
+#                                         (e.g GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL)
+CIC_FEATURES: null                       # bands of CIC to include (null = all)
+
+# -------------------------------------------------------------------------------
+#                      TIME SERIES MOSAIC (TSM)
+# -------------------------------------------------------------------------------
+
 # Time Series Mosaic (TSM) create spatially-consistent mosaic for unique dates
 TSM: false                               # Time Series Mosaic (TSM)
+TSM_BASE_IMGCOL: TSS                     # (TSS, CIC)
 
 
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -151,7 +162,7 @@ FOLD_CUSTOM: {
 # -------------------------------------------------------------------------------
 # Time Series Interpolation (TSI) method
 TSI: null                                # (null, WLIN, 1RBF, 2RBF, 3RBF)  
-TSI_BASE_IMGCOL: TSS                     # (TSS, TSM)
+TSI_BASE_IMGCOL: TSS                     # (TSS, TSM, CIC)
 
 # Interpolation settings
 INTERVAL: 16                             # Interpolation interval (days)
@@ -174,7 +185,7 @@ STM: null                                # null or list (min, p5, p10, p15, ...,
 #                                          p95, max, mean, median, stdDev, 
 #                                          variance, skew, kurtosis)
 # Collection to derive STMs from
-STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI)
+STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
 
 # Folding: temporal subwindows
 STM_FOLDING: false                       # use folding settings from above
@@ -185,7 +196,7 @@ STM_FOLDING_LIST_ITER: false             # false (joining) or true (list iterati
 # -------------------------------------------------------------------------------
 # Pixel-Based Compositing (PBC)
 PBC: null                                # null, BAP, MAX-RNB, NLCD, or 'FEATURE' (e.g. NDVI, NBR) 
-PBC_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI)
+PBC_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
 
 # PBC settings
 PBC_INVERT_QUALITY_METRIC: false         # invert if minima are better
@@ -225,12 +236,12 @@ NODATA_VALUE: -9999                      # Output no data value
 EXPORT_IMAGE: false                      # Export Image
 EXPORT_TABLE: false                      # Export Table 
 
-EXPORT_TSS: false                        # Export TSS 
+EXPORT_TSS: false                        # Export TSS
+EXPORT_CIC: false                        # Export CIC 
 EXPORT_TSM: false                        # Export TSM 
 EXPORT_TSI: false                        # Export TSI 
 EXPORT_STM: false                        # Export STM 
 EXPORT_PBC: false                        # Export PBC 
-EXPORT_TRD: false                        # Export TRD 
 
 # -------------------------------------------------------------------------------
 #                           GENERAL EXPORT SETTINGS
@@ -248,6 +259,6 @@ EXPORT_TABLE_REDUCER: first              # Reducer used to extract values
 EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
 # ATTENTION: The folllowing can result in many exports and be highly inefficient!
 EXPORT_PER_FEATURE: false                # Export separate img per feature/band
-EXPORT_PER_TIME: false                   # Export separate img per time
+EXPORT_PER_TIME: false                   # Export separate img per time (i.e., every img in imgcol)
 
 # EOF

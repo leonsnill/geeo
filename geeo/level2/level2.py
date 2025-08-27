@@ -4,7 +4,7 @@ from geeo.misc.spacetime import create_roi, int_to_datestring, find_utm, wkt_dic
 from geeo.level2.masking import mask_landsat, blu_filter, mask_landsat_erodil, mask_sentinel2_prob_erodil, \
                                 mask_sentinel2_cplus_erodil, mask_sentinel2_prob_shadow, mask_sentinel2_cplus, \
                                 mask_sentinel2_prob, mask_hls, mask_hls_erodil
-from geeo.level2.collection import get_landsat_imgcol, get_sentinel2_imgcol, get_copernicus_dem, get_hls
+from geeo.level2.collection import get_landsat_imgcol, get_sentinel2_imgcol, get_copernicus_dem, get_hls, get_custom_imgcol
 from geeo.level2.indices import dict_features, unmix
 from geeo.level2.mosaic import mosaic_imgcol
 
@@ -65,7 +65,13 @@ def run_level2(params):
     UMX_SUM_TO_ONE = prm.get('UMX_SUM_TO_ONE')
     UMX_NON_NEGATIVE = prm.get('UMX_NON_NEGATIVE')
     UMX_REMOVE_INPUT_FEATURES = prm.get('UMX_REMOVE_INPUT_FEATURES')
+    # CIC
+    CIC = prm.get('CIC')
+    CIC_FEATURES = prm.get('CIC_FEATURES')
+    # TSM
     TSM = prm.get('TSM')
+    TSM_BASE_IMGCOL = prm.get('TSM_BASE_IMGCOL')
+    # resampling
     RESAMPLING_METHOD = prm.get('RESAMPLING_METHOD')
     # CRS
     PIX_RES = prm.get('PIX_RES')
@@ -253,7 +259,7 @@ def run_level2(params):
         imgcol = hls.set('satellite', sensors_hls[0])
         prm['SATELLITE'] = sensors_hls[0]
     else:
-        raise ValueError("Unknown sensor selection: Please select at least one valid sensor.")
+        raise ValueError("Unknown sensor selection: Please select at least one valid sensor for TSS.")
 
     # ------------------------------------------------------------------------------------------------------------------------
     # resampling method; called early that subsequent analyses are correctly executed
@@ -296,11 +302,30 @@ def run_level2(params):
         prm['FEATURES'] = FEATURES
 
     # return preprocessed time-series stack (TSS) ImageCollection
-    prm['TSS'] = imgcol
+    TSS = imgcol
+    prm['TSS'] = TSS
+
+    # ------------------------------------------------------------------------------------------------------------------------
+    # Custom ImageCollection
+    if CIC:
+        imgcol_cic = get_custom_imgcol(cic=CIC, roi=ROI_GEOM, time=TOI)
+        
+        if CIC_FEATURES:
+            imgcol_cic = imgcol_cic.select(CIC_FEATURES)
+            FEATURES = CIC_FEATURES
+        else:
+            FEATURES = imgcol_cic.first().bandNames().getInfo()
+        prm['FEATURES'] = FEATURES
+        
+        if RESAMPLING_METHOD:
+            imgcol_cic = imgcol_cic.map(lambda img: img.resample(RESAMPLING_METHOD))
+        
+        prm['CIC'] = imgcol_cic
+        prm['SATELLITE'] = 'CIC'
 
     # Time-Series Mosaic (TSM)
     if TSM:
-        imgcol_tsm = mosaic_imgcol(imgcol)
+        imgcol_tsm = mosaic_imgcol(prm.get(TSM_BASE_IMGCOL))
         prm['TSM'] = imgcol_tsm
 
     # return dict
