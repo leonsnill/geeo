@@ -163,17 +163,6 @@ def export_table(img_or_imgcol, feature, reduceRegions=True, buffer=None, reduce
     return ee.batch.Task.start(out_table)
 
 
-
-# joins are not the way to go here, list iteration and ImageCollection.fromImages is the way to go
-# https://gis.stackexchange.com/questions/340433/making-intra-annual-image-composites-for-a-series-of-years-in-google-earth-engin
-# STM
-    # No fold (standard) -> ImageCollection -> STM Image -> Export Image / Table (default combined, but can be per feature)
-    # Fold -> Init ImageCollection -> map -> STM Image per Fold -> Export Image / Table per Fold (default combined, but can be per feature)
-# PBC
-    # No fold (standard) -> ImageCollection -> PBC Image -> Export Image / Table (default combined, but can be per feature)
-    # Fold -> Init ImageCollection -> map -> PBC Image per Fold -> Export Image / Table per Fold (default combined, but can be per feature)
-
-
 def run_export(params):
     """
     Run the export process from level3 output.

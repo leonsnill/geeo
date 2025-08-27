@@ -3,7 +3,7 @@ from geeo.level2.indices import rnb
 from geeo.misc.spacetime import add_timeband, combine_reducers, generate_key
 from geeo.level3.interpolation import tsi_rbf, tsi_rbf_duo, tsi_rbf_trio, tsi_linear_weighted
 from geeo.level3.initimgcol import init_imgcol, init_and_join
-from geeo.level3.stm import stm_initimgcol
+from geeo.level3.stm import stm_initimgcol, stm_iterList
 from geeo.level3.composite import composite_bap, composite_feature, composite_feature_invert, composite_nlcd
 
 def run_level3(prm):
@@ -45,6 +45,7 @@ def run_level3(prm):
     STM = prm.get('STM')
     STM_BASE_IMGCOL = prm.get('STM_BASE_IMGCOL')
     STM_FOLDING = prm.get('STM_FOLDING')
+    STM_FOLDING_LIST_ITER = prm.get('STM_FOLDING_LIST_ITER')
     # PBC
     PBC = prm.get('PBC')
     PBC_INVERT_QUALITY_METRIC = prm.get('PBC_INVERT_QUALITY_METRIC')
@@ -148,12 +149,21 @@ def run_level3(prm):
         if not stm_base_imgcol:
             raise ValueError("STM base ImageCollection not found.")
         stm_reducer = combine_reducers(STM)
-        
+    
         # check if folding is required
         if STM_FOLDING and FOLD:
-            # initialize and join image collection
-            imgcol_stm = init_and_join(prm, imgcol_secondary=stm_base_imgcol.select(FEATURES))
-            imgcol_stm = ee.ImageCollection(imgcol_stm.map(stm_initimgcol(stm_reducer)))
+            
+            if STM_FOLDING_LIST_ITER:
+                # Option 2) ee.List iteration
+                # joins might not be the way to go here, list iteration and ImageCollection.fromImages is the way to go
+                # https://gis.stackexchange.com/questions/340433/making-intra-annual-image-composites-for-a-series-of-years-in-google-earth-engin
+                imgcol_stm = stm_iterList(prm, stm_base_imgcol.select(FEATURES), stm_reducer)
+            else:
+                # Option 1) Joins
+                # initialize and join image collection
+                imgcol_stm = init_and_join(prm, imgcol_secondary=stm_base_imgcol.select(FEATURES))
+                imgcol_stm = ee.ImageCollection(imgcol_stm.map(stm_initimgcol(stm_reducer)))
+                
             # return STM as ImageCollection
             prm['STM_reducer'] = STM
             prm['STM'] = imgcol_stm

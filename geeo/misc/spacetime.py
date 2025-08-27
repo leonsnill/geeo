@@ -1099,7 +1099,6 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
         if start <= end:
             months = list(range(start, end + 1))
         else:
-            # Cyclic handling: wrap around the year
             months = list(range(start, 13)) + list(range(1, end + 1))
         return months
 
@@ -1109,7 +1108,6 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
         if start <= end:
             doys = list(range(start, end + 1))
         else:
-            # Cyclic handling: wrap around the year
             doys = list(range(start, 367)) + list(range(1, end + 1))
         return doys
 
@@ -1433,5 +1431,20 @@ def get_time_dict_subwindows(prm):
     }
     time_dict = construct_time_subwindows(**time_dict_raw)
     return time_dict
+
+
+def construct_calendarRange_filter(prm):
+    time_dict_subwindows = get_time_dict_subwindows(prm)
+    fold_list = []
+    for key, value in time_dict_subwindows.items():
+        filters = []
+        for unit, ee_unit in (('year', 'year'), ('month', 'month'), ('doy', 'day_of_year')):
+            rng = value.get(unit)
+            if rng is not None:
+                filters.append(ee.Filter.calendarRange(rng[0], rng[-1], ee_unit))
+        filter_obj = filters[0] if len(filters) == 1 else ee.Filter.And(*filters) if filters else None
+        if filter_obj:
+            fold_list.append(ee.Dictionary({'key': key, 'filter': filter_obj}))
+    return ee.List(fold_list)
 
 # EOF

@@ -1,7 +1,7 @@
 import ee
 from geeo.misc.spacetime import add_timeband, days_to_milli, add_time_properties_to_img, get_time_dict_subwindows
 
-
+    
 # combine functions to create imgcol from dict and join
 def init_and_join(prm, imgcol_secondary=None):
     time_dict_subwindows = get_time_dict_subwindows(prm)
@@ -10,7 +10,8 @@ def init_and_join(prm, imgcol_secondary=None):
     # add properties to secondary imgcol
     imgcol_secondary = imgcol_secondary.map(add_time_properties_to_img)
     # join imgcols
-    imgcol = join_collections_from_dict(imgcol, imgcol_secondary, time_dict_subwindows)
+    combined_filter = construct_listContains_filter(time_dict_subwindows)
+    imgcol = join_collections_from_dict(imgcol, imgcol_secondary, combined_filter)
     return imgcol
 
 
@@ -63,8 +64,7 @@ def init_imgcol_from_time(time_dict):
     return init_imgcol
 
 
-def join_collections_from_dict(new_img_col, existing_img_col, time_dict):
-
+def construct_listContains_filter(time_dict):
     # define possible filters
     filter_year = ee.Filter.listContains(leftField='year', rightField='year')
     filter_month = ee.Filter.listContains(leftField='month', rightField='month')
@@ -92,11 +92,14 @@ def join_collections_from_dict(new_img_col, existing_img_col, time_dict):
             combined_filter = ee.Filter.And(*combined_filters)
     else:
         raise ValueError("No valid filters found based on the provided time_dict.")
+    
+    return combined_filter
 
+
+def join_collections_from_dict(new_img_col, existing_img_col, combined_filter):
     # perform the join
     join = ee.Join.saveAll('window1', ordering = 'system:time_start', ascending = True)
     joined_col = join.apply(new_img_col, existing_img_col, combined_filter)
-
     return ee.ImageCollection(joined_col)
 
 

@@ -1,4 +1,5 @@
 import ee
+from geeo.misc.spacetime import construct_calendarRange_filter
 
 def stm_initimgcol(reducers):
     def wrap(img):
@@ -18,11 +19,20 @@ def folding_stm(imgcol, reducers):
         # filter imgcol
         imgcol_filtered = imgcol.filter(fold_filter)
         # get date of first image (needed for system:time_start property for table export)
-        img_first = imgcol_filtered.first()
+        #img_first = imgcol_filtered.first()
         # calculate STM
         img_stm = ee.Image(imgcol_filtered.reduce(reducers))
-        return img_stm.set('system:index', fold_key, 'system:time_start', img_first.get('system:time_start'))
+        img_stm_size = img_stm.bandNames().size()
+        return img_stm.set('system:index', fold_key, 'img_stm_size', img_stm_size)
     return wrap
+
+def stm_iterList(prm, imgcol, reducers):
+    fold_list = construct_calendarRange_filter(prm)
+    imgcol_stm = ee.ImageCollection.fromImages(
+        fold_list.map(folding_stm(imgcol, reducers))
+    )
+    imgcol_stm = imgcol_stm.filter(ee.Filter.gt('img_stm_size', 0))
+    return imgcol_stm
 
 
 # EOF

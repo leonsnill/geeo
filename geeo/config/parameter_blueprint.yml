@@ -178,6 +178,7 @@ STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI)
 
 # Folding: temporal subwindows
 STM_FOLDING: false                       # use folding settings from above
+STM_FOLDING_LIST_ITER: false             # false (joining) or true (list iteration)
 
 # -------------------------------------------------------------------------------
 #                        PIXEL-BASED COMPOSITING (PBC)

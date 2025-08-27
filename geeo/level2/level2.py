@@ -136,7 +136,10 @@ def run_level2(params):
     prm['CRS_TRANSFORM'] = CRS_TRANSFORM
     prm['PIX_RES'] = PIX_RES
 
+    # ------------------------------------------------------------------------------------------------------------------------
     # ImageCollections
+    
+    # ------------------------------------------------------------------------------------------------------------------------
     # Landsat
     sensors_landsat = [i for i in ['L9', 'L8', 'L7', 'L5', 'L4'] if i in SENSORS]
     if sensors_landsat:
@@ -164,6 +167,7 @@ def run_level2(params):
             if (BLUE_MAX_MASKING < 1) and (BLUE_MAX_MASKING > 0):
                 landsat = landsat.map(blu_filter(threshold=BLUE_MAX_MASKING))
 
+    # ------------------------------------------------------------------------------------------------------------------------
     # Sentinel-2
     sensors_sentinel2 = 'S2' in SENSORS
     if sensors_sentinel2:
@@ -210,6 +214,7 @@ def run_level2(params):
             if (BLUE_MAX_MASKING < 1) and (BLUE_MAX_MASKING > 0):
                 sentinel2 = sentinel2.map(blu_filter(threshold=BLUE_MAX_MASKING))
 
+    # ------------------------------------------------------------------------------------------------------------------------
     # HLS (HLSL30 and HLSS30)
     sensors_hls = [i for i in ['HLS', 'HLSL30', 'HLSS30'] if i in SENSORS]
     if sensors_hls:
@@ -250,7 +255,8 @@ def run_level2(params):
     else:
         raise ValueError("Unknown sensor selection: Please select at least one valid sensor.")
 
-        # resampling method; called early that subsequent analyses are correctly executed
+    # ------------------------------------------------------------------------------------------------------------------------
+    # resampling method; called early that subsequent analyses are correctly executed
     if RESAMPLING_METHOD:
         imgcol = imgcol.map(lambda img: img.resample(RESAMPLING_METHOD))
 

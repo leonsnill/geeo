@@ -104,6 +104,7 @@
 | STM                      | list    | null         | min, p5, ..., max, mean, etc.   | Spectral-Temporal Metrics to compute.            |
 | STM_BASE_IMGCOL          | str     | TSS          | TSS, TSM, TSI                   | Collection to derive STMs from.                  |
 | STM_FOLDING              | bool    | false        | true, false                     | Use folding settings from above.                 |
+| STM_FOLDING_LIST_ITER    | bool    | false        | true, false                     | Identical results, potentially different performance for large area processing. Use list iteration over dates (true) or classic joining of images to collection (false). |
 
 ---
 
@@ -142,7 +143,6 @@
 | EXPORT_TSI               | bool    | false        | true, false                     | Export TSI.                                      |
 | EXPORT_STM               | bool    | false        | true, false                     | Export STM.                                      |
 | EXPORT_PBC               | bool    | false        | true, false                     | Export PBC.                                      |
-| EXPORT_TRD               | bool    | false        | true, false                     | Export TRD.                                      |
 | EXPORT_LOCATION          | str     | Drive        | Drive, Asset                    | Export location.                                 |
 | EXPORT_DIRECTORY         | str     | null         |                                 | Export directory or assetId.                     |
 | EXPORT_DESC              | str     | GEEO         |                                 | Image description in filename.                   |
