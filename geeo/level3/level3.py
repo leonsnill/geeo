@@ -1,10 +1,11 @@
 import ee
 from geeo.level2.indices import rnb
-from geeo.misc.spacetime import add_timeband, combine_reducers, generate_key
+from geeo.misc.spacetime import add_timeband, combine_reducers, generate_key, imgcol_to_img
 from geeo.level3.interpolation import tsi_rbf, tsi_rbf_duo, tsi_rbf_trio, tsi_linear_weighted
 from geeo.level3.initimgcol import init_imgcol, init_and_join
 from geeo.level3.stm import stm_initimgcol, stm_iterList
 from geeo.level3.composite import composite_bap, composite_feature, composite_feature_invert, composite_nlcd
+from geeo.level3.lsp import lsp
 
 def run_level3(prm):
     """
@@ -27,7 +28,10 @@ def run_level3(prm):
     FOLD_YEAR = prm.get('FOLD_YEAR')
     FOLD_MONTH = prm.get('FOLD_MONTH')
     FOLD_CUSTOM = prm.get('FOLD_CUSTOM')
-    # TSI    
+    # NVO
+    NVO = prm.get('NVO')
+    NVO_FOLDING = prm.get('NVO_FOLDING')
+    # TSI
     TSI = prm.get('TSI')
     TSI_BASE_IMGCOL = prm.get('TSI_BASE_IMGCOL')
     INTERVAL = prm.get('INTERVAL')
@@ -50,12 +54,21 @@ def run_level3(prm):
     PBC = prm.get('PBC')
     PBC_INVERT_QUALITY_METRIC = prm.get('PBC_INVERT_QUALITY_METRIC')
     PBC_BASE_IMGCOL = prm.get('PBC_BASE_IMGCOL')
+    PBC_FOLDING = prm.get('PBC_FOLDING')
     PBC_BAP_DOY_EQ_YEAR = prm.get('PBC_BAP_DOY_EQ_YEAR')
     PBC_BAP_MIN_CLOUDDISTANCE = prm.get('PBC_BAP_MIN_CLOUDDISTANCE')
     PBC_BAP_MAX_CLOUDDISTANCE = prm.get('PBC_BAP_MAX_CLOUDDISTANCE')
     PBC_BAP_WEIGHT_DOY = prm.get('PBC_BAP_WEIGHT_DOY')
     PBC_BAP_WEIGHT_YEAR = prm.get('PBC_BAP_WEIGHT_YEAR')
     PBC_BAP_WEIGHT_CLOUD = prm.get('PBC_BAP_WEIGHT_CLOUD')
+    # LSP
+    LSP = prm.get('LSP')
+    LSP_BASE_IMGCOL = prm.get('LSP_BASE_IMGCOL')
+    LSP_BAND = prm.get('LSP_BAND')
+    LSP_YEAR_MIN = prm.get('LSP_YEAR_MIN')
+    LSP_YEAR_MAX = prm.get('LSP_YEAR_MAX')
+    LSP_ADJUST_SEASONAL = prm.get('LSP_ADJUST_SEASONAL')
+    LSP_ADJUST_SEASONAL_MAX_DAYS = prm.get('LSP_ADJUST_SEASONAL_MAX_DAYS')
     # General
     EXPORT_DESC_DETAIL_TIME = prm.get('EXPORT_DESC_DETAIL_TIME')
 
@@ -80,6 +93,26 @@ def run_level3(prm):
 
     prm['TIME_DESC'] = time_desc    
     
+
+    def calc_nvo(imgcol):
+        imgcol = imgcol.map(lambda img: img.addBands(
+            ee.Image(ee.Image.constant(ee.Number.parse(img.date().format('YYYYMMdd'))).int().rename('DATE')).updateMask(img.mask().reduce(ee.Reducer.min()))
+        ))
+        img_nvo = ee.Image(imgcol.select('DATE').reduce(ee.Reducer.countDistinctNonNull())).rename('NVO')
+        img = imgcol.first()
+        return img_nvo.copyProperties(source=img).set('system:time_start', img.get('system:time_start'))
+
+    # NVO
+    if NVO:
+        TSS = prm.get('TSS')
+        if NVO_FOLDING:
+            imgcol_tss = init_and_join(prm, imgcol_secondary=TSS.select(FEATURES))
+            imgcol_nvo = imgcol_tss.map(lambda img: calc_nvo(ee.ImageCollection.fromImages(img.get('window1'))))
+            img_nvo = imgcol_to_img(imgcol_nvo, date_to_bandname=False)
+        else:
+            img_nvo = calc_nvo(TSS)
+        
+        prm['NVO'] = img_nvo
 
     # TIME SERIES INTERPOLATION (TSI)
     if TSI:
@@ -182,10 +215,25 @@ def run_level3(prm):
         # make sure imgcol exists
         if not pbc_base_imgcol:
             raise ValueError("PBC base ImageCollection not found.")
+
+        # add here because PBC functions always work with joins
+        if not PBC_FOLDING:
+            prm_pbc = prm.copy()
+            prm_pbc['FOLD_YEAR'] = False
+            prm_pbc['FOLD_MONTH'] = False
+            prm_pbc['FOLD_CUSTOM'] = {
+                'year': None,
+                'month': None,
+                'doy': None,
+                'date': None
+            }
+        else:
+            prm_pbc = prm.copy()
+
         # check which composite algorithm to use
         if PBC == 'BAP':
             # initialize and join image collection
-            imgcol_pbc = init_and_join(prm, imgcol_secondary=pbc_base_imgcol)
+            imgcol_pbc = init_and_join(prm_pbc, imgcol_secondary=pbc_base_imgcol)
             # Griffiths et al. 2013 BAP
             imgcol_pbc = ee.ImageCollection(
                 imgcol_pbc.map(
@@ -201,7 +249,7 @@ def run_level3(prm):
         
         elif PBC == 'MAX-NDVI':
             # initialize and join image collection
-            imgcol_pbc = init_and_join(prm, imgcol_secondary=pbc_base_imgcol)
+            imgcol_pbc = init_and_join(prm_pbc, imgcol_secondary=pbc_base_imgcol)
             # Maximum NDVI composite
             imgcol_pbc = ee.ImageCollection(
                 imgcol_pbc.map(
@@ -211,7 +259,7 @@ def run_level3(prm):
 
         elif PBC in FEATURES:
             # initialize and join image collection
-            imgcol_pbc = init_and_join(prm, imgcol_secondary=pbc_base_imgcol)
+            imgcol_pbc = init_and_join(prm_pbc, imgcol_secondary=pbc_base_imgcol)
             if PBC_INVERT_QUALITY_METRIC:
                 imgcol_pbc = ee.ImageCollection(
                     imgcol_pbc.map(
@@ -229,7 +277,7 @@ def run_level3(prm):
             # add RNB band to base imgcol
             pbc_base_imgcol = pbc_base_imgcol.map(rnb)
             # initialize and join image collection
-            imgcol_pbc = init_and_join(prm, imgcol_secondary=pbc_base_imgcol)
+            imgcol_pbc = init_and_join(prm_pbc, imgcol_secondary=pbc_base_imgcol)
             # Maximum RNB composite
             imgcol_pbc = ee.ImageCollection(
                 imgcol_pbc.map(
@@ -239,7 +287,7 @@ def run_level3(prm):
         
         elif PBC == 'NLCD':
             # initialize and join image collection
-            imgcol_pbc = init_and_join(prm, imgcol_secondary=pbc_base_imgcol)
+            imgcol_pbc = init_and_join(prm_pbc, imgcol_secondary=pbc_base_imgcol)
             # Maximum NLCD composite
             imgcol_pbc = ee.ImageCollection(imgcol_pbc.map(composite_nlcd))
 
@@ -247,7 +295,30 @@ def run_level3(prm):
             raise ValueError(f"Unknown composite method: {PBC}. Or {PBC} not in FEATURES.")
 
         prm['PBC'] = imgcol_pbc.select(FEATURES)
+    
 
+    # LAND SURFACE PHENOLOGY (LSP)
+    if LSP == 'POLAR':
+        
+        lsp_base_imgcol = prm.get(LSP_BASE_IMGCOL)
+        # make sure imgcol exists
+        if not lsp_base_imgcol:
+            raise ValueError("LSP base ImageCollection not found.")
+
+        if not LSP_YEAR_MIN or not LSP_YEAR_MAX:  # global
+            LSP_YEAR_MIN = YEAR_MIN
+            LSP_YEAR_MAX = YEAR_MAX
+
+        imgcol_lsp = lsp(
+            imgcol=lsp_base_imgcol,
+            band=LSP_BAND,
+            year_min=LSP_YEAR_MIN,
+            year_max=LSP_YEAR_MAX,
+            adjust_seasonal=LSP_ADJUST_SEASONAL,
+            adjust_seasonal_max_delta_days=LSP_ADJUST_SEASONAL_MAX_DAYS
+        )
+        
+        prm['LSP'] = imgcol_lsp
     # return dict
     return prm
 

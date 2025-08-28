@@ -148,7 +148,7 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
                  2 = Point (will create a small buffer to form a polygon)
                  4 = Rectangle (creates a polygon)
                  > 4 Polygon (must be closed, i.e. last coordinate = first coordinate)
-               - File path to a vector file (str)
+               - File path to a vector file (str) or ee.FeatureCollection
                - A geopandas GeoDataFrame (gpd.geodataframe.GeoDataFrame)
                - ee.Geometry (Earth Engine geometry)
                - ee.FeatureCollection (Earth Engine feature collection)
@@ -162,7 +162,7 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
     # "Caution: providing a large or complex collection as the geometry argument can result in poor performance. 
     # Collating the geometry of collections does not scale well; use the smallest collection (or geometry) that is required to achieve the desired outcome."
 
-    if isinstance(roi_input, list):  # WGS84
+    if isinstance(roi_input, list):  # WGS84 coordinates
         roi_geom = create_polygon_geometry(roi_input)
         roi_featcol = ee.FeatureCollection([ee.Feature(roi_geom)])
         roi_bbox = bounds_from_featcol(roi_featcol)
@@ -171,24 +171,38 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
         roi_bbox_gdf = bbox_server_to_client(roi_bbox)
         roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs="EPSG:4326")
     
-    elif isinstance(roi_input, str) or isinstance(roi_input, gpd.geodataframe.GeoDataFrame):
+    elif isinstance(roi_input, str) or isinstance(roi_input, gpd.geodataframe.GeoDataFrame):  # either path to vector or path to ee.FeatureCollection with access rights
+
         if isinstance(roi_input, str):
-            gdf = gpd.read_file(roi_input)
-        elif isinstance(roi_input, gpd.geodataframe.GeoDataFrame):
+            try:
+                gdf = gpd.read_file(roi_input)
+                roi_featcol = init_featcol_from_vector(gdf)
+                roi_bbox = bounds_from_featcol(roi_featcol)
+                roi_bbox_gdf = [float(gdf.geometry.bounds.minx.iloc[0]), float(gdf.geometry.bounds.miny.iloc[0]),
+                                float(gdf.geometry.bounds.maxx.iloc[0]), float(gdf.geometry.bounds.maxy.iloc[0])]
+                roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs=gdf.crs)
+            except:  # must be ee.FeatureCollection
+                try:
+                    roi_featcol = ee.FeatureCollection(roi_input)
+                    roi_bbox = bounds_from_featcol(roi_featcol)
+                    roi_bbox_gdf = bbox_server_to_client(roi_bbox)
+                except Exception as e:
+                    raise ValueError(f"Vector file could not be initialized: neither from local file or ee.FeatureCollection: {e}. Check ROI path!")
+        else:
             gdf = roi_input
-        try:
-            roi_bbox_gdf = [float(gdf.geometry.bounds.minx.iloc[0]), float(gdf.geometry.bounds.miny.iloc[0]), 
-                               float(gdf.geometry.bounds.maxx.iloc[0]), float(gdf.geometry.bounds.maxy.iloc[0])]
-            roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs=gdf.crs)
             roi_featcol = init_featcol_from_vector(gdf)
             roi_bbox = bounds_from_featcol(roi_featcol)
-            if simplify_geom_to_bbox:
-                roi_geom = roi_bbox
-            else:
-                roi_geom = ee.Geometry(roi_featcol.geometry())
-        except Exception as e:
-            raise ValueError(f"Vector file could not be initialized to FeatureCollection: {e}")
-    
+            roi_bbox_gdf = [float(gdf.geometry.bounds.minx.iloc[0]), float(gdf.geometry.bounds.miny.iloc[0]),
+                            float(gdf.geometry.bounds.maxx.iloc[0]), float(gdf.geometry.bounds.maxy.iloc[0])]
+            roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs=gdf.crs)
+
+
+        # complex feature collection with many features can create overhead
+        if simplify_geom_to_bbox:
+            roi_geom = roi_bbox
+        else:
+            roi_geom = ee.Geometry(roi_featcol.geometry())
+
     elif isinstance(roi_input, ee.Geometry):  # WGS84
         roi_geom = roi_input
         roi_featcol = ee.FeatureCollection([ee.Feature(roi_geom)])
@@ -377,6 +391,56 @@ def find_utm(lon):
     utm = round((lon + 180) / 6)
     utm = "{0:0=2d}".format(utm)
     return "EPSG:326"+utm
+
+
+def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=None, simplify_geom_to_bbox=True):
+        
+        dict_spatial_meta = {}
+
+        # roi
+        dict_roi = create_roi(roi, simplify_geom_to_bbox=simplify_geom_to_bbox)
+        
+        # crs
+        if crs == 'UTM':
+            crs = find_utm(dict_roi['roi_geom'])
+        elif crs in wkt_dict.keys():
+            crs = wkt_dict[crs]
+        elif isinstance(crs, ee.projection.Projection):
+            crs = crs.getInfo().get('crs')
+        else:
+            crs = crs
+        # verify that EE accepts projection
+        try:
+            if ee.Projection(crs).getInfo():
+                pass
+        except:
+            raise ValueError('CRS not supported by GEE. Use valid EPSG, WKT, UTM, or GLANCE continent identifier.')
+        CRS = crs
+
+        # transform and dimensions
+        # explicitly specify CRS and IMG_DIMENSIONS, and CRS_TRANSFORM for export to match grid
+        # https://developers.google.com/earth-engine/guides/exporting_images
+        # "to get a block of pixels precisely aligned to another data source, specify dimensions, crs and crsTransform"
+        # Set CRS_TRANSFORM and IMG_DIMENSIONS based on CRS and ROI
+        
+        # automated matching using wgs84 not yet implemented in get_crs_transform_and_img_dimensions
+        if not crs == 'EPSG:4326':
+            if crs_transform is None:
+                roi_bbox_gdf_proj = dict_roi['roi_bbox_gdf'].to_crs(crs)
+                crs_transform, img_dimensions = get_crs_transform_and_img_dimensions(roi_bbox_gdf_proj, px_res)
+
+        # out dict
+        dict_spatial_meta['roi_geom'] = dict_roi['roi_geom']
+        dict_spatial_meta['roi_featcol'] = dict_roi['roi_featcol']
+        dict_spatial_meta['roi_bbox'] = dict_roi['roi_bbox']
+        dict_spatial_meta['roi_bbox_gdf'] = dict_roi['roi_bbox_gdf']
+        dict_spatial_meta['crs'] = CRS
+        dict_spatial_meta['pix_res'] = px_res
+        dict_spatial_meta['crs_transform'] = crs_transform
+        dict_spatial_meta['img_dimensions'] = img_dimensions
+
+        return dict_spatial_meta
+
 
 # convert ImageCollection to Image
 def imgcol_to_img(imgcol, date_to_bandname=True):
@@ -1138,7 +1202,7 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
     global_start_date_int = int(global_start_date)
     global_end_date_int = int(global_end_date)
 
-    # Check validity of custom ranges against global settings
+    # check validity of custom ranges against global settings
     if FOLD_CUSTOM is not None:
         
         custom_years = generate_custom_ranges(FOLD_CUSTOM.get('year'), YEAR_MIN, YEAR_MAX)
@@ -1407,8 +1471,33 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
             time_start = calculate_time_start(YEAR_MIN, month)
             add_to_result_dict(None, [month], None, YEAR_MIN, YEAR_MAX, 0, 0, time_start, None, 0, None, None)
     
+    # no folding, but output is global input
     else:
-        return None
+        
+        # date range scenario
+        if DATE_MIN is not None and DATE_MAX is not None:
+            start_year = int(global_start_date[:4])
+            end_year = int(global_end_date[:4])
+            start_doy = (datetime.strptime(global_start_date, "%Y%m%d") - datetime(start_year, 1, 1)).days + 1
+            end_doy = (datetime.strptime(global_end_date, "%Y%m%d") - datetime(end_year, 1, 1)).days + 1
+            time_start = date_to_milliseconds(global_start_date)
+            result_dict[f"Y{start_year}-{end_year}_M00-00_D{start_doy:03d}-{end_doy:03d}"] = {
+                "year": list(range(start_year, end_year + 1)),
+                "month": None,
+                "doy": None,
+                "date": [format_date(global_start_date), format_date(global_end_date)],
+                "time_start": time_start,
+                "year_center": (start_year + end_year) // 2,
+                "year_offset": (end_year - start_year) // 2,
+                "doy_center": None,
+                "doy_offset": None
+            }
+        else:
+            years = generate_year_list((YEAR_MIN, YEAR_MAX))
+            year_center, year_offset = get_center_offset(YEAR_MIN, YEAR_MAX)
+            months = generate_month_list((MONTH_MIN, MONTH_MAX))
+            time_start = calculate_time_start(YEAR_MIN, MONTH_MIN)
+            add_to_result_dict(years, months, None, YEAR_MIN, YEAR_MAX, 0, 0, time_start, year_center, year_offset, None, None)
 
     return result_dict
 

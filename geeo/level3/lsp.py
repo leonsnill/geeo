@@ -155,8 +155,8 @@ def get_lsp_metrics(band='NDVI'):
         imgcol_window = imgcol_window.map(lambda x: x.addBands(x.select(band).multiply(10000).toInt64().rename(band), overwrite=True))  #.multiply(10000).toInt64()
 
         # get seasonal metrics: mean and std
-        ndvi_mean_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.mean()).rename('NDVI_mean_s'))
-        ndvi_stdDev_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.stdDev()).rename('NDVI_stdDev_s'))
+        feature_mean_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.mean()).rename(band+'_mean_s'))
+        feature_stdDev_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.stdDev()).rename(band+'_stdDev_s'))
 
         # 4.2 Cumulative sum
         def accumulate(image, acc):
@@ -242,7 +242,7 @@ def get_lsp_metrics(band='NDVI'):
         EOS = ee.Image(cumulative.select('EOS').reduce(ee.Reducer.max())).rename('EOS')
 
 
-        return img.addBands([SOS, SOP, MOS, EOP, EOS, Q_SOS, Q_SOP, Q_MOP, Q_EOP, Q_EOS, maxus, p100, ndvi_mean_s, ndvi_stdDev_s])
+        return img.addBands([SOS, SOP, MOS, EOP, EOS, Q_SOS, Q_SOP, Q_MOP, Q_EOP, Q_EOS, maxus, p100, feature_mean_s, feature_stdDev_s])
     return wrap
 
 
@@ -254,6 +254,9 @@ def lsp(imgcol, band='NDVI', adjust_seasonal=True, adjust_seasonal_max_delta_day
     if not year_min or not year_max:
         year_min = ee.Date(imgcol.aggregate_min('system:time_start')).get('year')
         year_max = ee.Date(imgcol.aggregate_max('system:time_start')).get('year')
+    else:
+        year_min = ee.Number(year_min)
+        year_max = ee.Number(year_max)
 
     # -----------------------------------------------------------------
     # (1) Long term phenological years / average vector

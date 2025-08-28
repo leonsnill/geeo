@@ -1,12 +1,18 @@
 import ee
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
-from geeo.misc.spacetime import create_roi, int_to_datestring, find_utm, wkt_dict, get_crs_transform_and_img_dimensions
+from geeo.misc.spacetime import get_spatial_metadata, int_to_datestring
 from geeo.level2.masking import mask_landsat, blu_filter, mask_landsat_erodil, mask_sentinel2_prob_erodil, \
                                 mask_sentinel2_cplus_erodil, mask_sentinel2_prob_shadow, mask_sentinel2_cplus, \
                                 mask_sentinel2_prob, mask_hls, mask_hls_erodil
 from geeo.level2.collection import get_landsat_imgcol, get_sentinel2_imgcol, get_copernicus_dem, get_hls, get_custom_imgcol
 from geeo.level2.indices import dict_features, unmix
 from geeo.level2.mosaic import mosaic_imgcol
+
+
+def apply_custom_formula(img, formula, band_map, new_band_name='custom'):
+    variables = {var: img.select([band]) for var, band in band_map.items()}
+    result = img.expression(formula, variables).rename(new_band_name)
+    return img.addBands(result)
 
 
 def run_level2(params):
@@ -59,6 +65,7 @@ def run_level2(params):
     ERODE_DILATE_SCALE = prm.get('ERODE_DILATE_SCALE')
     BLUE_MAX_MASKING = prm.get('BLUE_MAX_MASKING')
     FEATURES = prm.get('FEATURES')
+    CUSTOM_FORMULAS = prm.get('CUSTOM_FORMULAS')
     DEM = prm.get('DEM')
     # UNMX
     UMX = prm.get('UMX')
@@ -79,6 +86,7 @@ def run_level2(params):
     CRS_TRANSFORM = prm.get('CRS_TRANSFORM')
     IMG_DIMENSIONS = prm.get('IMG_DIMENSIONS')
 
+    # ------------------------------------------------------------------------------------------------------------------------
     # Time Of Interest (TOI)
     # get parameters
     # check if DATE_MIN and DATE_MAX are provided
@@ -93,54 +101,33 @@ def run_level2(params):
             ee.Filter.calendarRange(MONTH_MIN, MONTH_MAX, 'month'),
             ee.Filter.calendarRange(DOY_MIN, DOY_MAX, 'day_of_year')
             )
-    
-    # Region Of Interest (ROI)
-    dict_roi = create_roi(ROI, simplify_geom_to_bbox=ROI_SIMPLIFY_GEOM_TO_BBOX)
-    ROI_GEOM = dict_roi['roi_geom']
-    ROI_FEATCOL = dict_roi['roi_featcol']
-    ROI_BBOX = dict_roi['roi_bbox']
-    ROI_BBOX_GDF = dict_roi['roi_bbox_gdf']
+
+    # ------------------------------------------------------------------------------------------------------------------------
+    # Region Of Interest (ROI) and CRS
+
+    dict_spatial_metadata = get_spatial_metadata(roi=ROI, crs=CRS, px_res=PIX_RES, 
+                                                 crs_transform=CRS_TRANSFORM, img_dimensions=IMG_DIMENSIONS, 
+                                                 simplify_geom_to_bbox=ROI_SIMPLIFY_GEOM_TO_BBOX)
+
+    # get parameters into variables
+    ROI_GEOM = dict_spatial_metadata['roi_geom']
+    ROI_FEATCOL = dict_spatial_metadata['roi_featcol']
+    ROI_BBOX = dict_spatial_metadata['roi_bbox']
+    ROI_BBOX_GDF = dict_spatial_metadata['roi_bbox_gdf']
+    CRS = dict_spatial_metadata['crs']
+    PIX_RES = dict_spatial_metadata['pix_res']
+    IMG_DIMENSIONS = dict_spatial_metadata['img_dimensions']
+    CRS_TRANSFORM = dict_spatial_metadata['crs_transform']
+
+    # Update parameters
+    prm['CRS'] = CRS
+    prm['IMG_DIMENSIONS'] = IMG_DIMENSIONS
+    prm['CRS_TRANSFORM'] = CRS_TRANSFORM
+    prm['PIX_RES'] = PIX_RES
     prm['ROI_GEOM'] = ROI_GEOM
     prm['ROI_FEATCOL'] = ROI_FEATCOL
     prm['ROI_BBOX'] = ROI_BBOX
     prm['ROI_BBOX_GDF'] = ROI_BBOX_GDF
-
-    # CRS settings
-    # UTM finder
-    if CRS == 'UTM':
-        CRS = find_utm(ROI_GEOM)
-    elif CRS in wkt_dict.keys():
-        CRS = wkt_dict[CRS]
-    else:
-        CRS = CRS
-    prm['CRS'] = CRS
-    
-    # verify that EE accepts projection
-    try:
-        if ee.Projection(CRS).getInfo():
-            pass
-    except:
-        raise ValueError('CRS not supported by GEE. Use EPSG, WKT, UTM, or GLANCE continent identifier.')
-    
-    # explicitly specify CRS and IMG_DIMENSIONS, and CRS_TRANSFORM for export to match grid
-    # https://developers.google.com/earth-engine/guides/exporting_images
-    # "to get a block of pixels precisely aligned to another data source, specify dimensions, crs and crsTransform"
-    # Set CRS_TRANSFORM and IMG_DIMENSIONS based on CRS and ROI
-    if CRS == 'EPSG:4326':
-        # Geographic coordinates: pixel matching not supported
-        CRS_TRANSFORM = None
-        IMG_DIMENSIONS = None
-    else:
-        # Project ROI_BBOX_GDF to output CRS and compute transform/dimensions
-        roi_bbox_gdf_proj = prm['ROI_BBOX_GDF'].to_crs(CRS)
-        crs_transform, img_dimensions = get_crs_transform_and_img_dimensions(roi_bbox_gdf_proj, PIX_RES)
-        CRS_TRANSFORM = CRS_TRANSFORM or crs_transform
-        IMG_DIMENSIONS = IMG_DIMENSIONS or img_dimensions
-
-    # Update parameters
-    prm['IMG_DIMENSIONS'] = IMG_DIMENSIONS
-    prm['CRS_TRANSFORM'] = CRS_TRANSFORM
-    prm['PIX_RES'] = PIX_RES
 
     # ------------------------------------------------------------------------------------------------------------------------
     # ImageCollections
@@ -270,10 +257,18 @@ def run_level2(params):
     existing_feat = ['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2', 'RE1', 'RE2', 'RE3', 'RE4', 'LST', 'mask']
     additional_feat = [feat for feat in FEATURES if feat not in existing_feat]
     for feat in additional_feat:
-        imgcol = imgcol.map(dict_features[feat])  # dict_features from indices.py contains functions
+        if feat in dict_features:
+            imgcol = imgcol.map(dict_features[feat])  # dict_features from indices.py contains functions
+        elif CUSTOM_FORMULAS and feat in CUSTOM_FORMULAS:
+            formula = prm['CUSTOM_FORMULAS'][feat]['formula']
+            variable_map = prm['CUSTOM_FORMULAS'][feat]['variable_map']
+            imgcol = imgcol.map(lambda img: apply_custom_formula(img, formula, variable_map, feat))
+
     # subset to selected features
     imgcol = imgcol.select(FEATURES + ['mask'])
 
+    # DEM for now not easily addable, rather move to external export
+    '''
     # check if DEM is requested
     if DEM:
         # Digitial Elevation Model (DEM): Copernicus DEM
@@ -283,6 +278,8 @@ def run_level2(params):
     else:
         SPECIAL_FEATURES = []
     prm['SPECIAL_FEATURES'] = SPECIAL_FEATURES
+    '''
+    SPECIAL_FEATURES = []
 
     # UNMIXING (UMX)
     if UMX:

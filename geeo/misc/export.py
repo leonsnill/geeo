@@ -2,7 +2,7 @@
 import ee
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
 from geeo.misc.formatting import scale_and_dtype
-from geeo.misc.spacetime import imgcol_to_img, create_roi, reduction, get_time_dict_subwindows
+from geeo.misc.spacetime import imgcol_to_img, create_roi, reduction, get_time_dict_subwindows, get_spatial_metadata
 
 # ----------------------------------------------------------------------------
 
@@ -23,12 +23,55 @@ wkt_mollweide = ' \
     AUTHORITY["EPSG","54009"]]'
 
 
-def export_img(img, outname='GEE_IMG', out_location='Drive', out_dir=None, 
-               px_res=None, region=None, dimensions=None, crs=None, crsTransform=None, 
-               nodata=None, scale=1, fileDimensions=None, dtype='double', export_bandnames=False):
+def export_img(img, 
+               outname='GEE_IMG', out_location='Drive', out_dir=None, 
+               px_res=None, region=None, crs=None, crsTransform=None, dimensions=None, fileDimensions=None, 
+               adjust_crsTransform_to_region=True,  # get crsTransform using crs + px_res, and region
+               resampling_method=None,  # None (nearest neighbour), bilinear, bicubic
+               nodata=None, scale=1, dtype=None, export_bandnames=False):
+
+
+    # possible spatial configurations that export_img (might differ from Export.image.toDrive in assumptions, e.g.
+    # Export.image.toDrive may silently use WGS84 and scale=1000 if not specified)
+
+    # crs, px_res (scale), region (global crs transform used, region determines also dimensions of image)
+    # crs, crsTransform, region (grid matching, region determines also dimensions of image)
+    # crs, crsTransform, dimensions (grid matching, dimensions determine also region of image, crsTransforms informs corner coordinate of image)
+    
+    # crs, crsTransform (region required, because dimensions unknown; tries to infer region from img.geometry(); only works for bound image)
+
+    # if px_res, region, and crs are all None, get them from img
+    if px_res is None and crsTransform is None:
+        px_res = img.select(0).projection().nominalScale().getInfo()
+        
+    if region is None and crsTransform is None:    
+        region = img.geometry()
+    
+    if crs is None:
+        crs = img.select(0).projection()
+
+    # check crs
+    crs = ee.Projection(crs)
+    try:
+        if crs.getInfo():
+            pass
+    except:
+        raise ValueError('CRS not supported by GEE or could not be inferred from img. Use valid EPSG or WKT string.')
+
+    # resample if not None (Nearest Neighbour)
+    if resampling_method:
+        img = img.resample(resampling_method)
 
     # scaling, dtype and nodata
     img = scale_and_dtype(img, scale=scale, dtype=dtype, nodata=nodata)
+
+    # if crsTransform is None (and crs != 'EPSG:4326') 
+    # (user uses function separately to GEEO workflow, where it will be defined if not WGS84)
+    # # (roi, crs, px_res, crs_transform=None, img_dimensions=None, simplify_geom_to_bbox=True)   
+    if adjust_crsTransform_to_region and crsTransform is None:
+        dict_spatial_metadata = get_spatial_metadata(region, crs, px_res)
+        crsTransform = dict_spatial_metadata.get('crs_transform')
+        dimensions = dict_spatial_metadata.get('img_dimensions')
 
     # image dimensions and tiling: shardSize & fileDimensions
     # alternatively get fileDimensions from dimensions as an tuple of (width, height):
@@ -36,9 +79,14 @@ def export_img(img, outname='GEE_IMG', out_location='Drive', out_dir=None,
         dim_width, dim_height = tuple([int(x) for x in dimensions.split('x')])
         fileDimensions = ((round(dim_width/256)*256)+256, (round(dim_height/256)*256)+256)  # 256 is the shardSize
 
-    # if crsTransform is not None, set px_res to None
+    # if crsTransform is not None, set px_res and region to None
     if crsTransform is not None:
         px_res = None
+    
+    # now it uses crsTransform to align, but not based on ROI 
+    # (which might not match grid, but by precalculated dimensions using crsTransform as origin for image (not just global grid))
+    if crsTransform is not None and dimensions is not None:
+        region = None
 
     # export image
     if out_location == 'Drive':
@@ -195,6 +243,9 @@ def run_export(params):
     # TSM
     TSM = prm.get('TSM')
     EXPORT_TSM = prm.get('EXPORT_TSM')
+    # NVO
+    NVO = prm.get('NVO')
+    EXPORT_NVO = prm.get('EXPORT_NVO')
     # TSI
     TSI = prm.get('TSI')
     EXPORT_TSI = prm.get('EXPORT_TSI')
@@ -209,6 +260,8 @@ def run_export(params):
     # Export settings
     PIX_RES = prm.get('PIX_RES')
     CRS = prm.get('CRS')
+    IMG_DIMENSIONS = prm.get('IMG_DIMENSIONS')
+    CRS_TRANSFORM = prm.get('CRS_TRANSFORM')
     EXPORT_TABLE_TILE_SCALE = prm.get('EXPORT_TABLE_TILE_SCALE')
     DATATYPE = prm.get('DATATYPE')
     DATATYPE_SCALE = prm.get('DATATYPE_SCALE')
@@ -239,18 +292,6 @@ def run_export(params):
         REDUCE_REGIONS = True
     else:
         REDUCE_REGIONS = False
-    
-    # check output from level-2 and overwrite if necessary
-    IMG_DIMENSIONS = prm.get('IMG_DIMENSIONS')
-    CRS_TRANSFORM = prm.get('CRS_TRANSFORM')
-    if CRS != 'EPSG:4326':
-        ROI_BBOX = None
-        prm['ROI_BBOX'] = ROI_BBOX
-    else:
-        IMG_DIMENSIONS = None
-        CRS_TRANSFORM = None
-        prm['IMG_DIMENSIONS'] = IMG_DIMENSIONS
-        prm['CRS_TRANSFORM'] = CRS_TRANSFORM
     
     # ------------------------------------------------------------------------
     # check if export is requested in general
@@ -356,6 +397,19 @@ def run_export(params):
             else:
                 raise ValueError('TSM ImageCollection not calculated. Set *TSM: true* in the dict / .yml file.')
         
+        # --------------------------------------------------------------------
+        # NVO
+        if EXPORT_NVO:
+            if NVO:
+                print("---------------------------------------------------------")
+                print("      Exporting Number of Valid Observations (NVO)")
+                print("")
+                outfile = 'NVO_' + desc + time_desc + '_' + SATELLITE
+                print("->  "+outfile)
+                export_img(img=NVO, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER,
+                           px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
+                           scale=1, dtype='int16', export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+
         # --------------------------------------------------------------------
         # TSI
         if EXPORT_TSI:

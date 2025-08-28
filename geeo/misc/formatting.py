@@ -73,12 +73,12 @@ def scale_bands(bands, scale=1e4, offset=0.0):
     return wrap
 
 
-def scale_and_dtype(inp, scale=None, dtype=None, nodata=None):
+def scale_and_dtype(inp, scale=1, dtype=None, nodata=None):
 
     # if input is an image
     if isinstance(inp, ee.image.Image):
         # scale image
-        if scale:
+        if scale != 1:
             inp = inp.multiply(scale).set('system:index', inp.get('system:index'), 'system:time_start', inp.get('system:time_start'))
         # set nodata value
         if nodata:
