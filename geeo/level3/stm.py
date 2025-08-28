@@ -22,17 +22,17 @@ def folding_stm(imgcol, reducers):
         #img_first = imgcol_filtered.first()
         # calculate STM
         img_stm = ee.Image(imgcol_filtered.reduce(reducers))
-        img_stm_size = img_stm.bandNames().size()
-        return img_stm.set('system:index', fold_key, 'img_stm_size', img_stm_size)
+        img_size = img_stm.bandNames().size()
+        return img_stm.set('system:index', fold_key, 'img_size', img_size)
     return wrap
 
 def stm_iterList(prm, imgcol, reducers):
     fold_list = construct_calendarRange_filter(prm)
-    imgcol_stm = ee.ImageCollection.fromImages(
+    imgcol = ee.ImageCollection.fromImages(
         fold_list.map(folding_stm(imgcol, reducers))
     )
-    imgcol_stm = imgcol_stm.filter(ee.Filter.gt('img_stm_size', 0))
-    return imgcol_stm
+    imgcol = imgcol.filter(ee.Filter.gt('img_size', 0))
+    return imgcol
 
 
 # EOF

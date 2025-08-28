@@ -6,6 +6,7 @@ from geeo.level3.initimgcol import init_imgcol, init_and_join
 from geeo.level3.stm import stm_initimgcol, stm_iterList
 from geeo.level3.composite import composite_bap, composite_feature, composite_feature_invert, composite_nlcd
 from geeo.level3.lsp import lsp
+from geeo.level3.nvo import calc_nvo, nvo_iterList
 
 def run_level3(prm):
     """
@@ -92,22 +93,19 @@ def run_level3(prm):
         time_desc = time_start + '-' + time_end
 
     prm['TIME_DESC'] = time_desc    
-    
-
-    def calc_nvo(imgcol):
-        imgcol = imgcol.map(lambda img: img.addBands(
-            ee.Image(ee.Image.constant(ee.Number.parse(img.date().format('YYYYMMdd'))).int().rename('DATE')).updateMask(img.mask().reduce(ee.Reducer.min()))
-        ))
-        img_nvo = ee.Image(imgcol.select('DATE').reduce(ee.Reducer.countDistinctNonNull())).rename('NVO')
-        img = imgcol.first()
-        return img_nvo.copyProperties(source=img).set('system:time_start', img.get('system:time_start'))
 
     # NVO
     if NVO:
         TSS = prm.get('TSS')
         if NVO_FOLDING:
+            
+            # option 1) joining
             imgcol_tss = init_and_join(prm, imgcol_secondary=TSS.select(FEATURES))
             imgcol_nvo = imgcol_tss.map(lambda img: calc_nvo(ee.ImageCollection.fromImages(img.get('window1'))))
+            
+            # option 2) list iter
+            #imgcol_nvo= nvo_iterList(prm, TSS.select(FEATURES))
+            
             img_nvo = imgcol_to_img(imgcol_nvo, date_to_bandname=False)
         else:
             img_nvo = calc_nvo(TSS)
