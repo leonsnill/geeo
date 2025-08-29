@@ -113,7 +113,7 @@ def export_img(img,
             region=region,
             crs=crs,
             crsTransform=crsTransform,
-            assetId=out_dir,
+            assetId=out_dir+'/'+outname,
             maxPixels=1e13
         )
     else:
@@ -122,25 +122,17 @@ def export_img(img,
     out_image_process = ee.batch.Task.start(out_image)
 
     # separate bandname export
-    if export_bandnames:
+    if export_bandnames and out_location == 'Drive':
         bandnames = ee.FeatureCollection(
             ee.List(img.bandNames()).map(
             lambda x: ee.Feature(None, {'name': x})
             )
         )
-        if out_location == 'Drive':
-            out_table = ee.batch.Export.table.toDrive(collection=bandnames,
-                                            description=outname+'_bandnames',
-                                            fileFormat='CSV',
-                                            folder=out_dir)
-        elif out_location == 'Asset':
-            out_table = ee.batch.Export.table.toDrive(collection=bandnames,
-                                            description=outname+'_bandnames',
-                                            fileFormat='CSV',
-                                            folder=out_dir)
-        else:
-            raise ValueError('Invalid out_location')
-        
+        out_table = ee.batch.Export.table.toDrive(collection=bandnames,
+                                        description=outname+'_bandnames',
+                                        fileFormat='CSV',
+                                        folder=out_dir)
+
         out_table_process = ee.batch.Task.start(out_table)
     else:
         out_table_process = None
@@ -203,7 +195,7 @@ def export_table(img_or_imgcol, feature, reduceRegions=True, buffer=None, reduce
         out_table = ee.batch.Export.table.toAsset(
             collection=table, 
             description=outname,
-            assetId=out_dir
+            assetId=out_dir+'/'+outname
         )
     else:
         raise ValueError('Invalid out_location')
