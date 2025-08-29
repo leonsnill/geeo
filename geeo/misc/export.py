@@ -266,7 +266,7 @@ def run_export(params):
     EXPORT_TABLE = prm.get('EXPORT_TABLE')
     EXPORT_DESC = prm.get('EXPORT_DESC')
     EXPORT_LOCATION = prm.get('EXPORT_LOCATION')
-    EXPORT_FOLDER = prm.get('EXPORT_FOLDER')
+    EXPORT_DIRECTORY = prm.get('EXPORT_DIRECTORY')
     EXPORT_BANDNAMES_AS_CSV = prm.get('EXPORT_BANDNAMES_AS_CSV')
     EXPORT_TABLE_METHOD = prm.get('EXPORT_TABLE_METHOD')
     EXPORT_TABLE_BUFFER = prm.get('EXPORT_TABLE_BUFFER')
@@ -309,7 +309,7 @@ def run_export(params):
                         img = imgcol_to_img(TSS.select(feature), date_to_bandname=False)  # False, because duplicate feature+date exist in TSS 
                         outfile = 'TSS_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                         print("->  "+outfile)
-                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 
@@ -320,7 +320,7 @@ def run_export(params):
                         img_time_desc = img.date().format('YYYYMMdd').getInfo()
                         outfile = 'TSS_' + desc + img_time_desc + '_' + SATELLITE  # since this is a single date image "TSS" is a weird wording
                         print("->  "+outfile)
-                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                             px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                             scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 
@@ -329,14 +329,14 @@ def run_export(params):
                     img = imgcol_to_img(TSS, date_to_bandname=False) # False, because duplicate feature+date exist in TSS 
                     outfile = 'TSS_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
-                    export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                    export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                             px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                             scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
             if EXPORT_TABLE:
                 outfile = 'TSS_' + desc + time_desc + '_' + SATELLITE
                 print("->  "+outfile)
                 export_table(img_or_imgcol=TSS, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
-                            tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
+                            tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, px_res=PIX_RES, 
                             nodata=NODATA_VALUE, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=FEATURES, 
                             scale=DATATYPE_SCALE, dtype=DATATYPE)
             print("")
@@ -359,7 +359,7 @@ def run_export(params):
                             img = imgcol_to_img(TSM.select(feature))
                             outfile = 'TSM_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -370,7 +370,7 @@ def run_export(params):
                             img_time_desc = img.date().format('YYYYMMdd').getInfo()
                             outfile = 'TSM_' + desc + img_time_desc + '_' + SATELLITE
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -378,14 +378,14 @@ def run_export(params):
                         img = imgcol_to_img(TSM)
                         outfile = 'TSM_' + desc + time_desc + '_' + SATELLITE
                         print("->  "+outfile)
-                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 if EXPORT_TABLE:
                     outfile = 'TSM_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
                     export_table(img_or_imgcol=TSM, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
-                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
+                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, px_res=PIX_RES, 
                                 nodata=NODATA_VALUE, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=FEATURES, 
                                 scale=DATATYPE_SCALE, dtype=DATATYPE)
                 print("")
@@ -402,7 +402,7 @@ def run_export(params):
                 print("")
                 outfile = 'NVO_' + desc + time_desc + '_' + SATELLITE
                 print("->  "+outfile)
-                export_img(img=NVO, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER,
+                export_img(img=NVO, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY,
                            px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                            scale=1, dtype='int16', export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 print("")
@@ -425,7 +425,7 @@ def run_export(params):
                             img = imgcol_to_img(TSI.select(feature))
                             outfile = 'TSI_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -436,7 +436,7 @@ def run_export(params):
                             img_time_desc = img.date().format('YYYYMMdd').getInfo()
                             outfile = 'TSI_' + desc + img_time_desc + '_' + SATELLITE
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -444,14 +444,14 @@ def run_export(params):
                         img = imgcol_to_img(TSI)
                         outfile = 'TSI_' + desc + time_desc + '_' + SATELLITE
                         print("->  "+outfile)
-                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 if EXPORT_TABLE:
                     outfile = 'TSI_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
                     export_table(img_or_imgcol=TSI, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
-                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
+                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, px_res=PIX_RES, 
                                 nodata=NODATA_VALUE, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=FEATURES, 
                                 scale=DATATYPE_SCALE, dtype=DATATYPE)
                 print("")
@@ -479,7 +479,7 @@ def run_export(params):
                                 img = STM.select(features_stm)
                             outfile = 'STM_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -494,7 +494,7 @@ def run_export(params):
                             img_time_desc = list(time_dict_subwindows.keys())[i]
                             outfile = 'STM_' + desc + img_time_desc + '_' + SATELLITE
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -505,7 +505,7 @@ def run_export(params):
                             img = STM
                         outfile = 'STM_' + desc + time_desc + '_' + SATELLITE
                         print("->  "+outfile)
-                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 if EXPORT_TABLE:
@@ -514,7 +514,7 @@ def run_export(params):
                     outfile = 'STM_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
                     export_table(img_or_imgcol=STM, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
-                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
+                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, px_res=PIX_RES, 
                                 nodata=NODATA_VALUE, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=features_stm, 
                                 scale=DATATYPE_SCALE, dtype=DATATYPE)
                 print("")
@@ -537,7 +537,7 @@ def run_export(params):
                             img = imgcol_to_img(PBC.select(feature))
                             outfile = 'PBC_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                     px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                     scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -548,7 +548,7 @@ def run_export(params):
                             img_time_desc = img.get('system:index').getInfo()
                             outfile = 'PBC_' + desc + img_time_desc + '_' + SATELLITE
                             print("->  "+outfile)
-                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
@@ -556,14 +556,14 @@ def run_export(params):
                         img = imgcol_to_img(PBC)
                         outfile = 'PBC_' + desc + time_desc + '_' + SATELLITE
                         print("->  "+outfile)
-                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                        export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                                 px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 if EXPORT_TABLE:
                     outfile = 'PBC_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
                     export_table(img_or_imgcol=PBC, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
-                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
+                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, px_res=PIX_RES, 
                                 nodata=NODATA_VALUE, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=FEATURES, 
                                 scale=DATATYPE_SCALE, dtype=DATATYPE)
                 print("")
@@ -583,7 +583,7 @@ def run_export(params):
                     outfile = 'LSP_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
                     img = prm['LSP_IMG']
-                    export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                    export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
                             px_res=PIX_RES, crs=CRS, nodata=-9999, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                             scale=1, dtype='int16', export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                 if EXPORT_TABLE:
@@ -591,7 +591,7 @@ def run_export(params):
                     print("->  "+outfile)
                     imgcol = prm['LSP']
                     export_table(img_or_imgcol=imgcol, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
-                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
+                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, px_res=PIX_RES, 
                                 nodata=-9999, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=FEATURES, 
                                 scale=1, dtype='int16')
                 print("")
