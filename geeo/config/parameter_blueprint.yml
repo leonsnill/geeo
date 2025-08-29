@@ -267,7 +267,7 @@ RESAMPLING_METHOD: null                  # null (nearest neighbour), bilinear, b
 
 DATATYPE: int16                          # uint8, int8, uint16, int16, uint32, int32, float, double
 DATATYPE_SCALE: 10000                    # Scale factor (check DATATYPE)
-NODATA_VALUE: -9999                      # Output no data value
+NODATA_VALUE: -9999                      # Output no data value (for certain exports like LSP not used)
 
 # -------------------------------------------------------------------------------
 #                            PRODUCTS TO EXPORT
@@ -282,6 +282,7 @@ EXPORT_NVO: false                        # Export NVO
 EXPORT_TSI: false                        # Export TSI 
 EXPORT_STM: false                        # Export STM 
 EXPORT_PBC: false                        # Export PBC
+EXPORT_LSP: false                        # Export LSP
 
 # -------------------------------------------------------------------------------
 #                           GENERAL EXPORT SETTINGS

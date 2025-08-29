@@ -1,5 +1,6 @@
 import ee
 import math
+from geeo.misc.spacetime import imgcol_to_img
 
 # get DOY as band
 def add_doyband(img):
@@ -14,10 +15,18 @@ def add_mask_band(img):
     return img.addBands(mask_band)
 
 milli_year = 365.2425*1000*60*60*24  # max difference = 1 year
+milli_day = 1000*60*60*24
 
 def add_milliband(img):
     millis =  ee.Image(img.date().millis()).rename('millis')
     return img.addBands(millis.toInt64())
+
+# convert t_start_adj and t_end_adj from milliseconds to days since 1970-01-01
+def convert_milli_bands_to_days(bands):
+    def wrap(img):
+        bands_days = img.select(bands).divide(milli_day).int32()
+        return img.addBands(bands_days, overwrite=True)
+    return wrap
 
 # DOY to radians
 def doy_to_radians(img):
@@ -155,8 +164,8 @@ def get_lsp_metrics(band='NDVI'):
         imgcol_window = imgcol_window.map(lambda x: x.addBands(x.select(band).multiply(10000).toInt64().rename(band), overwrite=True))  #.multiply(10000).toInt64()
 
         # get seasonal metrics: mean and std
-        feature_mean_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.mean()).rename(band+'_mean_s'))
-        feature_stdDev_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.stdDev()).rename(band+'_stdDev_s'))
+        #feature_mean_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.mean()).rename(band+'_mean_s'))
+        #feature_stdDev_s = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.stdDev()).rename(band+'_stdDev_s'))
 
         # 4.2 Cumulative sum
         def accumulate(image, acc):
@@ -201,7 +210,7 @@ def get_lsp_metrics(band='NDVI'):
         Q_MOP = ee.Image(cumulative.select(band).reduce(ee.Reducer.percentile([50]))).rename('Q_MOP')
         Q_EOP = ee.Image(cumulative.select(band).reduce(ee.Reducer.percentile([75]))).rename('Q_EOP')
         Q_EOS = ee.Image(cumulative.select(band).reduce(ee.Reducer.percentile([80]))).rename('Q_EOS')
-        maxus = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.max())).rename('MAX')
+        FEATURE_MAX = ee.Image(imgcol_window.select(band).reduce(ee.Reducer.max())).rename(band+'_MAX')
 
         # get DOYs at percentiles
         def perc_diff(img_eq):
@@ -242,13 +251,13 @@ def get_lsp_metrics(band='NDVI'):
         EOS = ee.Image(cumulative.select('EOS').reduce(ee.Reducer.max())).rename('EOS')
 
 
-        return img.addBands([SOS, SOP, MOS, EOP, EOS, Q_SOS, Q_SOP, Q_MOP, Q_EOP, Q_EOS, maxus, p100, feature_mean_s, feature_stdDev_s])
+        return img.addBands([SOS, SOP, MOS, EOP, EOS, Q_SOS, Q_SOP, Q_MOP, Q_EOP, Q_EOS, FEATURE_MAX, p100])
     return wrap
 
 
 # wrap processing into one function
 def lsp(imgcol, band='NDVI', adjust_seasonal=True, adjust_seasonal_max_delta_days=40,
-        year_min=None, year_max=None):
+        year_min=None, year_max=None, return_imgcol=False):
 
     # get temporal window
     if not year_min or not year_max:
@@ -340,11 +349,63 @@ def lsp(imgcol, band='NDVI', adjust_seasonal=True, adjust_seasonal_max_delta_day
         get_lsp_metrics(band=band)
     )
 
-    '''
-    TO-DOs
-    - check unmask in cumsum function if TSI has gaps
-    - check what happens when "band" has negative values; -> sign for positive for cumulative sum?
-    '''
+    # ---------------------------------------------------------------
+    # format for output
 
-    return imgcol_pheno
+    # global bands (always available, and only needed once)
+    lsp_global_bands = [
+        'RAVG',  # long-term (entire time series) average vector to peak (DOY)
+        'THETA',  # long-term (entire time series) average vector to through (DOY)
+        'valid_firstyear'  # binary; 1 if first year has valid LSP metrics (then last year has not) for that pixel
+                           # 0 means that the valid LSP metrics start at y+1 and the last year has valid LSP metrics
+                           # E.g. time series from 2020-2025
+                           # 0 means that valid LSP metrics were calculated for 2021-2025
+                           # 1 means that valid LSP metrics were calculated for 2020-2024
+    ]
+    # seasonal bands (unadjusted season)
+    lsp_seasonal = [
+        't_start',
+        't_end',
+        'SOS',
+        'SOP',
+        'MOS',
+        'EOP',
+        'EOS'
+    ]
+    # seasonal adjusted bands
+    lsp_seasonal_adj = [
+        'THETA_s',
+        'RAVG_s',
+        't_start_adj',
+        't_end_adj'
+    ]
 
+    if adjust_seasonal:
+        imgcol_pheno = imgcol_pheno.map(convert_milli_bands_to_days(['t_start', 't_end', 't_start_adj', 't_end_adj']))
+        output_bands = lsp_seasonal_adj + lsp_seasonal
+    else:
+        imgcol_pheno = imgcol_pheno.map(convert_milli_bands_to_days(['t_start', 't_end']))
+        output_bands = lsp_seasonal
+
+
+    if return_imgcol:
+        imgcol_pheno = imgcol_pheno.select(output_bands + lsp_global_bands)
+        return imgcol_pheno
+    
+    else:
+        # convert seasonal LSP to image
+        img_lsp = imgcol_to_img(imgcol_pheno.select(output_bands), date_format='YYYY')
+
+        # long term average vectors and valid first year flag are global and thus only needed once
+        img_global_lsp = ee.Image(imgcol_pheno.first().select(lsp_global_bands))
+
+        img_lsp = img_lsp.addBands(img_global_lsp)
+
+        return img_lsp
+
+'''
+TO-DOs
+- check unmask in cumsum function if TSI has gaps
+- check what happens when "band" has negative values; -> sign for positive for cumulative sum?
+'''
+# EOF

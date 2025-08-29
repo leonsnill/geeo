@@ -256,6 +256,10 @@ def run_export(params):
     # PBC
     PBC = prm.get('PBC')
     EXPORT_PBC = prm.get('EXPORT_PBC')
+    # LSP
+    LSP = prm.get('LSP')
+    LSP_IMG = prm.get('LSP_IMG')
+    EXPORT_LSP = prm.get('EXPORT_LSP')
     # TREND
     # Export settings
     PIX_RES = prm.get('PIX_RES')
@@ -409,6 +413,10 @@ def run_export(params):
                 export_img(img=NVO, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER,
                            px_res=PIX_RES, crs=CRS, nodata=NODATA_VALUE, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
                            scale=1, dtype='int16', export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                print("")
+                print("---------------------------------------------------------")
+            else:
+                raise ValueError('NVO Image not calculated. Set *NVO: true* in the dict / .yml file.')
 
         # --------------------------------------------------------------------
         # TSI
@@ -571,6 +579,33 @@ def run_export(params):
             else:
                 raise ValueError('PBC ImageCollection not calculated. Set PBC method in the dict / .yml file.')
 
+        # --------------------------------------------------------------------
+        # LSP
+        if EXPORT_LSP:
+            # check if LSP exists
+            if LSP:
+                print("---------------------------------------------------------")
+                print("        Exporting Land Surface Phenology (LSP)")
+                print("")
+                if EXPORT_IMAGE:
+                    outfile = 'LSP_' + desc + time_desc + '_' + SATELLITE
+                    print("->  "+outfile)
+                    img = prm['LSP_IMG']
+                    export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, 
+                            px_res=PIX_RES, crs=CRS, nodata=-9999, crsTransform=CRS_TRANSFORM, dimensions=IMG_DIMENSIONS,
+                            scale=1, dtype='int16', export_bandnames=EXPORT_BANDNAMES_AS_CSV)
+                if EXPORT_TABLE:
+                    outfile = 'LSP_' + desc + time_desc + '_' + SATELLITE
+                    print("->  "+outfile)
+                    imgcol = prm['LSP']
+                    export_table(img_or_imgcol=imgcol, feature=ROI_FEATCOL, reduceRegions=REDUCE_REGIONS, buffer=EXPORT_TABLE_BUFFER, reducer=EXPORT_TABLE_REDUCER, 
+                                tileScale=EXPORT_TABLE_TILE_SCALE, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_FOLDER, px_res=PIX_RES, 
+                                nodata=-9999, drop_nodata=EXPORT_TABLE_DROP_NODATA, features=FEATURES, 
+                                scale=1, dtype='int16')
+                print("")
+                print("---------------------------------------------------------")       
+            else:
+                raise ValueError('LSP ImageCollection not calculated. Set LSP method in the dict / .yml file.')
 
     # return dict
     return prm

@@ -443,10 +443,10 @@ def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=No
 
 
 # convert ImageCollection to Image
-def imgcol_to_img(imgcol, date_to_bandname=True):
+def imgcol_to_img(imgcol, date_to_bandname=True, date_format='YYYYMMdd'):
     img = ee.Image(imgcol.toBands())
     if date_to_bandname:
-        bandnames = get_dates_with_bands_str(imgcol)
+        bandnames = get_dates_with_bands_str(imgcol, format=date_format)
         img = img.rename(bandnames)
     return img
 
@@ -1043,38 +1043,34 @@ def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=Non
 # -------------------------------------------------------------------------------
 def int_to_datestring(x):
     date_str = str(x)
-    # Parse the string to a datetime object
     date_obj = datetime.strptime(date_str, '%Y%m%d')
-    # Format the datetime object to the desired string format
     formatted_date = date_obj.strftime('%Y-%m-%d')
     return formatted_date
+
 
 def add_timeband(img):
     img_time = ee.Image.constant(img.get('system:time_start')).updateMask(img.select(0).mask())
     return img.addBands(img_time.rename('time')).toFloat()
 
+
 # client-side function
 def days_to_milli(days):
     return days*1000*60*60*24
 
+
 # get acquisition dates + bands of images as ee.List
 def get_dates_with_bands_str(imgcol, format='YYYYMMdd'):
     def format_date_and_bands(img):
-        # Get the date in the specified format
         date_str = img.date().format(format)
-        # Get the list of band names
         band_names = img.bandNames()
-        # Combine the date with each band name
         date_band_strs = band_names.map(lambda band: ee.String(band).cat('_').cat(date_str))
-        # Return the combined strings as a feature collection
         return ee.Feature(None, {'date_band_strs': date_band_strs})
-
-    # Map over the image collection to get the formatted date and band strings
+    # map over imgcol to get formatted date and band strings
     features = imgcol.map(format_date_and_bands)
-    
-    # Extract the list of date_band_strs from the features
+    # extract list of date_band_strs from features
     date_band_strs = features.aggregate_array('date_band_strs').flatten()
     return ee.List(date_band_strs)
+
 
 def imgcol_dates_to_featcol(imgcol, format='YYYYMMdd'):
     dates = imgcol.map(
@@ -1105,6 +1101,7 @@ def generate_key(year_range, month_range, doy_range):
     month_part = f"M{month_range[0]:02d}-{month_range[1]:02d}"
     doy_part = f"D{doy_range[0]:03d}-{doy_range[1]:03d}"
     return f"{year_part}_{month_part}_{doy_part}"
+
 
 # generate folds for folding using ee.Filter.listContains() and subsequent ee.Join.saveAll()
 def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN, DOY_MAX, DATE_MIN, DATE_MAX, FOLD_YEAR, FOLD_MONTH, FOLD_CUSTOM):
@@ -1141,7 +1138,6 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
 
     def calculate_time_start(year, month=1, day=1, doy=None):
         if doy is not None:
-            # Convert DOY to month and day
             date = datetime(year, 1, 1) + timedelta(days=doy - 1)
             month = date.month
             day = date.day
@@ -1180,7 +1176,7 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
             if start < global_min or end > global_max:
                 raise ValueError(f"Custom {unit_name} range [{start}, {end}] is outside the global {unit_name} range [{global_min}, {global_max}].")
 
-    # Compute global date range if DATE_MIN or DATE_MAX are not specified
+    # compute global date range if DATE_MIN or DATE_MAX are not specified
     if DATE_MIN is None:
         global_start_date = f"{YEAR_MIN:04d}{MONTH_MIN:02d}01"  # Start from the first day of the month
     else:
@@ -1189,7 +1185,6 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
         MONTH_MIN, MONTH_MAX = int(DATE_MIN[4:6]), int(DATE_MAX[4:6])
     
     if DATE_MAX is None:
-        # Calculate the last day of MONTH_MAX in YEAR_MAX
         if MONTH_MAX == 12:
             global_end_date = f"{YEAR_MAX:04d}{MONTH_MAX:02d}31"
         else:
@@ -1228,10 +1223,10 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
         custom_doys = None
         custom_date_ranges = None
 
-    # Initialize the result dictionary
+    # init the resulting dict
     result_dict = {}
 
-    # Helper function to add an entry to the result_dict
+    # helper to construct dict
     def add_to_result_dict(years, months, doys, start_year, end_year, start_doy, end_doy, time_start, year_center, year_offset, doy_center, doy_offset):
         year_str = f"{years[0]}-{years[-1]}" if years else f'{start_year}-{end_year}' #"0000-0000"
         month_str = f"{months[0]:02d}-{months[-1]:02d}" if months else '01-12'
@@ -1249,7 +1244,7 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
             "doy_offset": doy_offset
         }
 
-    # Helper function to get center and offset values
+    # helper to get center and offset values
     def get_center_offset(range_start, range_end):
         center = (range_start + range_end) // 2
         offset = (range_end - range_start) // 2
@@ -1263,7 +1258,6 @@ def construct_time_subwindows(YEAR_MIN, YEAR_MAX, MONTH_MIN, MONTH_MAX, DOY_MIN,
             start_year = int(start_date_str[:4])
             end_year = int(end_date_str[:4])
             
-            # Calculate DOY for start and end dates
             start_doy = (datetime.strptime(start_date_str, "%Y%m%d") - datetime(start_year, 1, 1)).days + 1
             end_doy = (datetime.strptime(end_date_str, "%Y%m%d") - datetime(end_year, 1, 1)).days + 1
             
