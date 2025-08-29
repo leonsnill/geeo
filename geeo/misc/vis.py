@@ -116,7 +116,6 @@ class VisMap:
 
     def add_ee_layer(self, ee_object, vis_params=None, name='Image', opacity=1.0, cmap=None, roi=None):
         if vis_params is None:
-            # If visualization parameters are not provided, calculate them using percentiles
             if roi is None:
                 roi_geometry = ee_object.geometry()
             elif isinstance(roi, ee.Geometry):
@@ -126,11 +125,20 @@ class VisMap:
             vis_params = self.get_percentile_min_max(ee_object, roi_geometry)
         
         if cmap:
-            # If a colormap is provided, apply it to the visualization parameters
             color_ramp = self.create_color_ramp(cmap)
             vis_params['palette'] = color_ramp
         
         map_id_dict = ee.Image(ee_object).getMapId(vis_params)
+        tile_layer = TileLayer(
+            url=map_id_dict['tile_fetcher'].url_format,
+            attribution='Google Earth Engine',
+            name=name,
+            opacity=opacity
+        )
+        self.map.add_layer(tile_layer)
+    
+    def add_ee_featurecollection_layer(self, ee_fc, name='FeatureCollection', opacity=1.0):
+        map_id_dict = ee_fc.getMapId({})
         tile_layer = TileLayer(
             url=map_id_dict['tile_fetcher'].url_format,
             attribution='Google Earth Engine',
@@ -222,8 +230,14 @@ class VisMap:
         """Displays the map."""
         display(self.map)
 
-    def add(self, ee_image, vis_params=None, name='New Layer', opacity=1.0, cmap=None, roi=None):
-        """Adds a new Earth Engine image layer to the existing map."""
-        self.add_ee_layer(ee_image, vis_params, name, opacity, cmap, roi)
+    def add(self, ee_object, name='New Layer', opacity=1.0, cmap=None, roi=None):
+        if isinstance(ee_object, ee.Image):
+            self.add_ee_layer(ee_object, None, name, opacity, cmap, roi)
+        elif isinstance(ee_object, ee.FeatureCollection):
+            self.add_ee_featurecollection_layer(
+                ee_object, name, opacity
+            )
+        else:
+            raise TypeError("ee_object must be an ee.Image or ee.FeatureCollection")
 
 # EOF
