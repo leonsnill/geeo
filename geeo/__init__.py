@@ -33,7 +33,7 @@ from geeo.level3.level3 import run_level3
 from geeo.misc.export import run_export
 
 # extended functions outside main functionality
-from geeo.misc.spacetime import vector_to_chunks, create_glance_tiles, create_tiles, getRegion
+from geeo.misc.spacetime import vector_to_chunks, create_glance_tiles, create_tiles, getRegion, create_roi
 from .misc.vis import VisMap, plot_rbf_interpolation, plot_getRegion
 from geeo.level3.lsp import lsp
 from geeo.misc.postprocess import process_ee_files
@@ -61,3 +61,4 @@ setattr(sys.modules[__name__], 'load_blueprint', load_blueprint)
 setattr(sys.modules[__name__], 'tsi_rbf_array', tsi_rbf_array)
 setattr(sys.modules[__name__], 'tsi_rbf_tif', tsi_rbf_tif)
 setattr(sys.modules[__name__], 'tsi_rbf_df', tsi_rbf_df)
+setattr(sys.modules[__name__], 'create_roi', create_roi)
