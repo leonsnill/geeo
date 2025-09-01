@@ -284,11 +284,13 @@ def rbf_interpolation_df(
     sigma2=32, win2=32,
     sigma3=64, win3=64,
     bw1=4, bw2=8,
+    nodata_value=-9999,
     drop_all_nan=True
 ):
     out_frames = []
     for g, gdf in df.groupby(group_col):
         sub = gdf[value_cols].copy()
+        sub = sub.replace(nodata_value, np.nan)
         if drop_all_nan:
             sub = sub.loc[sub.notna().any(axis=1)]
         if sub.empty:
@@ -323,7 +325,8 @@ def rbf_time_series_array(data, band_dates, step_days=16,
                           sigma2=32, win2=32,
                           sigma3=64, win3=64,
                           bw1=4, bw2=8,
-                          target_times=None
+                          target_times=None,
+                          nodata_value=-9999,
 ):
     if isinstance(band_dates[0], str):
         times = np.array([np.datetime64(datetime.strptime(d, "%Y%m%d")) for d in band_dates])
@@ -342,7 +345,10 @@ def rbf_time_series_array(data, band_dates, step_days=16,
         w, m = _rbf_build_weights(times, target_times, sigma, win)
         weights_list.append(w)
         mask_list.append(m)
-    out = _rbf_interp_cube(data.astype('float32'), weights_list, mask_list, mode, bw1, bw2)  # (T,y,x)
+    if nodata_value is not None:
+        data = data.astype('float32')
+        data = np.where(data == nodata_value, np.nan, data)
+    out = _rbf_interp_cube(data, weights_list, mask_list, mode, bw1, bw2)  # (T,y,x)
     new_dates = [np.datetime_as_string(t, unit='D').replace('-','') for t in target_times]
     return out, new_dates
 
@@ -409,7 +415,8 @@ def rbf_time_series_tif_gdal(src_path, dst_path=None,
                              chunk_x=None, chunk_y=None,
                              creation_options=None,
                              n_cores=1,
-                             in_prefix=None, out_prefix=None):
+                             in_prefix=None, out_prefix=None,
+                             nodata_value=None):
 
     src = gdal.Open(src_path, gdal.GA_ReadOnly)
     band_indices, times, detected_prefix = _parse_dates_from_gdal(src, prefix=in_prefix)
@@ -456,7 +463,10 @@ def rbf_time_series_tif_gdal(src_path, dst_path=None,
     )
     out_ds.SetGeoTransform(src.GetGeoTransform())
     out_ds.SetProjection(src.GetProjection())
-    nodata = src.GetRasterBand(1).GetNoDataValue()
+
+    if nodata_value is None:
+        nodata_value = src.GetRasterBand(1).GetNoDataValue()
+
     # process
     if n_cores <= 1:
         for xoff, yoff, xwin, ywin in _iter_windows(xsize, ysize, chunk_x, chunk_y):
@@ -465,8 +475,8 @@ def rbf_time_series_tif_gdal(src_path, dst_path=None,
                 a = src.GetRasterBand(bi).ReadAsArray(xoff, yoff, xwin, ywin).astype('float32', copy=False)
                 arr_list.append(a)
             cube = np.stack(arr_list, axis=0)
-            if nodata is not None:
-                cube[cube == nodata] = np.nan
+            if nodata_value is not None:
+                cube[cube == nodata_value] = np.nan
             out_block = _rbf_interp_cube(cube, weights_list, mask_list, mode, bw1, bw2)
             for ti in range(out_block.shape[0]):
                 out_ds.GetRasterBand(ti+1).WriteArray(out_block[ti], xoff, yoff)
@@ -475,24 +485,23 @@ def rbf_time_series_tif_gdal(src_path, dst_path=None,
         tasks = []
         with ProcessPoolExecutor(max_workers=n_cores) as ex:
             for xoff, yoff, xwin, ywin in _iter_windows(xsize, ysize, chunk_x, chunk_y):
-                args = (src_path, band_indices, xoff, yoff, xwin, ywin, nodata,
+                args = (src_path, band_indices, xoff, yoff, xwin, ywin, nodata_value,
                         weights_list, mask_list, mode, bw1, bw2)
                 tasks.append(ex.submit(_process_block_worker, args))
             for fut in as_completed(tasks):
                 xoff, yoff, out_block = fut.result()
                 for ti in range(out_block.shape[0]):
                     out_ds.GetRasterBand(ti+1).WriteArray(out_block[ti], xoff, yoff)
+    if nodata_value is None:
+        nodata_value = np.nan
     for i, t in enumerate(target_times, start=1):
         ts = np.datetime_as_string(t, unit='D').replace('-','')
         b = out_ds.GetRasterBand(i)
         b.SetDescription(f'{out_prefix}_{ts}')
-        b.SetNoDataValue(np.nan)
+        b.SetNoDataValue(nodata_value)
     out_ds.FlushCache()
     out_ds = None
     src = None
     return dst_path
-
-
-
 
 # EOF
