@@ -12,13 +12,11 @@ except Exception as e:
     ee.Initialize()
 '''
     
-# Define lazy imports for submodules
 misc = LazyLoader('geeo.misc')
 level2 = LazyLoader('geeo.level2')
 level3 = LazyLoader('geeo.level3')
 level4 = LazyLoader('geeo.level4')
 
-# Define what should be available when using 'from geeo import *'
 __all__ = [
     "misc",
     "level2",
@@ -26,22 +24,25 @@ __all__ = [
     "level4"
 ]
 
+# main modules that should be accessible from top
 import sys
-from .utils import create_parameter_file, calculate_image_size, load_parameters, merge_parameters, rbf_interpolation
-from .misc.vis import VisMap, plot_rbf_interpolation, plot_getRegion
+from .utils import create_parameter_file, calculate_image_size, load_parameters, merge_parameters, load_blueprint
 from .main import run_param
 from geeo.level2.level2 import run_level2
 from geeo.level3.level3 import run_level3
-from geeo.level3.lsp import lsp
 from geeo.misc.export import run_export
+
+# extended functions outside main functionality
 from geeo.misc.spacetime import vector_to_chunks, create_glance_tiles, create_tiles, getRegion
+from .misc.vis import VisMap, plot_rbf_interpolation, plot_getRegion
+from geeo.level3.lsp import lsp
 from geeo.misc.postprocess import process_ee_files
+from geeo.level3.interpolation import tsi_rbf_array, tsi_rbf_tif, tsi_rbf_df
 
 # set attributes for top-level access
 setattr(sys.modules[__name__], 'create_parameter_file', create_parameter_file)
 setattr(sys.modules[__name__], 'load_parameters', load_parameters)
 setattr(sys.modules[__name__], 'merge_parameters', merge_parameters)
-setattr(sys.modules[__name__], 'rbf_interpolation', rbf_interpolation)
 setattr(sys.modules[__name__], 'VisMap', VisMap)
 setattr(sys.modules[__name__], 'plot_rbf_interpolation', plot_rbf_interpolation)
 setattr(sys.modules[__name__], 'plot_getRegion', plot_getRegion)
@@ -56,4 +57,7 @@ setattr(sys.modules[__name__], 'create_glance_tiles', create_glance_tiles)
 setattr(sys.modules[__name__], 'create_tiles', create_tiles)
 setattr(sys.modules[__name__], 'getRegion', getRegion)
 setattr(sys.modules[__name__], 'calculate_image_size', calculate_image_size)
-
+setattr(sys.modules[__name__], 'load_blueprint', load_blueprint)
+setattr(sys.modules[__name__], 'tsi_rbf_array', tsi_rbf_array)
+setattr(sys.modules[__name__], 'tsi_rbf_tif', tsi_rbf_tif)
+setattr(sys.modules[__name__], 'tsi_rbf_df', tsi_rbf_df)
