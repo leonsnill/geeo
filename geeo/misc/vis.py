@@ -52,7 +52,7 @@ def plot_rbf_interpolation(df, interp, value_col='NDVI', observed=False, ax=None
         fig, ax = plt.subplots(figsize=(20, 5))
     if observed:
         ax.plot(df.index, df[value_col], 'kx', label='Observed')
-    ax.plot(interp.index, interp['rbf_interp'], label=label, **kwargs)
+    ax.plot(interp.index, interp[value_col], label=label, **kwargs)
     ax.set_title('RBF Interpolation')
     ax.set_xlabel('Date')
     ax.set_ylabel('Value')
