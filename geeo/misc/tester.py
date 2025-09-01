@@ -31,26 +31,43 @@ prm = {
     'EXPORT_NVO': False
 }
 
-
-
+# init
 default_params = load_blueprint()
 prm = merge_parameters(default_params, prm)
 
-
+# lvl2
 lvl2 = geeo.run_level2(prm)
 TSS = lvl2['TSS']
-
 CIC = lvl2.get('CIC')
 TSM = lvl2.get('TSM')
 
+# lvl3
 lvl3 = geeo.run_level3(lvl2)
+PBC = lvl3.get('PBC')
+LSP = lvl3.get('LSP')
+NVO = lvl3.get('NVO')
+
+# export
 export = geeo.run_export(lvl3)
 
 
+# ---------------------------------------------------------------------------------------------------------------
 
-PBC = lvl3.get('PBC')
-#PBC
+import ee
+ee.Initialize()
+from geeo.level3.interpolation import rbf_interpolation_df, rbf_time_series_array, rbf_time_series_tif_gdal
 
-LSP = lvl3.get('LSP')
+inp_file = ''
 
-NVO = lvl3.get('NVO')
+test = rbf_time_series_tif_gdal(
+    src_path=inp_file,
+    step_days=12,
+    mode='2RBF',
+    sigma1=16, win1=16,
+    sigma2=32, win2=48,
+    sigma3=64, win3=64,
+    bw1=4, bw2=8,
+    n_cores=1,
+    chunk_x=None, chunk_y=None,
+    creation_options=None
+)
