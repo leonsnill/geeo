@@ -273,7 +273,7 @@ def _rbf_interpolate_timeseries(times_np, values_2d, mode,
     out = _rbf_interp_cube(values_2d, weights_list, mask_list, mode, bw1, bw2)  # shape (n_vars,T)
     return out, target_times
 
-def rbf_interpolation_df(
+def tsi_rbf_df(
     df,
     group_col,
     value_cols,
@@ -319,7 +319,7 @@ def rbf_interpolation_df(
 
 # array interface
 
-def rbf_time_series_array(data, band_dates, step_days=16,
+def tsi_rbf_array(data, band_dates, step_days=16,
                           mode='3RBF',
                           sigma1=16, win1=16,
                           sigma2=32, win2=32,
@@ -406,7 +406,7 @@ def _process_block_worker(args):
     ds = None
     return (xoff, yoff, out_block)
 
-def rbf_time_series_tif_gdal(src_path, dst_path=None, 
+def tsi_rbf_tif(src_path, dst_path=None, 
                              step_days=16, mode='3RBF',
                              sigma1=16, win1=16,
                              sigma2=32, win2=32,
