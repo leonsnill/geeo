@@ -55,36 +55,30 @@ def create_parameter_file(destination="", overwrite=False):
         create_parameter_file("new_parameters")      # file name without suffix
         create_parameter_file()                      # current working directory with default name
     """
-    # Define the blueprint path
+    # blueprint path
     blueprint_path = os.path.join(os.path.dirname(__file__), 'config', 'parameter_blueprint.yml')
     
-    # Check if the blueprint file exists
+    # check if the blueprint file existss
     if not os.path.exists(blueprint_path):
         raise FileNotFoundError(f"Blueprint file not found: {blueprint_path}")
     
-    # Determine the destination
     if not destination:
-        # If no destination is provided, use the current working directory with default name
         dest_filename = os.path.join(os.getcwd(), "parameter.yml")
     elif os.path.isdir(destination):
-        # If a directory is provided, use it with default name
         dest_filename = os.path.join(destination, "parameter.yml")
     else:
         dest_filename = destination
         if not dest_filename.endswith(".yml"):
             dest_filename += ".yml"
     
-    # Check if the destination file exists
     if os.path.exists(dest_filename) and not overwrite:
         print(f"Warning: File already exists: {dest_filename}. Set overwrite=True if you wish to replace it.")
         return
     
-    # Create the destination directory if it doesn't exist
     dest_dir = os.path.dirname(dest_filename)
     if dest_dir:  # Check if dest_dir is not empty
         os.makedirs(dest_dir, exist_ok=True)
 
-    # Copy the blueprint file to the destination
     shutil.copy(blueprint_path, dest_filename)
     print(f"Parameter file created: {dest_filename}")
 

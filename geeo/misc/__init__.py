@@ -1,7 +1,7 @@
 from ..utils import LazyLoader
 
 # Define lazy imports for submodules within level2
-export = LazyLoader('geeo.misc.export')
+export = LazyLoader('geeo.export.export')
 formatting = LazyLoader('geeo.misc.formatting')
 postprocess = LazyLoader('geeo.misc.postprocess')
 spacetime = LazyLoader('geeo.misc.spacetime')

@@ -394,52 +394,91 @@ def find_utm(lon):
 
 
 def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=None, simplify_geom_to_bbox=True):
-        
-        dict_spatial_meta = {}
+    """
+    Get spatial metadata (ROI geometry, CRS, pixel grid transform, and image dimensions) used for
+    aligning Earth Engine exports.
+    Parameters
+    ----------
+    roi : (ee.Geometry | ee.FeatureCollection | GeoJSON-like | shapely geometry)
+        Region of interest to process. Converted internally via create_roi().
+    crs : str | ee.Projection
+        Target coordinate reference system. Accepts:
+        - 'UTM' (auto–selects UTM zone of ROI)
+        - EPSG code (e.g. 'EPSG:3857')
+        - WKT identifier key from wkt_dict
+        - ee.projection.Projection instance
+    px_res : float | int
+        Pixel size (map units of the target CRS).
+    crs_transform : list | tuple | None, optional
+        Explicit affine transform (a list of 6 or 9 elements). If None, it is derived
+        for non-WGS84 CRSs using the ROI bounding box and px_res.
+    img_dimensions : list | tuple | None, optional
+        (width, height). If None and crs_transform is computed, it is inferred.
+    simplify_geom_to_bbox : bool, default True
+        If True, ROI geometry may be simplified to its bounding box for grid derivation.
+    Returns
+    -------
+    dict
+        {
+          'roi_geom': ee.Geometry,
+          'roi_featcol': ee.FeatureCollection,
+          'roi_bbox': ee.Geometry (bounding box),
+          'roi_bbox_gdf': GeoDataFrame (bounding box in vector form),
+          'crs': str (final CRS),
+          'pix_res': float,
+          'crs_transform': list | None,
+          'img_dimensions': list | None
+        }
+    Raises
+    ------
+    ValueError
+        If the CRS is not supported by Earth Engine.
+    """
+    dict_spatial_meta = {}
 
-        # roi
-        dict_roi = create_roi(roi, simplify_geom_to_bbox=simplify_geom_to_bbox)
-        
-        # crs
-        if crs == 'UTM':
-            crs = find_utm(dict_roi['roi_geom'])
-        elif crs in wkt_dict.keys():
-            crs = wkt_dict[crs]
-        elif isinstance(crs, ee.projection.Projection):
-            crs = crs.getInfo().get('crs')
-        else:
-            crs = crs
-        # verify that EE accepts projection
-        try:
-            if ee.Projection(crs).getInfo():
-                pass
-        except:
-            raise ValueError('CRS not supported by GEE. Use valid EPSG, WKT, UTM, or GLANCE continent identifier.')
-        CRS = crs
+    # roi
+    dict_roi = create_roi(roi, simplify_geom_to_bbox=simplify_geom_to_bbox)
+    
+    # crs
+    if crs == 'UTM':
+        crs = find_utm(dict_roi['roi_geom'])
+    elif crs in wkt_dict.keys():
+        crs = wkt_dict[crs]
+    elif isinstance(crs, ee.projection.Projection):
+        crs = crs.getInfo().get('crs')
+    else:
+        crs = crs
+    # verify that EE accepts projection
+    try:
+        if ee.Projection(crs).getInfo():
+            pass
+    except:
+        raise ValueError('CRS not supported by GEE. Use valid EPSG, WKT, UTM, or GLANCE continent identifier.')
+    CRS = crs
 
-        # transform and dimensions
-        # explicitly specify CRS and IMG_DIMENSIONS, and CRS_TRANSFORM for export to match grid
-        # https://developers.google.com/earth-engine/guides/exporting_images
-        # "to get a block of pixels precisely aligned to another data source, specify dimensions, crs and crsTransform"
-        # Set CRS_TRANSFORM and IMG_DIMENSIONS based on CRS and ROI
-        
-        # automated matching using wgs84 not yet implemented in get_crs_transform_and_img_dimensions
-        if not crs == 'EPSG:4326':
-            if crs_transform is None:
-                roi_bbox_gdf_proj = dict_roi['roi_bbox_gdf'].to_crs(crs)
-                crs_transform, img_dimensions = get_crs_transform_and_img_dimensions(roi_bbox_gdf_proj, px_res)
+    # transform and dimensions
+    # explicitly specify CRS and IMG_DIMENSIONS, and CRS_TRANSFORM for export to match grid
+    # https://developers.google.com/earth-engine/guides/exporting_images
+    # "to get a block of pixels precisely aligned to another data source, specify dimensions, crs and crsTransform"
+    # Set CRS_TRANSFORM and IMG_DIMENSIONS based on CRS and ROI
+    
+    # automated matching using wgs84 not yet implemented in get_crs_transform_and_img_dimensions
+    if not crs == 'EPSG:4326':
+        if crs_transform is None:
+            roi_bbox_gdf_proj = dict_roi['roi_bbox_gdf'].to_crs(crs)
+            crs_transform, img_dimensions = get_crs_transform_and_img_dimensions(roi_bbox_gdf_proj, px_res)
 
-        # out dict
-        dict_spatial_meta['roi_geom'] = dict_roi['roi_geom']
-        dict_spatial_meta['roi_featcol'] = dict_roi['roi_featcol']
-        dict_spatial_meta['roi_bbox'] = dict_roi['roi_bbox']
-        dict_spatial_meta['roi_bbox_gdf'] = dict_roi['roi_bbox_gdf']
-        dict_spatial_meta['crs'] = CRS
-        dict_spatial_meta['pix_res'] = px_res
-        dict_spatial_meta['crs_transform'] = crs_transform
-        dict_spatial_meta['img_dimensions'] = img_dimensions
+    # out dict
+    dict_spatial_meta['roi_geom'] = dict_roi['roi_geom']
+    dict_spatial_meta['roi_featcol'] = dict_roi['roi_featcol']
+    dict_spatial_meta['roi_bbox'] = dict_roi['roi_bbox']
+    dict_spatial_meta['roi_bbox_gdf'] = dict_roi['roi_bbox_gdf']
+    dict_spatial_meta['crs'] = CRS
+    dict_spatial_meta['pix_res'] = px_res
+    dict_spatial_meta['crs_transform'] = crs_transform
+    dict_spatial_meta['img_dimensions'] = img_dimensions
 
-        return dict_spatial_meta
+    return dict_spatial_meta
 
 
 # convert ImageCollection to Image

@@ -23,14 +23,92 @@ wkt_mollweide = ' \
     AUTHORITY["EPSG","54009"]]'
 
 
-def export_img(img, 
-               outname='GEE_IMG', out_location='Drive', out_dir=None, 
-               px_res=None, region=None, crs=None, crsTransform=None, dimensions=None, fileDimensions=None, 
-               adjust_crsTransform_to_region=True,  # get crsTransform using crs + px_res, and region
-               resampling_method=None,  # None (nearest neighbour), bilinear, bicubic
-               nodata=None, scale=1, dtype=None, export_bandnames=False):
-
-
+def export_img(
+        img,
+        outname='GEE_IMG', out_location='Drive', out_dir=None,
+        px_res=None, region=None, crs=None, crsTransform=None, dimensions=None, fileDimensions=None,
+        adjust_crsTransform_to_region=True,  # get crsTransform using crs + px_res, and region
+        resampling_method=None,  # None (nearest neighbour), bilinear, bicubic
+        nodata=None, scale=1, dtype=None, export_bandnames=False):
+    
+    """
+    Export an Earth Engine Image to Google Drive or to an Earth Engine Asset with
+    flexible control over spatial referencing, pixel resolution ('scale' in EE), datatype,
+    and optional band name export.
+    This function wraps ee.batch.Export.image.toDrive / toAsset and attempts to infer
+    missing spatial parameters (projection, scale, region, transform) from the
+    input image or from the supplied region + resolution. It can also construct a
+    grid-aligned transform (crsTransform) and image dimensions to ensure
+    alignment with tiling schemes.
+    Starts the Earth Engine export task(s) immediately.
+    
+    Parameters
+    ----------
+    img : ee.Image
+        The Earth Engine image to export.
+    outname : str, default 'GEE_IMG'
+        Description / base filename used in the export task (and asset ID name).
+    out_location : str, {'Drive','Asset'}, default 'Drive'
+        Destination: Google Drive or Earth Engine Asset.
+    out_dir : str or None
+        Drive folder name (for Drive) or asset root path (for Asset). Required
+        when exporting to an Asset (used as parent path) or to a specific Drive
+        folder.
+    px_res : int or float or None
+        Pixel resolution in units of the target CRS (passed as scale). Ignored if
+        crsTransform is provided. If None and no crsTransform, inferred from the
+        first band’s nominal scale.
+    region : ee.Geometry or GeoJSON-like or None
+        Geometry defining the export region. If None and no crsTransform, image
+        geometry is used. Ignored when both crsTransform and dimensions are
+        provided (grid-based export).
+    crs : str or ee.Projection or None
+        Target coordinate reference system (e.g. 'EPSG:3857'). If None, inferred
+        from the first band’s projection.
+    crsTransform : list[float] or None
+        Affine transform as a 6-element (or 9-element) list. When provided it
+        overrides px_res and (in combination with dimensions) can define spatial
+        extent without an explicit region.
+    dimensions : str or None
+        Export dimensions as 'WIDTHxHEIGHT' (e.g. '1024x2048'). Mutually exclusive
+        with scale+region unless using crsTransform for grid alignment.
+    fileDimensions : tuple[int,int] or None
+        Size (tileWidth, tileHeight) of internal GeoTIFF shards. If None and
+        dimensions is given, a padded multiple of 256 is computed.
+    adjust_crsTransform_to_region : bool, default True
+        When True and no crsTransform supplied, derives a transform and dimensions
+        from (region, crs, px_res) using get_spatial_metadata.
+    resampling_method : str or None
+        Resampling: one of None (nearest), 'bilinear', 'bicubic'. Applied prior to
+        export via img.resample().
+    nodata : int or float or None
+        Value to encode as NoData in the output GeoTIFF.
+    scale : int or float, default 1
+        Multiplier applied to pixel values before casting (via scale_and_dtype).
+    dtype : str or None
+        Target data type (e.g. 'int16', 'uint16', 'float32'). Passed to
+        scale_and_dtype.
+    export_bandnames : bool, default False
+        If True (Drive only), also exports a CSV listing band names.
+    Behavior / Logic Notes
+    ----------------------
+    - If neither px_res nor crsTransform is supplied, pixel size is inferred.
+    - If neither region nor crsTransform is supplied, the image geometry is used.
+    - Providing crsTransform nullifies px_res. If both crsTransform and dimensions
+        are set, region is ignored (extent derives from transform + dimensions).
+    - When dimensions provided without fileDimensions, a padded multiple of 256 is
+        computed for fileDimensions (shard size).
+    - scale_and_dtype and get_spatial_metadata must exist in scope.
+    Returns
+    -------
+    tuple
+        (image_task_start_result, bandnames_task_start_result)
+        The function calls Task.start(...) immediately. In the EE Python API,
+        Task.start() returns None, so the first element will typically be None.
+        The second element is None if export_bandnames is False; otherwise the
+        result of starting the table export task (also typically None).
+    """
+    
     # possible spatial configurations that export_img (might differ from Export.image.toDrive in assumptions, e.g.
     # Export.image.toDrive may silently use WGS84 and scale=1000 if not specified)
 
@@ -144,6 +222,67 @@ def export_table(img_or_imgcol, feature, reduceRegions=True, buffer=None, reduce
                  crs=None, tileScale=1, outname='GEE_IMG', out_location='Drive', out_dir=None,
                  px_res=30, nodata=0, drop_nodata=False, features=None, scale=1, dtype='double'):
     
+    """
+    Export per-feature statistics from an Earth Engine Image or ImageCollection as a table
+    (CSV to Google Drive or FeatureCollection asset).
+    This function (1) builds / coerces a region of interest (ROI) FeatureCollection, (2) scales
+    and casts the input imagery, (3) performs a per-feature reduction (optionally across all
+    images), (4) filters out incomplete or NoData rows, and (5) starts an Earth Engine table
+    export task.
+    Parameters
+    ----------
+    img_or_imgcol : ee.Image or ee.ImageCollection
+        The input raster data to sample / reduce.
+    feature : ee.FeatureCollection or ee.Feature or ee.Geometry or dict-like
+        Region(s) of interest. If not already a FeatureCollection, it is passed to create_roi()
+        to generate one.
+    reduceRegions : bool, default True
+        If True, uses a region-based reduction across all features (and images if an
+        ImageCollection). Passed through to the internal reduction() helper.
+    buffer : int or float or None, default None
+        Optional buffer distance (meters) applied to each feature before extraction.
+    reducer : str or ee.Reducer, default 'first'
+        Reduction method identifier understood by the internal reduction() helper (e.g.
+        'first', 'mean', etc.) or a custom ee.Reducer.
+    crs : str or None, default None
+        Target coordinate reference system (e.g. 'EPSG:4326'). If None, Earth Engine defaults
+        are used.
+    tileScale : int, default 1
+        tileScale parameter to mitigate memory / computation limits for large exports.
+    outname : str, default 'GEE_IMG'
+        Description / base name for the export task and output file.
+    out_location : {'Drive', 'Asset'}, default 'Drive'
+        Destination for the exported table: Google Drive (CSV) or Earth Engine Asset
+        (FeatureCollection).
+    out_dir : str or None, default None
+        Drive folder name (when out_location='Drive') or parent Asset path (when
+        out_location='Asset'). For Asset exports the final assetId becomes out_dir + '/' + outname.
+    px_res : int or float, default 30
+        Nominal pixel resolution (meters) for sampling / reduction (passed as scale).
+    nodata : int or float, default 0
+        Fill value applied when scaling / casting the image bands.
+    drop_nodata : bool, default False
+        If True, filters out any feature rows where all bands equal the nodata value.
+    features : list[str] or None, default None
+        Explicit list of band/property names to retain and use for completeness filtering.
+        If None, band names are fetched from the first image.
+    scale : int or float, default 1
+        Multiplicative factor applied to pixel values via scale_and_dtype().
+    dtype : str, default 'double'
+        Target numeric data type string accepted by scale_and_dtype() (e.g. 'double', 'float',
+        'int16').
+    Raises
+    ------
+    ValueError
+        If img_or_imgcol is not an ee.Image or ee.ImageCollection, if out_location is invalid,
+        or if type expectations are not met.
+    Returns
+    -------
+    ee.batch.Task or None
+        The started export task object in typical Earth Engine usage returns None from .start().
+        (Note: This function invokes ee.batch.Task.start() immediately.)
+    """
+
     # ROI
     if not isinstance(feature, ee.featurecollection.FeatureCollection):
         dict_roi = create_roi(feature)
