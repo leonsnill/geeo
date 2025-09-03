@@ -39,11 +39,15 @@ DATE_MAX: null                           # YYYYMMDD
 ROI: [12.9, 52.2, 13.9, 52.7]
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
+
 # -------------------------------------------------------------------------------
 #                            TIME SERIES STACK (TSS)
 #                        SENSOR AND DATA QUALITY SETTINGS                          
 # -------------------------------------------------------------------------------
 
+# ------------------------------------
+#          Sensor Selection
+# ------------------------------------
 # Time Series Stack (TSS) is the raw (preprocessed) ImageCollection 
 # Landsat 4-9 Level 2, Collection 2, Tier 1
 # Sentinel-2 Level-2A
@@ -56,6 +60,9 @@ SENSORS:                                 # Options: L9, L8, L7, L5, L4, S2, HLS,
 - L4
 MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
 
+# ------------------------------------
+#          Masking
+# ------------------------------------
 # Landsat settings
 EXCLUDE_SLCOFF: false                    # Exclude Landsat-7 ETM+ SLC-off
 GCP_MIN_LANDSAT: 1                       # Min Ground Control Points for Landsat
@@ -79,18 +86,21 @@ MASKS_HLS:
 - cshadow
 - snow
 
-# Advanced masking
+# General advanced masking
 ERODE_DILATE: false                      # Erode an dilate mask
 ERODE_RADIUS: 60                         # Erosion radius (meters)
 DILATE_RADIUS: 120                       # Dilation radius (meters)
 ERODE_DILATE_SCALE: 60                   # Pixel scale for erode/dilate operations
 BLUE_MAX_MASKING: null                   # Maximum blue reflectance to mask [0, 1]
 
+
 # -------------------------------------------------------------------------------
 #                           BANDS | INDICES | FEATURES
 # -------------------------------------------------------------------------------
 
-# Selected bands, indices, and features
+# ------------------------------------
+#         Available Features
+# ------------------------------------
 # Available bands:
 # BLU, GRN, RED, NIR, SW1, SW2 (Landsat+Sentinel-2)
 # LST (Landsat, if LST was processed for scene)
@@ -107,7 +117,9 @@ FEATURES:
 #- MY_FORMULA1
 #- MY_FORMULA2
 
-# Custom formulas
+# ------------------------------------
+#   Custom Features from Functions
+# ------------------------------------
 CUSTOM_FORMULAS:                         # custom formulas (optional)
   MY_FORMULA1:                                  # will become also the bandname if in FEATURES
     formula: "(G-SW1)/(G+SW1)"
@@ -119,17 +131,16 @@ CUSTOM_FORMULAS:                         # custom formulas (optional)
     variable_map:
       MY_FORMULA: MY_FORMULA1
 
-# -------------------------------------------------------------------------------
-#                                LINEAR UNMIXING
-# -------------------------------------------------------------------------------
-
-# Linear Unmixing (UMX)
+# ------------------------------------
+#        Linear Unmixing (UMX)
+# ------------------------------------
 UMX: null                                # endmeber dictionary
 # {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
 # Unmixing settings
 UMX_SUM_TO_ONE: true                     # Sum to one constraint
 UMX_NON_NEGATIVE: true                   # Non-negative constraint
 UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
+
 
 # -------------------------------------------------------------------------------
 #                           CUSTOM IMAGE COLLECTION (CIC)
@@ -140,8 +151,9 @@ CIC: null                                # path to ee.ImageCollection in catalog
 #                                         (e.g GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL)
 CIC_FEATURES: null                       # bands of CIC to include (null = all)
 
+
 # -------------------------------------------------------------------------------
-#                      TIME SERIES MOSAIC (TSM)
+#                             TIME SERIES MOSAIC (TSM)
 # -------------------------------------------------------------------------------
 
 # Time Series Mosaic (TSM) create spatially-consistent mosaic for unique dates
@@ -171,17 +183,19 @@ FOLD_CUSTOM: {
   date: null                             # [YYYYMMDD-YYYYMMDD, ...] / [YYYYMMDD+-OFFSET, ...]
 }
 
+
 # -------------------------------------------------------------------------------
-#                      NUMBER of VALID OBSERVATIONS (NVO)
+#                       NUMBER of VALID OBSERVATIONS (NVO)
 # -------------------------------------------------------------------------------
-# Number of valid observations (NVOs)
+
 NVO: false
 NVO_FOLDING: false
 
+
 # -------------------------------------------------------------------------------
-#                        TIME SERIES INTERPOLATION (TSI)
+#                         TIME SERIES INTERPOLATION (TSI)
 # -------------------------------------------------------------------------------
-# Time Series Interpolation (TSI) method
+
 TSI: null                                # (null, WLIN, 1RBF, 2RBF, 3RBF)  
 TSI_BASE_IMGCOL: TSS                     # (TSS, TSM, CIC)
 
@@ -198,10 +212,11 @@ WIN3: 64                                 # Window3 for RBF (in days)
 BW1: 4                                   # Weight for WIN1
 BW2: 8                                   # Weight for WIN2
 
+
 # -------------------------------------------------------------------------------
 #                        SPECTRAL TEMPORAL METRICS (STM)
 # -------------------------------------------------------------------------------
-# Spectral-Temporal Metrics (STMs) settings
+
 STM: null                                # null or list (min, p5, p10, p15, ..., 
 #                                          p95, max, mean, median, stdDev, 
 #                                          variance, skew, kurtosis)
@@ -212,10 +227,11 @@ STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
 STM_FOLDING: false                       # use folding settings from above
 STM_FOLDING_LIST_ITER: false             # false (joining) or true (list iteration)
 
+
 # -------------------------------------------------------------------------------
 #                        PIXEL-BASED COMPOSITING (PBC)
 # -------------------------------------------------------------------------------
-# Pixel-Based Compositing (PBC)
+
 PBC: null                                # null, BAP, MAX-RNB, NLCD, or 'FEATURE' (e.g. NDVI, NBR) 
 PBC_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
 
@@ -233,6 +249,11 @@ PBC_BAP_MIN_CLOUDDISTANCE: 0             # Cloud distance (m) where CLOUD-score 
 PBC_BAP_WEIGHT_DOY: 0.6                  # Weight for DOY-score (seasonal consistency)
 PBC_BAP_WEIGHT_YEAR: 0.2                 # Weight for YEAR-score (annual consistency)
 PBC_BAP_WEIGHT_CLOUD: 0.2                # Weight for CLOUD-score
+
+
+# ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+#                                    LEVEL-4
+# ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 # -------------------------------------------------------------------------------
 #                         LAND SURFACE PHENOLOGY (LSP)
@@ -257,6 +278,7 @@ LSP_ADJUST_SEASONAL_MAX_DAYS: 40         # maximum adjustment in days
 # -------------------------------------------------------------------------------
 #                               IMAGE SETTINGS
 # -------------------------------------------------------------------------------
+
 PIX_RES: 30                              # Pixel resolution (in meters)
 
 CRS: EPSG:4326                           # EPSG, WKT string, UTM, Mollweide, or GLANCE continent (AF,AN,AS,EU,OC,NA,SA)
@@ -269,9 +291,11 @@ DATATYPE: int16                          # uint8, int8, uint16, int16, uint32, i
 DATATYPE_SCALE: 10000                    # Scale factor (check DATATYPE)
 NODATA_VALUE: -9999                      # Output no data value (for certain exports like LSP not used)
 
+
 # -------------------------------------------------------------------------------
 #                            PRODUCTS TO EXPORT
 # -------------------------------------------------------------------------------
+
 EXPORT_IMAGE: false                      # Export Image
 EXPORT_TABLE: false                      # Export Table 
 
@@ -284,9 +308,11 @@ EXPORT_STM: false                        # Export STM
 EXPORT_PBC: false                        # Export PBC
 EXPORT_LSP: false                        # Export LSP
 
+
 # -------------------------------------------------------------------------------
 #                           GENERAL EXPORT SETTINGS
 # -------------------------------------------------------------------------------
+
 EXPORT_LOCATION: Drive                   # (Drive, Asset)
 EXPORT_DIRECTORY: null                   # null (Drive main folder) / assetId
 EXPORT_DESC: GEEO                        # Image description included in filename

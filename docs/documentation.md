@@ -1,7 +1,11 @@
 # GEEO Parameter Reference
 
-## SPACE AND TIME
 
+# Parameter documentation
+
+## LEVEL-2
+
+### SPACE AND TIME
 These are the global spatial and temporal filters applied to the ImageCollections. The YEAR, MONTH, and DOY parameters can be combined to
 trigger a logical and filtering. Calendar year wrapping is considered for MONTH and DOY, i.e. MONTH_MIN and DOY_MIN may be greater than MONTH_MAX and DOY_MAX, respectively.
 For example, to only process November to February, set MONTH_MIN=11 and MONTH_MAX=2.
@@ -23,9 +27,7 @@ For filtering ee.ImageCollections spatially, it is recommended to leave ROI_SIMP
 | ROI                      | list / str / GeoDataFrame / ee object | [12.9, 52.2, 13.9, 52.7] | Point [lon, lat]; BBox [xmin, ymin, xmax, ymax]; path to .shp/.gpkg; GeoDataFrame; ee.Geometry / ee.FeatureCollection | Area of Interest; complex polygons can slow filtering and may be bbox-simplified. |
 | ROI_SIMPLIFY_GEOM_TO_BBOX| bool    | true         | true, false                     | Simplifies geometry to bounding box for ee.ImageCollection filtering. Usually desireable, since  providing a complex collection as geometry argument may result in poor performance. A scenario where setting this to false makes sense if a not too complex geometry covers a large area but the bounding box would include ee.Images that are not needed (e.g. points covering distinct regions across a large area with great distances between the points. |
 
----
-
-## SENSOR AND DATA QUALITY SETTINGS (TIME SERIES STACK - TSS)
+### SENSOR AND DATA QUALITY SETTINGS (TIME SERIES STACK - TSS)
 
 The following settings define if and which ee.ImageCollection Time-Series-Stack (TSS) to use and how to pre-process the data, most notably cloud masking. 
 The masking settings are set to typical settings to only consider scenes with less than 75% cloud cover, and masking clouds, cloud shadows, snow/ice, as well as fill values. As such, in practise when having created a new parameter file or when operating with python dictionaries in interactive sessions, only setting SENSORS is often enough. 
@@ -49,52 +51,35 @@ The masking settings are set to typical settings to only consider scenes with le
 | ERODE_DILATE_SCALE       | int     | 60           | meters                          | Pixel scale used for morphology (higher = faster, because coarser pixel grain). |
 | BLUE_MAX_MASKING         | float   | null         | 0-1                             | Mask pixels whose blue reflectance exceed this threshold (e.g. haze/glint); ignored if null or 0. |
 
----
-
-## BANDS | INDICES | FEATURES
+### BANDS | INDICES | FEATURES
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | FEATURES                 | list    | [BLU, GRN, RED, NIR, SW1, SW2, NDVI] | See description | Bands / indices / custom formula outputs kept in pipeline; include DEM or unmixing outputs here for export. |
-
-### Custom Formulas
-
-| Parameter        | Type  | Default | Allowed Values / Format | Description |
-|------------------|-------|---------|-------------------------|-------------|
 | CUSTOM_FORMULAS  | dict  | null    | {NAME: {formula: "(G-SW1)/(G+SW1)", variable_map: {G: GRN, SW1: SW1}}, ...} | Per-image EE expression definitions; add NAME to FEATURES to include resulting band. |
-
-Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES` to add it.
-
----
-
-## LINEAR UNMIXING
-
-| Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
-|--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | UMX                      | dict    | null         | See description                 | Endmember dictionary: {Class: [vals...]}; vector order must match FEATURES. |
 | UMX_SUM_TO_ONE           | bool    | true         | true, false                     | Enforce abundance fractions sum to 1. |
 | UMX_NON_NEGATIVE         | bool    | true         | true, false                     | Constrain abundance fractions to ≥ 0. |
 | UMX_REMOVE_INPUT_FEATURES| bool    | true         | true, false                     | Keep only abundance (unmixed) bands if true; otherwise append. |
 
----
+### CUSTOM IMAGE COLLECTION (CIC)
 
-## TIME SERIES STACK (TSS) and MOSAIC (TSM)
+| Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
+|--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
+| CIC             | str   | null    | ee.ImageCollection path | Use external ImageCollection instead of constructing TSS. |
+| CIC_FEATURES    | list  | null    | band names or null      | Optional band subset; null keeps all CIC bands. |
+
+### TIME SERIES MOSAIC (TSM)
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | TSM                      | bool    | false        | true, false                     | Build one spatial mosaic per unique acquisition date across sensors. |
 | TSM_BASE_IMGCOL          | str     | TSS          | TSS, CIC                        | Source collection for mosaicking (raw TSS or custom CIC). |
 
-### Custom Image Collection (CIC)
 
-| Parameter       | Type  | Default | Allowed Values / Format | Description |
-|-----------------|-------|---------|-------------------------|-------------|
-| CIC             | str   | null    | ee.ImageCollection path | Use external ImageCollection instead of constructing TSS. |
-| CIC_FEATURES    | list  | null    | band names or null      | Optional band subset; null keeps all CIC bands. |
+## LEVEL-3
 
----
-
-## TEMPORAL SUBWINDOWS | FOLDING
+### TEMPORAL SUBWINDOWS | FOLDING
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
@@ -102,18 +87,16 @@ Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES`
 | FOLD_MONTH               | bool    | false        | true, false                     | Partition into monthly subwindows (Jan..Dec across years). |
 | FOLD_CUSTOM              | dict    | {year: null, month: null, doy: null, date: null} | See description | Additional custom windows via ranges or target±offset lists (e.g. [2020-2021], [265+-30]). |
 
----
 
-## NUMBER OF VALID OBSERVATIONS (NVO)
+### NUMBER OF VALID OBSERVATIONS (NVO)
 
 | Parameter     | Type | Default | Allowed Values / Format | Description |
 |---------------|------|---------|-------------------------|-------------|
 | NVO           | bool | false   | true, false             | Compute per-pixel count of valid (unmasked) observations from TSS. |
 | NVO_FOLDING   | bool | false   | true, false             | If true, counts produced per temporal fold (year/month/custom). |
 
----
 
-## TIME SERIES INTERPOLATION (TSI)
+### TIME SERIES INTERPOLATION (TSI)
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
@@ -131,9 +114,8 @@ Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES`
 | BW1                      | int     | 4            |                                 | Weight for 2nd kernel (2RBF/3RBF). |
 | BW2                      | int     | 8            |                                 | Weight for 3rd kernel (3RBF). |
 
----
 
-## SPECTRAL TEMPORAL METRICS (STM)
+### SPECTRAL TEMPORAL METRICS (STM)
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
@@ -142,9 +124,8 @@ Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES`
 | STM_FOLDING              | bool    | false        | true, false                     | Compute metrics within each active fold (year/month/custom). |
 | STM_FOLDING_LIST_ITER    | bool    | false        | true, false                     | Alternate per-fold implementation (list iteration) for performance tuning. |
 
----
 
-## PIXEL-BASED COMPOSITING (PBC)
+### PIXEL-BASED COMPOSITING (PBC)
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
@@ -159,10 +140,25 @@ Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES`
 | PBC_BAP_WEIGHT_YEAR      | float   | 0.2          | 0-1                             | Weight for YEAR (temporal recency) component. |
 | PBC_BAP_WEIGHT_CLOUD     | float   | 0.2          | 0-1                             | Weight for CLOUD (cloud distance) component. |
 
----
+
+## LEVEL-4
+
+### LAND SURFACE PHENOLOGY (LSP)
+
+| Parameter                 | Type  | Default | Allowed Values / Format | Description |
+|---------------------------|-------|---------|-------------------------|-------------|
+| LSP                       | str   | null    | null, POLAR             | Land Surface Phenology method (POLAR) or disabled (null). |
+| LSP_BASE_IMGCOL           | str   | TSI     | TSI, CIC                | Source collection for phenology (interpolated TSI recommended). |
+| LSP_BAND                  | str   | NDVI    | Any feature band        | Band providing vegetation signal for phenometrics (e.g. NDVI). |
+| LSP_YEAR_MIN              | int   | null    | year or null            | Override global YEAR_MIN for phenology (null uses global). |
+| LSP_YEAR_MAX              | int   | null    | year or null            | Override global YEAR_MAX for phenology (null uses global). |
+| LSP_ADJUST_SEASONAL       | bool  | false   | true, false             | Enable per-year seasonal start/end DOY adjustment. |
+| LSP_ADJUST_SEASONAL_MAX_DAYS | int| 40      | days                    | Max ± days shift allowed when seasonal adjustment enabled. |
+
 
 ## EXPORT
 
+### IMAGE SETTINGS
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | PIX_RES                  | int     | 30           | meters                          | Output pixel size (meters). |
@@ -173,6 +169,10 @@ Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES`
 | DATATYPE                 | str     | int16        | uint8, int8, uint16, ...        | Export datatype after applying DATATYPE_SCALE. |
 | DATATYPE_SCALE           | int     | 10000        |                                 | Multiplicative factor (e.g. reflectance * 10000 before casting). |
 | NODATA_VALUE             | int     | -9999        |                                 | Fill value for masked pixels in exports. |
+
+### PRODUCTS TO EXPORT
+| Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
+|--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | EXPORT_IMAGE             | bool    | false        | true, false                     | Export final image product (context: composite / metrics / phenology etc.). |
 | EXPORT_TABLE             | bool    | false        | true, false                     | Export attribute/sample table (reduceRegions or reduceRegion). |
 | EXPORT_TSS               | bool    | false        | true, false                     | Export preprocessed Time Series Stack (ImageCollection). |
@@ -183,6 +183,10 @@ Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES`
 | EXPORT_STM               | bool    | false        | true, false                     | Export Spectral Temporal Metrics (image or per-fold collection). |
 | EXPORT_PBC               | bool    | false        | true, false                     | Export pixel-based composites. |
 | EXPORT_LSP               | bool    | false        | true, false                     | Export Land Surface Phenology outputs. |
+
+### GENERAL EXPORT SETTINGS
+| Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
+|--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | EXPORT_LOCATION          | str     | Drive        | Drive, Asset                    | Destination: Google Drive folder or EE Asset collection. |
 | EXPORT_DIRECTORY         | str     | null         |                                 | Drive subfolder name or full asset ID; null = default/root. |
 | EXPORT_DESC              | str     | GEEO         |                                 | Prefix for export task & filenames. |
@@ -198,25 +202,3 @@ Note: DEM is no longer a separate boolean parameter; include `DEM` in `FEATURES`
 | EXPORT_PER_TIME          | bool    | false        | true, false                     | Export each timestamp image separately. |
 
 ---
-
-## LAND SURFACE PHENOLOGY (LSP)
-
-| Parameter                 | Type  | Default | Allowed Values / Format | Description |
-|---------------------------|-------|---------|-------------------------|-------------|
-| LSP                       | str   | null    | null, POLAR             | Land Surface Phenology method (POLAR) or disabled (null). |
-| LSP_BASE_IMGCOL           | str   | TSI     | TSI, CIC                | Source collection for phenology (interpolated TSI recommended). |
-| LSP_BAND                  | str   | NDVI    | Any feature band        | Band providing vegetation signal for phenometrics (e.g. NDVI). |
-| LSP_YEAR_MIN              | int   | null    | year or null            | Override global YEAR_MIN for phenology (null uses global). |
-| LSP_YEAR_MAX              | int   | null    | year or null            | Override global YEAR_MAX for phenology (null uses global). |
-| LSP_ADJUST_SEASONAL       | bool  | false   | true, false             | Enable per-year seasonal start/end DOY adjustment. |
-| LSP_ADJUST_SEASONAL_MAX_DAYS | int| 40      | days                    | Max ± days shift allowed when seasonal adjustment enabled. |
-
----
-
-## Deprecated / Removed Parameters
-
-| Parameter | Status    | Replacement / Note |
-|-----------|-----------|--------------------|
-| DEM       | Removed   | Include `DEM` directly in `FEATURES`. |
-| EXPORT_TRD | Removed  | Replaced by more explicit export flags (e.g. EXPORT_TSS / STM / PBC etc.). |
-

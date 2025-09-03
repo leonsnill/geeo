@@ -1,6 +1,7 @@
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
 from geeo.level2.level2 import run_level2
 from geeo.level3.level3 import run_level3
+from geeo.level4.level4 import run_level4
 from geeo.export.export import run_export
 
 
@@ -28,6 +29,7 @@ def run_param(params):
     """
     pipeline = run_level2(params)
     pipeline = run_level3(pipeline)
+    pipeline = run_level4(pipeline)
     pipeline = run_export(pipeline)
     return pipeline
 
