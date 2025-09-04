@@ -52,8 +52,7 @@ In the [docs folder](docs), you will find the **[documentation to the parameter 
 
 ### Quick use overview
 
-The settings for the main processing chain of geeo can be defined using either a .yml text file or python dictionary.
-For a basic example, consider we would like to have Spectral-Temporal-Metrics (STMs) for three seasons for the area of greater Berlin for the year 2024. 
+The settings for the main processing chain of geeo can be defined using either a .yml text file or python dictionary. 
 
 ```python
 # import required packages
@@ -65,31 +64,41 @@ import geeo
 
 # -----------------------------------------------------------------
 # Option 1) Parameter .yml file
-
 # create new .yml file to set instructions
 geeo.create_parameter_file('new_param_file')
-
 # open parameter file in editor and set instructions ...
-
 # run instructions: level-2 -> level-3 -> level-4 -> export
 run = geeo.run_param('new_param_file.yml')
-run
 
+# -----------------------------------------------------------------
+# Option 2) python dictionary of user-settings
+param_dict = {
+    # your settings ...
+}
+run = geeo.run_param(param_dict)
+```
 
+Let`s use the dict approach to illustrate the basic workflow. Consider the simple task of calculating Spectral-Temporal-Metrics (STMs) of the NDVI using Landsat for three seasons for the area of greater Berlin in 2024.
+
+```python
 # -----------------------------------------------------------------
 # Option 2) python dictionary of user-settings
 
 param_dict = {
+    
     'YEAR_MIN': 2024,
     'YEAR_MAX': 2024,
     'ROI': [13.07, 52.37, 13.78, 52.64],  # Berlin
     'SENSORS': ['L8', 'L9'],  # Landsat-8 and Landsat-9
     'FEATURES': ['NDVI'],
+    
     'STM': ['p10', 'p50', 'p90', 'stdDev'],  # reducer metrics
     'FOLD_CUSTOM': {'month': ['3-5', '6-8', '9-11']},  # spring, summer, autumn sub-windows
     'STM_FOLDING': True,  # apply sub-windows to STM calculation
+    
     'EXPORT_IMAGE': False,  # global setting to export any image
     'EXPORT_STM': False  # setting to export STMs if EXPORT_IMAGE was True
+
 }
 # all remaining settings will be set to default values from blueprint!
 
@@ -100,4 +109,12 @@ stm = run.get('STM')
 print('STM bands: ', stm.first().bandNames().getInfo())
 ```
 
-If we were to set the export settings to true, it would export the seasonal STM to Drive using the default metadata and projection settings.
+We leave many settings to default for illustrational purposes, including export settings regarding resampling, projection and metadata.
+But in essence, that is all that would be needed to:
+
+- Combine Landsat-8 and Landsat-9 Collection 2 Tier 1 Surface Reflectance collections
+- Apply quality masks (cloud, c. shadow, etc.)
+- Calculate the NDVI
+- Construct temporal subwindows for filtering
+- Retrieve STMs for subwindows
+- Export result to Drive/Asset (*in theory*, here set to False) 
