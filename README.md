@@ -1,39 +1,41 @@
-# Geographical and Ecological Earth Observation (GEEO)
-GEEO is a processing pipeline and collection of algorithms for obtaining Analysis-Ready-Data (ARD) from Landsat and Sentinel-2 using the Google Earth Engine Python API.
-The modules are organized along different hierarchical levels, and processing instructions are readily defined by the user via a parameter file (.yml) or Python dictionary:
+# Geographical and Ecological Earth Observation (geeo)
+**geeo** is a processing pipeline and collection of algorithms that uses the [Google Earth Engine (GEE) Python API](https://developers.google.com/earth-engine/guides/python_install) for creating Analysis-Ready-Data (ARD) from optical imagery, including the Landsat and Sentinel-2 archives. The package is structured along hierarchical levels, emphasizing a standardized, reproducible and efficient workflow, covering the suite from image preprocessing, harmonization, and spatial organisation, to advanced feature generation and time series analyses. 
+Processing instructions are readily defined using a .yml-file or python dictionary, facilitating stand-alone use or interactive integration into processing workflows using GEE:
 
 ![sample SVG image](geeo/data/fig/geeo_workflow_manuscript.svg)
 
-GEEO includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. The selection of routines is primarily influenced by work conducted in the [Biogeography Lab](https://pages.cms.hu-berlin.de/biogeo/website/) and [Earth Observation Lab](https://eolab.geographie.hu-berlin.de/) at Humboldt-University of Berlin. Inspiration for structuring the module along a parameter file comes from David Frantz' [Framework for Operational Radiometric Correction for Environmental monitoring (FORCE)](https://force-eo.readthedocs.io/en/latest/index.html).
+**geeo** includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. The selection of routines is primarily influenced by work conducted in the [Biogeography Lab](https://pages.cms.hu-berlin.de/biogeo/website/) and [Earth Observation Lab](https://eolab.geographie.hu-berlin.de/) at Humboldt University of Berlin. Inspiration for the modular structure and parameter file communication comes from David Frantz' [Framework for Operational Radiometric Correction for Environmental monitoring (FORCE)](https://force-eo.readthedocs.io/en/latest/index.html), a highly-advanced all-in-one processing engine for medium-resolution Earth Observation image archives for your computing infrastructure.
 
----
+# Access and installation
 
-### Installation
+You need to have [access to Google Earth Engine](https://developers.google.com/earth-engine/guides/access) and its [Python API](https://developers.google.com/earth-engine/guides/python_install). Read the following sections how to set up the latter for your local environment or by using a Jupyter Notebook hosted via Google Colab.  
 
-#### Local
-Make sure you have a Python 3 distribution of our choice installed (e.g. Anaconda). Prior to installing `geeo`, you preferably want to set up a new virtual environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing `geeo`):
+### Local Python environment
+Make sure you have a Python 3 distribution of our choice installed (e.g. Anaconda). Prior to installing **geeo**, you preferably want to set up a new environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing **geeo**):
 
 ```bash
 conda create -n geeo_env python=3.11 ipykernel earthengine-api pyyaml pandas geopandas matplotlib tqdm ipyleaflet ipywidgets gdal scikit-learn
 conda activate geeo_env
 ```
 
-Once created and activated, you can directly install the package using `pip`:
+Once created and activated, you can directly install the package from GitHub using `pip`:
 
 ```bash
 pip install git+https://github.com/leonsnill/geeo.git
 ```
 
-#### Google Colab
-You can also quite quickly get started using a Google Colab hosted Jupyter Notebook.
+### Google Colab
+You can also directly get started using [Google Colab](https://colab.research.google.com/) for hosting a Jupyter Notebook.
 
-Simply install `geeo` in the first code chunk.
+In a new .ipynb-notebook, simply install **geeo** in the first code chunk like so:
 
 ```python
 !pip install git+https://github.com/leonsnill/geeo.git
 ```
 
-Import, authenticate and initialize the Earth Engine python API, then import `geeo`.
+### Import
+
+Import, authenticate and initialize the Earth Engine python API, then import **geeo**.
 
 ```python
 import ee
@@ -43,10 +45,59 @@ ee.Initialize(project='your-project-name')
 import geeo
 ```
 
----
 
-### Getting started
+# Documentation and examples
 
-To become familiar with the module design and handling we have prepared short examples to instruct certain processing chains, visualize ouputs and request exports. You can find them in the folder [docs](docs). Here you also find the [documentation to the parameter file](docs/documentation.md).
+In the [docs folder](docs), you will find the **[documentation to the parameter settings](docs/documentation.md)**, the settings for instructing the core processing chain of geeo. To become familiar with the module design and handling, you also find some example Jupyter Notebooks on how to instruct certain processing chains, visualize ouputs and request exports in the [docs folder](docs).
+
+### Quick use overview
+
+The settings for the main processing chain of geeo can be defined using either a .yml text file or python dictionary.
+For a basic example, consider we would like to have Spectral-Temporal-Metrics (STMs) for three seasons for the area of greater Berlin for the year 2024. 
+
+```python
+# import required packages
+import ee
+ee.Authenticate()
+ee.Initialize(project='eexnill')
+import geeo
 
 
+# -----------------------------------------------------------------
+# Option 1) Parameter .yml file
+
+# create new .yml file to set instructions
+geeo.create_parameter_file('new_param_file')
+
+# open parameter file in editor and set instructions ...
+
+# run instructions: level-2 -> level-3 -> level-4 -> export
+run = geeo.run_param('new_param_file.yml')
+run
+
+
+# -----------------------------------------------------------------
+# Option 2) python dictionary of user-settings
+
+param_dict = {
+    'YEAR_MIN': 2024,
+    'YEAR_MAX': 2024,
+    'ROI': [13.07, 52.37, 13.78, 52.64],  # Berlin
+    'SENSORS': ['L8', 'L9'],  # Landsat-8 and Landsat-9
+    'FEATURES': ['NDVI'],
+    'STM': ['p10', 'p50', 'p90', 'stdDev'],  # reducer metrics
+    'FOLD_CUSTOM': {'month': ['3-5', '6-8', '9-11']},  # spring, summer, autumn sub-windows
+    'STM_FOLDING': True,  # apply sub-windows to STM calculation
+    'EXPORT_IMAGE': False,  # global setting to export any image
+    'EXPORT_STM': False  # setting to export STMs if EXPORT_IMAGE was True
+}
+# all remaining settings will be set to default values from blueprint!
+
+run = geeo.run_param(param_dict)
+
+# get STM ee.ImageCollection (collection of ee.Image subwindows)
+stm = run.get('STM')
+print('STM bands: ', stm.first().bandNames().getInfo())
+```
+
+If we were to set the export settings to true, it would export the seasonal STM to Drive using the default metadata and projection settings.
