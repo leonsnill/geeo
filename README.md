@@ -33,6 +33,8 @@ In a new .ipynb-notebook, simply install **geeo** in the first code chunk like s
 !pip install git+https://github.com/leonsnill/geeo.git
 ```
 
+First tutorial notebook: [![here](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_0_introducing-geeo.ipynb).
+
 ### Import
 
 Import, authenticate and initialize the Earth Engine python API, then import **geeo**.
