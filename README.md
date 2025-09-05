@@ -40,10 +40,12 @@ First tutorial notebook: [![here](https://colab.research.google.com/assets/colab
 Import, authenticate and initialize the Earth Engine python API, then import **geeo**.
 
 ```python
+# Google cloud project name with Earth Engine API enabled
+my_project_name = ''
+
 import ee
 ee.Authenticate()
-ee.Initialize(project='your-project-name')
-
+ee.Initialize(project=my_project_name)
 import geeo
 ```
 
@@ -57,10 +59,12 @@ In the [docs folder](docs), you will find the **[documentation to the parameter 
 The settings for the main processing chain of geeo can be defined using either a .yml text file or python dictionary. 
 
 ```python
+# Google cloud project name with Earth Engine API enabled
+my_project_name = ''
 # import required packages
 import ee
 ee.Authenticate()
-ee.Initialize(project='eexnill')
+ee.Initialize(project=my_project_name)
 import geeo
 
 
