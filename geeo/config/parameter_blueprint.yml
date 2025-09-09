@@ -226,6 +226,7 @@ STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
 # Folding: temporal subwindows
 STM_FOLDING: false                       # use folding settings from above
 STM_FOLDING_LIST_ITER: false             # false (joining) or true (list iteration)
+                                         # check documentation for details!
 
 
 # -------------------------------------------------------------------------------
@@ -282,7 +283,7 @@ LSP_ADJUST_SEASONAL_MAX_DAYS: 40         # maximum adjustment in days
 PIX_RES: 30                              # Pixel resolution (in meters)
 
 CRS: EPSG:4326                           # EPSG, WKT string, UTM, Mollweide, or GLANCE continent (AF,AN,AS,EU,OC,NA,SA)
-CRS_TRANSFORM: null                      # Affine transform to use for export        
+CRS_TRANSFORM: null                      # [...] Affine transform to use for export        
 IMG_DIMENSIONS: null                     # Image dimensions (widthxheight) in pixels (requires CRS_TRANSFORM)
 
 RESAMPLING_METHOD: null                  # null (nearest neighbour), bilinear, bicubic
