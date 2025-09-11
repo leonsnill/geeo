@@ -180,6 +180,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 from osgeo import gdal
+from tqdm import tqdm
 
 # core RBF interpolation functions (used for images, arrays and dfs)
 
@@ -288,7 +289,8 @@ def tsi_rbf_df(
     drop_all_nan=True
 ):
     out_frames = []
-    for g, gdf in df.groupby(group_col):
+    print('Interpolating DF ...')
+    for g, gdf in tqdm(df.groupby(group_col)):
         sub = gdf[value_cols].copy()
         sub = sub.replace(nodata_value, np.nan)
         if drop_all_nan:
