@@ -37,7 +37,7 @@ DATE_MAX: null                           # YYYYMMDD
 # - Polygon as [[lon1, lat1], [lon2, lat2], ..., [lon1, lat1]]
 # - Path / or geopandas object vector file (e.g. shapefile, geopackage, geojson)
 ROI: [12.9, 52.2, 13.9, 52.7]
-ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
+ROI_SIMPLIFY_GEOM_TO_BBOX: false         # Simplify geometry to bounding box
 
 
 # -------------------------------------------------------------------------------
