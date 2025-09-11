@@ -168,9 +168,11 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
         roi_bbox = bounds_from_featcol(roi_featcol)
         if simplify_geom_to_bbox:
             roi_geom = roi_bbox
-        roi_bbox_gdf = bbox_server_to_client(roi_bbox)
-        roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs="EPSG:4326")
-    
+            roi_gdf = bbox_server_to_client(roi_bbox)
+            roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs="EPSG:4326")
+        else:
+            roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
+
     elif isinstance(roi_input, str) or isinstance(roi_input, gpd.geodataframe.GeoDataFrame):  # either path to vector or path to ee.FeatureCollection with access rights
 
         if isinstance(roi_input, str):
@@ -178,23 +180,26 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
                 gdf = gpd.read_file(roi_input)
                 roi_featcol = init_featcol_from_vector(gdf)
                 roi_bbox = bounds_from_featcol(roi_featcol)
-                roi_bbox_gdf = [float(gdf.geometry.bounds.minx.iloc[0]), float(gdf.geometry.bounds.miny.iloc[0]),
+                roi_gdf = [float(gdf.geometry.bounds.minx.iloc[0]), float(gdf.geometry.bounds.miny.iloc[0]),
                                 float(gdf.geometry.bounds.maxx.iloc[0]), float(gdf.geometry.bounds.maxy.iloc[0])]
-                roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs=gdf.crs)
+                roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs=gdf.crs)
             except:  # must be ee.FeatureCollection
                 try:
                     roi_featcol = ee.FeatureCollection(roi_input)
                     roi_bbox = bounds_from_featcol(roi_featcol)
-                    roi_bbox_gdf = bbox_server_to_client(roi_bbox)
+                    if simplify_geom_to_bbox:
+                        roi_gdf = bbox_server_to_client(roi_bbox)
+                    else:
+                        roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
                 except Exception as e:
                     raise ValueError(f"Vector file could not be initialized: neither from local file or ee.FeatureCollection: {e}. Check ROI path!")
         else:
             gdf = roi_input
             roi_featcol = init_featcol_from_vector(gdf)
             roi_bbox = bounds_from_featcol(roi_featcol)
-            roi_bbox_gdf = [float(gdf.geometry.bounds.minx.iloc[0]), float(gdf.geometry.bounds.miny.iloc[0]),
+            roi_gdf = [float(gdf.geometry.bounds.minx.iloc[0]), float(gdf.geometry.bounds.miny.iloc[0]),
                             float(gdf.geometry.bounds.maxx.iloc[0]), float(gdf.geometry.bounds.maxy.iloc[0])]
-            roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs=gdf.crs)
+            roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs=gdf.crs)
 
 
         # complex feature collection with many features can create overhead
@@ -209,19 +214,22 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
         roi_bbox = bounds_from_featcol(roi_featcol)
         if simplify_geom_to_bbox:
             roi_geom = roi_bbox
-        roi_bbox_gdf = bbox_server_to_client(roi_bbox)
-        roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs="EPSG:4326")
+            roi_gdf = bbox_server_to_client(roi_bbox)
+            roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs="EPSG:4326")
+        else:
+            roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
     
     elif isinstance(roi_input, ee.featurecollection.FeatureCollection):  # WGS84
         roi_featcol = roi_input
         roi_bbox = bounds_from_featcol(roi_featcol)
-        roi_bbox_gdf = bbox_server_to_client(roi_bbox)
+        roi_gdf = bbox_server_to_client(roi_bbox)
         # complex feature collection with many features can create overhead
         if simplify_geom_to_bbox:
             roi_geom = roi_bbox
+            roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs="EPSG:4326")
         else:
             roi_geom = ee.Geometry(roi_featcol.geometry())
-        roi_bbox_gdf = gpd.GeoDataFrame(geometry=[box(roi_bbox_gdf[0], roi_bbox_gdf[1], roi_bbox_gdf[2], roi_bbox_gdf[3])], crs="EPSG:4326")
+            roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
     
     else:
         raise ValueError("ROI incorrectly specified. Input must be a list of coordinates, a file path, ee.Geometry, or ee.FeatureCollection.")
@@ -230,7 +238,7 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
         'roi_geom': roi_geom,
         'roi_featcol': roi_featcol,
         'roi_bbox': roi_bbox,
-        'roi_bbox_gdf': roi_bbox_gdf
+        'roi_gdf': roi_gdf
     }
 
     return dict_roi
@@ -423,7 +431,7 @@ def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=No
           'roi_geom': ee.Geometry,
           'roi_featcol': ee.FeatureCollection,
           'roi_bbox': ee.Geometry (bounding box),
-          'roi_bbox_gdf': GeoDataFrame (bounding box in vector form),
+          'roi_gdf': GeoDataFrame (bounding box in vector form),
           'crs': str (final CRS),
           'pix_res': float,
           'crs_transform': list | None,
@@ -465,14 +473,14 @@ def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=No
     # automated matching using wgs84 not yet implemented in get_crs_transform_and_img_dimensions
     if not crs == 'EPSG:4326':
         if crs_transform is None:
-            roi_bbox_gdf_proj = dict_roi['roi_bbox_gdf'].to_crs(crs)
-            crs_transform, img_dimensions = get_crs_transform_and_img_dimensions(roi_bbox_gdf_proj, px_res)
+            roi_gdf_proj = dict_roi['roi_gdf'].to_crs(crs)
+            crs_transform, img_dimensions = get_crs_transform_and_img_dimensions(roi_gdf_proj, px_res)
 
     # out dict
     dict_spatial_meta['roi_geom'] = dict_roi['roi_geom']
     dict_spatial_meta['roi_featcol'] = dict_roi['roi_featcol']
     dict_spatial_meta['roi_bbox'] = dict_roi['roi_bbox']
-    dict_spatial_meta['roi_bbox_gdf'] = dict_roi['roi_bbox_gdf']
+    dict_spatial_meta['roi_gdf'] = dict_roi['roi_gdf']
     dict_spatial_meta['crs'] = CRS
     dict_spatial_meta['pix_res'] = px_res
     dict_spatial_meta['crs_transform'] = crs_transform

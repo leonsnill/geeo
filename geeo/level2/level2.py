@@ -113,7 +113,7 @@ def run_level2(params):
     ROI_GEOM = dict_spatial_metadata['roi_geom']
     ROI_FEATCOL = dict_spatial_metadata['roi_featcol']
     ROI_BBOX = dict_spatial_metadata['roi_bbox']
-    ROI_BBOX_GDF = dict_spatial_metadata['roi_bbox_gdf']
+    ROI_BBOX_GDF = dict_spatial_metadata['roi_gdf']
     CRS = dict_spatial_metadata['crs']
     PIX_RES = dict_spatial_metadata['pix_res']
     IMG_DIMENSIONS = dict_spatial_metadata['img_dimensions']
