@@ -172,6 +172,7 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
             roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs="EPSG:4326")
         else:
             roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
+            roi_gdf = roi_gdf.set_crs('EPSG:4326')
 
     elif isinstance(roi_input, str) or isinstance(roi_input, gpd.geodataframe.GeoDataFrame):  # either path to vector or path to ee.FeatureCollection with access rights
 
@@ -191,6 +192,7 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
                         roi_gdf = bbox_server_to_client(roi_bbox)
                     else:
                         roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
+                        roi_gdf = roi_gdf.set_crs('EPSG:4326')
                 except Exception as e:
                     raise ValueError(f"Vector file could not be initialized: neither from local file or ee.FeatureCollection: {e}. Check ROI path!")
         else:
@@ -218,6 +220,7 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
             roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs="EPSG:4326")
         else:
             roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
+            roi_gdf = roi_gdf.set_crs('EPSG:4326')
     
     elif isinstance(roi_input, ee.featurecollection.FeatureCollection):  # WGS84
         roi_featcol = roi_input
@@ -230,6 +233,7 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
         else:
             roi_geom = ee.Geometry(roi_featcol.geometry())
             roi_gdf = ee.data.computeFeatures({'expression': roi_featcol, 'fileFormat': 'GEOPANDAS_GEODATAFRAME'})
+            roi_gdf = roi_gdf.set_crs('EPSG:4326')
     
     else:
         raise ValueError("ROI incorrectly specified. Input must be a list of coordinates, a file path, ee.Geometry, or ee.FeatureCollection.")
