@@ -225,10 +225,10 @@ def create_roi(roi_input, simplify_geom_to_bbox=False):
     elif isinstance(roi_input, ee.featurecollection.FeatureCollection):  # WGS84
         roi_featcol = roi_input
         roi_bbox = bounds_from_featcol(roi_featcol)
-        roi_gdf = bbox_server_to_client(roi_bbox)
         # complex feature collection with many features can create overhead
         if simplify_geom_to_bbox:
             roi_geom = roi_bbox
+            roi_gdf = bbox_server_to_client(roi_bbox)
             roi_gdf = gpd.GeoDataFrame(geometry=[box(roi_gdf[0], roi_gdf[1], roi_gdf[2], roi_gdf[3])], crs="EPSG:4326")
         else:
             roi_geom = ee.Geometry(roi_featcol.geometry())
