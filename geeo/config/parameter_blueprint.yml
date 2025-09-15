@@ -67,7 +67,7 @@ MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
 EXCLUDE_SLCOFF: false                    # Exclude Landsat-7 ETM+ SLC-off
 GCP_MIN_LANDSAT: 1                       # Min Ground Control Points for Landsat
 MASKS_LANDSAT:                           # Landsat masks (null, cloud, cshadow,
-- cloud                                  # snow, fill, dilated, saturated)
+- cloud                                  # snow, fill, dilated)
 - cshadow
 - snow
 - fill
@@ -82,7 +82,7 @@ MASKS_S2_NIR_THRESH_SHADOW: 0.2          # PROB: Threshold NIR-based shadow mask
 
 # HLS masking (Fmask)
 MASKS_HLS:
-- cloud                                  # snow, fill, dilated, saturated)
+- cloud                                  # snow, fill, dilated)
 - cshadow
 - snow
 
