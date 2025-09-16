@@ -405,7 +405,7 @@ def find_utm(lon):
     return "EPSG:326"+utm
 
 
-def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=None, simplify_geom_to_bbox=True):
+def get_spatial_metadata(roi, px_res, crs=None, crs_transform=None, img_dimensions=None, simplify_geom_to_bbox=True):
     """
     Get spatial metadata (ROI geometry, CRS, pixel grid transform, and image dimensions) used for
     aligning Earth Engine exports.
@@ -458,6 +458,8 @@ def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=No
         crs = wkt_dict[crs]
     elif isinstance(crs, ee.projection.Projection):
         crs = crs.getInfo().get('wkt')
+    elif crs is None:  # get from roi
+        crs = dict_roi['roi_gdf'].crs.to_wkt()
     else:
         crs = crs
     # verify that EE accepts projection
