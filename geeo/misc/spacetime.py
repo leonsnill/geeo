@@ -457,7 +457,7 @@ def get_spatial_metadata(roi, crs, px_res, crs_transform=None, img_dimensions=No
     elif crs in wkt_dict.keys():
         crs = wkt_dict[crs]
     elif isinstance(crs, ee.projection.Projection):
-        crs = crs.getInfo().get('crs')
+        crs = crs.getInfo().get('wkt')
     else:
         crs = crs
     # verify that EE accepts projection

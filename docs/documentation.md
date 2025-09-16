@@ -73,7 +73,7 @@ The masking settings are set to typical settings to only consider scenes with le
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| TSM                      | bool    | false        | true, false                     | Build one spatial mosaic per unique acquisition date across sensors. |
+| TSM                      | bool    | false        | true, false                     | Build one spatial mosaic per unique acquisition date in TSS or CIC. |
 | TSM_BASE_IMGCOL          | str     | TSS          | TSS, CIC                        | Source collection for mosaicking (raw TSS or custom CIC). |
 
 
@@ -93,26 +93,26 @@ The masking settings are set to typical settings to only consider scenes with le
 | Parameter     | Type | Default | Allowed Values / Format | Description |
 |---------------|------|---------|-------------------------|-------------|
 | NVO           | bool | false   | true, false             | Compute per-pixel count of valid (unmasked) observations from TSS. |
-| NVO_FOLDING   | bool | false   | true, false             | If true, counts produced per temporal fold (year/month/custom). |
+| NVO_FOLDING   | bool | false   | true, false             | If true, counts produced per temporal fold (year/month/custom). Usefull to assess the number of observations that were used to generate STMs, for example. |
 
 
 ### TIME SERIES INTERPOLATION (TSI)
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| TSI                      | str     | null         | null, WLIN, 1RBF, 2RBF, 3RBF    | Interpolation method: WLIN (weighted linear) or RBF with 1–3 Gaussian kernels; null disables. |
+| TSI                      | str     | null         | null, WLIN, 1RBF, 2RBF, 3RBF    | Interpolation method: WLIN (weighted linear) or Radial-Basis-Function (RBF) using one to three Gaussian kernels; null disables. |
 | TSI_BASE_IMGCOL          | str     | TSS          | TSS, TSM, CIC                   | Collection to interpolate (raw, mosaicked, or custom). |
 | INTERVAL                 | int     | 16           | days                            | Desired spacing between interpolated timestamps. |
 | INTERVAL_UNIT            | str     | day          | day, month, year                | Unit used for INTERVAL spacing. |
-| INIT_JANUARY_1ST         | bool    | false        | true, false                     | Force interpolated timeline to start Jan 1. |
-| SIGMA1                   | int     | 16           | days                            | RBF kernel width 1 (days). |
-| SIGMA2                   | int     | 32           | days                            | RBF kernel width 2 (2RBF/3RBF only). |
-| SIGMA3                   | int     | 64           | days                            | RBF kernel width 3 (3RBF only). |
-| WIN1                     | int     | 16           | days                            | Half-window size for kernel 1 / WLIN. |
-| WIN2                     | int     | 32           | days                            | Half-window size for kernel 2. |
-| WIN3                     | int     | 64           | days                            | Half-window size for kernel 3. |
-| BW1                      | int     | 4            |                                 | Weight for 2nd kernel (2RBF/3RBF). |
-| BW2                      | int     | 8            |                                 | Weight for 3rd kernel (3RBF). |
+| INIT_JANUARY_1ST         | bool    | false        | true, false                     | Force interpolation to start Jan 1 (of YEAR_MIN). |
+| SIGMA1                   | int     | 16           | days                            | First RBF kernel width (days). |
+| SIGMA2                   | int     | 32           | days                            | Second RBF kernel width (2RBF/3RBF only). |
+| SIGMA3                   | int     | 64           | days                            | Third RBF kernel width (3RBF only). |
+| WIN1                     | int     | 16           | days                            | +- of days (i.e. half-window size) maximum offset for observations in TSI_BASE_IMGCOL to be included for each INTERVAL for kernel 1.  |
+| WIN2                     | int     | 32           | days                            | +- of days (i.e. half-window size) maximum offset for observations in TSI_BASE_IMGCOL to be included for each INTERVAL for kernel 2. |
+| WIN3                     | int     | 64           | days                            | +- of days (i.e. half-window size) maximum offset for observations in TSI_BASE_IMGCOL to be included for each INTERVAL for kernel 3. |
+| BW1                      | int     | 4            |                                 | Expected/ideal number of observations between two timesteps (e.g. within 16 days when INTERVAL=16) used to calculate the weight for 2nd kernel (2RBF/3RBF) over the first. If there are enough observations to satisfy the ideal setting for a single kernel, the second kernel weight is set to zero, i.e. obervations further away do not impact the interpolation result. |
+| BW2                      | int     | 8            |                                 | Weight for 3rd kernel (3RBF), see BW1. |
 
 
 ### SPECTRAL TEMPORAL METRICS (STM)
