@@ -457,7 +457,11 @@ def get_spatial_metadata(roi, px_res, crs=None, crs_transform=None, img_dimensio
     elif crs in wkt_dict.keys():
         crs = wkt_dict[crs]
     elif isinstance(crs, ee.projection.Projection):
-        crs = crs.getInfo().get('wkt')
+        crs_wkt = crs.getInfo().get('wkt')
+        if not crs_wkt:
+            crs = crs.getInfo().get('crs')
+        else:
+            crs = crs_wkt
     elif crs is None:  # get from roi
         crs = dict_roi['roi_gdf'].crs.to_wkt()
     else:

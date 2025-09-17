@@ -23,16 +23,15 @@ def run_level2(params):
         params (str or dict): Path to the YAML file or a dictionary of parameters.
     """
 
-    # Load blueprint defaults
+    # load blueprint defaults
     default_params = load_blueprint()
     
-    # Determine the type of `params` and load/merge accordingly
+    # determine the type of `params` and load/merge accordingly
     if isinstance(params, str):
-        # Assume `params` is a path to a YAML file
+        # assume params is a path to a YAML file
         yaml_params = load_parameters(params)
         prm = merge_parameters(default_params, yaml_params)
     elif isinstance(params, dict):
-        # Assume `params` is a dictionary of parameters
         prm = merge_parameters(default_params, dict_params=params)
     else:
         raise ValueError("params must be either a path to a YAML file or a dictionary")
@@ -66,7 +65,6 @@ def run_level2(params):
     BLUE_MAX_MASKING = prm.get('BLUE_MAX_MASKING')
     FEATURES = prm.get('FEATURES')
     CUSTOM_FORMULAS = prm.get('CUSTOM_FORMULAS')
-    DEM = prm.get('DEM')
     # UNMX
     UMX = prm.get('UMX')
     UMX_SUM_TO_ONE = prm.get('UMX_SUM_TO_ONE')

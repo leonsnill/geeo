@@ -127,7 +127,6 @@ def export_img(
     
     if crs is None:
         crs = img.select(0).projection()
-
     # check crs
     crs = ee.Projection(crs)
     try:
@@ -147,7 +146,7 @@ def export_img(
     # (user uses function separately to GEEO workflow, where it will be defined if not WGS84)
     # # (roi, crs, px_res, crs_transform=None, img_dimensions=None, simplify_geom_to_bbox=True)   
     if adjust_crsTransform_to_region and crsTransform is None:
-        dict_spatial_metadata = get_spatial_metadata(region, crs, px_res)
+        dict_spatial_metadata = get_spatial_metadata(roi=region, px_res=px_res, crs=crs)
         crsTransform = dict_spatial_metadata.get('crs_transform')
         dimensions = dict_spatial_metadata.get('img_dimensions')
 

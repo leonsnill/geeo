@@ -39,6 +39,10 @@ DATE_MAX: null                           # YYYYMMDD
 ROI: [12.9, 52.2, 13.9, 52.7]
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
+ROI_TILES: False                        # Use features in ROI vector file as independent 'tiles' (ROI) 
+ROI_TILES_ATTRIBUTE_COLUMN: null        # Attribute column (str) that contains unique IDs (appended to DESC)
+ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/select (null = all)
+
 
 # -------------------------------------------------------------------------------
 #                            TIME SERIES STACK (TSS)
