@@ -36,7 +36,7 @@ DATE_MAX: null                           # YYYYMMDD
 # - Rectangle as [lon, lat, lon, lat]
 # - Polygon as [[lon1, lat1], [lon2, lat2], ..., [lon1, lat1]]
 # - Path / or geopandas object vector file (e.g. shapefile, geopackage, geojson)
-ROI: ../geeo/data/GLANCE_EU_150-X029-Y029.gpkg
+ROI: https://raw.githubusercontent.com/leonsnill/geeo/master/geeo/data/GLANCE_EU_150-X029-Y029.gpkg
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
 
