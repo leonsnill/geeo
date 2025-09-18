@@ -462,8 +462,8 @@ def get_spatial_metadata(roi, px_res, crs=None, crs_transform=None, img_dimensio
             crs = crs.getInfo().get('crs')
         else:
             crs = crs_wkt
-    elif crs is None:  # get from roi
-        crs = dict_roi['roi_gdf'].crs.to_wkt()
+    elif crs is None:  # try to get get from roi
+        crs = dict_roi['roi_gdf'].crs.to_string()
     else:
         crs = crs
     # verify that EE accepts projection
@@ -748,60 +748,6 @@ wkt_dict = {
     'Mollweide': wkt_mollweide
 }
 
-# Projections and Tiling
-WKT_LAEA_TEMPLATE = """
-PROJCS["BU MEaSUREs Lambert Azimuthal Equal Area - {continent} - V01",
-    GEOGCS["GCS_WGS_1984",
-        DATUM["D_WGS_1984",
-            SPHEROID["WGS_1984",6378137.0,298.257223563]],
-        PRIMEM["Greenwich",0.0],
-        UNIT["degree",0.0174532925199433]],
-    PROJECTION["Lambert_Azimuthal_Equal_Area"],
-    PARAMETER["false_easting",0.0],
-    PARAMETER["false_northing",0.0],
-    PARAMETER["longitude_of_center",{lon_of_center}],
-    PARAMETER["latitude_of_center",{lat_of_center}],
-    UNIT["meter",1.0]]
-"""
-
-PROJ_LAEA_CENTERS = {
-    'AF': {
-        'lat_of_center': 5,
-        'lon_of_center': 20,
-    },
-    'AN': {
-        'lat_of_center': -90,
-        'lon_of_center': 0,
-    },
-    'AS': {
-        'lat_of_center': 45,
-        'lon_of_center': 100,
-    },
-    'EU': {
-        'lat_of_center': 55,
-        'lon_of_center': 20,
-    },
-    'OC': {
-        'lat_of_center': -15,
-        'lon_of_center': 135,
-    },
-    'NA': {
-        'lat_of_center': 50,
-        'lon_of_center': -100,
-    },
-    'SA': {
-        'lat_of_center': -15,
-        'lon_of_center': -60,
-    },
-}
-CONTINENTS = list(PROJ_LAEA_CENTERS.keys())
-
-GLANCE_GRID_CRS_WKT = {
-    continent: WKT_LAEA_TEMPLATE.format(continent=continent,
-                                        **params)
-    for continent, params in PROJ_LAEA_CENTERS.items()
-}
-
 GLANCE_GRIDS_UL_XY = {
     'AF': (-5312270.00, 3707205.0),
     'AN': (-3662210.00, 5169375.0),
@@ -846,12 +792,15 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
     if tile_size not in valid_sizes:
         raise ValueError(f"Invalid tile size. Must be one of {valid_sizes}.")
 
+    # get WKT string for continent
+    wkt_continent = wkt_dict[continent_code]
+
     if zone_mask:
         # Load zone mask GeoDataFrame
         zone_mask_gdf = gpd.read_file(
             os.path.join(os.path.dirname(__file__), f'../data/GLANCE-tiles/GLANCE_V01_{continent_code}_PROJ_ZONE.gpkg')
         )
-        zone_mask_gdf = zone_mask_gdf.to_crs(GLANCE_GRID_CRS_WKT[continent_code])
+        zone_mask_gdf = zone_mask_gdf.to_crs(wkt_continent)
         zone_mask_gdf = zone_mask_gdf.dissolve()
         # get column names and remove from final gpkg later
         zone_mask_colnames = [col for col in zone_mask_gdf.columns if col != 'geometry']
@@ -870,14 +819,13 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
         land_mask_colnames = [col for col in land_mask_gdf.columns if col != 'geometry']
 
     if continent_code == "ALL":
-        continents = CONTINENTS
+        continents = ['AF', 'AS', 'NA', 'SA', 'EU', 'OC']
     else:
         continents = [continent_code]
 
     result_grids = []
 
     for continent in continents:
-        crs_wkt = GLANCE_GRID_CRS_WKT[continent]
         upper_left = GLANCE_GRIDS_UL_XY[continent]
         grid_limits = GLANCE_GRIDS_LIMITS[continent]
 
@@ -919,12 +867,12 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
         grid_data.update(x_columns)
         grid_data.update(y_columns)
 
-        grid_gdf = gpd.GeoDataFrame(grid_data, crs=crs_wkt)
+        grid_gdf = gpd.GeoDataFrame(grid_data, crs=wkt_continent)
 
         # apply zone mask if required
         if zone_mask:
             print("Filtering grid tiles using the zone mask...")
-            zone_mask_gdf = zone_mask_gdf.to_crs(crs_wkt)
+            zone_mask_gdf = zone_mask_gdf.to_crs(wkt_continent)
             grid_gdf = gpd.sjoin(grid_gdf, zone_mask_gdf, how="inner", predicate="intersects")
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
             # drop zone mask columns from final gpkg
@@ -934,7 +882,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
         # Apply land mask if required
         if land_mask:
             print("Filtering grid tiles using the land mask...")
-            land_mask_gdf = land_mask_gdf.to_crs(crs_wkt)
+            land_mask_gdf = land_mask_gdf.to_crs(wkt_continent)
             grid_gdf = gpd.sjoin(grid_gdf, land_mask_gdf, how="inner", predicate="intersects")
             grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
             # drop land mask columns from final gpkg
@@ -971,39 +919,19 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
 
 # --------------------------------------------------------------------------------------------
 # general creat_tile funciton
-def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=None,
-                 output_dir=None, land_mask=False, land_mask_path=None
-):
-    """
-    Create a grid of tiles for any projection and bounding box or ROI.
-
-    Parameters:
-    - crs: CRS string or pyproj.CRS object for the grid.
-    - extent: (xmin, ymin, xmax, ymax) in WGS84 (lon/lat) defining the extent. If None, uses vector_roi extent.
-    - tile_size: Size of each tile in CRS units (default 150000).
-    - origin: (x, y) tuple in CRS units for the upper-left corner (optional).
-              If None, uses (xmin, ymax) of extent (projected to CRS).
-    - vector_roi: Path to shapefile or GeoDataFrame to clip the grid or define extent if extent is None.
-    - output_dir: Directory to save the grid GeoPackage (optional).
-    - land_mask: Whether to restrict grid to land surfaces (default False).
-    - land_mask_path: Path to land mask file (optional, defaults to GLANCE land mask).
-
-    Returns:
-    - GeoDataFrame of grid tiles.
-    """
+# ...existing code...
+def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=None, output_dir=None, land_mask=False, land_mask_path=None):
     import geopandas as gpd
-    from shapely.geometry import Polygon
+    from shapely.geometry import Polygon, box
+    from shapely.ops import transform as shp_transform
     import os
     from pyproj import Transformer
+    import math
 
-    DEFAULT_LAND_MASK_PATH = os.path.join(
-        os.path.dirname(__file__), "../data/ne_10m_land.gpkg"
-    )
+    DEFAULT_LAND_MASK_PATH = os.path.join(os.path.dirname(__file__), "../data/ne_10m_land.gpkg")
 
-    # determine extent in WGS84
-    if extent is None:
-        if vector_roi is None:
-            raise ValueError("Either extent or vector_roi must be provided.")
+    roi_gdf = None
+    if vector_roi is not None:
         if isinstance(vector_roi, str):
             roi_gdf = gpd.read_file(vector_roi)
         elif isinstance(vector_roi, gpd.geodataframe.GeoDataFrame):
@@ -1012,87 +940,81 @@ def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=Non
             raise ValueError("vector_roi must be a file path or a GeoDataFrame")
         if roi_gdf.crs is None:
             raise ValueError("vector_roi must have a valid CRS.")
-        roi_gdf_wgs84 = roi_gdf.to_crs("EPSG:4326")
-        xmin, ymin, xmax, ymax = roi_gdf_wgs84.total_bounds
+        roi_gdf_crs = roi_gdf.to_crs(crs)
+        roi_union_crs = roi_gdf_crs.unary_union
     else:
+        roi_gdf_crs = None
+        roi_union_crs = None
+
+    transformer_wgs84_to_crs = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
+
+    if roi_gdf is not None:
+        x_min, y_min, x_max, y_max = roi_gdf_crs.total_bounds
+    else:
+        if extent is None:
+            raise ValueError("Either extent or vector_roi must be provided.")
         xmin, ymin, xmax, ymax = extent
+        wgs84_poly = box(xmin, ymin, xmax, ymax)
+        def _proj(x, y, z=None):
+            return transformer_wgs84_to_crs.transform(x, y)
+        poly_crs = shp_transform(_proj, wgs84_poly)
+        x_min, y_min, x_max, y_max = poly_crs.bounds
 
-    # project extent to target CRS
-    transformer = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
-    x0, y0 = transformer.transform(xmin, ymax)
-    x1, y1 = transformer.transform(xmax, ymin)
-
-    if origin is None:
-        ul_x, ul_y = x0, y0
+    if origin is not None:
+        ox, oy = origin
+        looks_like_wgs84 = (-180.0 <= ox <= 180.0) and (-90.0 <= oy <= 90.0)
+        if looks_like_wgs84:
+            ul_x, ul_y = transformer_wgs84_to_crs.transform(ox, oy)
+        else:
+            ul_x, ul_y = ox, oy
     else:
-        ul_x, ul_y = origin
+        ul_x, ul_y = x_min, y_max
 
-    # calculate grid limits in CRS units
-    n_cols = int((x1 - ul_x) // tile_size) + 1
-    n_rows = int((ul_y - y1) // tile_size) + 1
+    start_col = math.floor((x_min - ul_x) / tile_size)
+    end_col = math.ceil((x_max - ul_x) / tile_size) - 1
+    start_row = math.floor((ul_y - y_max) / tile_size)
+    end_row = math.ceil((ul_y - y_min) / tile_size) - 1
+
+    bbox_poly = box(x_min, y_min, x_max, y_max)
 
     grid_list = []
     id_list = []
     x_list = []
     y_list = []
 
-    bbox_poly = Polygon([
-        (x0, y1), (x0, y0), (x1, y0), (x1, y1)
-    ])
-
-    for row in range(n_rows):
-        for col in range(n_cols):
-            x_min = ul_x + (col * tile_size)
-            y_max = ul_y - (row * tile_size)
-            x_max = x_min + tile_size
-            y_min = y_max - tile_size
-
-            tile_poly = Polygon([(x_min, y_min), (x_min, y_max), (x_max, y_max), (x_max, y_min)])
+    for row in range(start_row, end_row + 1):
+        for col in range(start_col, end_col + 1):
+            x0 = ul_x + col * tile_size
+            y0 = ul_y - row * tile_size
+            x1 = x0 + tile_size
+            y1 = y0 - tile_size
+            tile_poly = Polygon([(x0, y1), (x0, y0), (x1, y0), (x1, y1)])
             if not tile_poly.intersects(bbox_poly):
                 continue
-
+            if roi_union_crs is not None and not tile_poly.intersects(roi_union_crs):
+                continue
             grid_list.append(tile_poly)
             id_list.append(f"X{col:03d}-Y{row:03d}")
             x_list.append(col)
             y_list.append(row)
 
-    grid_data = {
-        "geometry": grid_list,
-        "ID": id_list,
-        "X": x_list,
-        "Y": y_list
-    }
+    grid_data = {"geometry": grid_list, "ID": id_list, "X": x_list, "Y": y_list}
     grid_gdf = gpd.GeoDataFrame(grid_data, crs=crs)
 
-    # land mask if required
     if land_mask:
         mask_path = land_mask_path if land_mask_path is not None else DEFAULT_LAND_MASK_PATH
-        land_mask_gdf = gpd.read_file(mask_path)
-        land_mask_gdf = land_mask_gdf.to_crs(grid_gdf.crs)
+        land_mask_gdf = gpd.read_file(mask_path).to_crs(grid_gdf.crs)
         grid_gdf = gpd.sjoin(grid_gdf, land_mask_gdf, how="inner", predicate="intersects")
         grid_gdf = grid_gdf.drop(columns="index_right").drop_duplicates(subset="geometry")
 
-    if vector_roi is not None and extent is not None:
-        if isinstance(vector_roi, str):
-            user_gdf = gpd.read_file(vector_roi)
-        elif isinstance(vector_roi, gpd.geodataframe.GeoDataFrame):
-            user_gdf = vector_roi
-        else:
-            raise ValueError("vector_roi must be a file path or a GeoDataFrame")
-        if user_gdf.crs != grid_gdf.crs:
-            user_gdf = user_gdf.to_crs(grid_gdf.crs)
-        grid_gdf = grid_gdf[grid_gdf.geometry.intersects(user_gdf.unary_union)]
-        grid_gdf = grid_gdf.drop_duplicates(subset="geometry")
-    
-    # reomve columns: featurcla, scalerank, min_zoom
     grid_gdf = grid_gdf.drop(columns=['featurecla', 'scalerank', 'min_zoom'], errors='ignore')
 
     if output_dir:
         output_filename = os.path.join(output_dir, f"tiles_{tile_size // 1000}km.gpkg")
         grid_gdf.to_file(output_filename, driver="GPKG")
-        print(f"Grid saved to {output_filename}")
 
     return grid_gdf
+
 
 
 # -------------------------------------------------------------------------------

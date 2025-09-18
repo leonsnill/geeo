@@ -20,8 +20,8 @@
 # -------------------------------------------------------------------------------
 
 # Global time settings
-YEAR_MIN: 2023                           # Minimum year
-YEAR_MAX: 2023                           # Maximum year
+YEAR_MIN: 2022                           # Minimum year
+YEAR_MAX: 2024                           # Maximum year
 MONTH_MIN: 1                             # Minimum month
 MONTH_MAX: 12                            # Maximum month
 DOY_MIN: 1                               # Minimum day of year
@@ -36,12 +36,8 @@ DATE_MAX: null                           # YYYYMMDD
 # - Rectangle as [lon, lat, lon, lat]
 # - Polygon as [[lon1, lat1], [lon2, lat2], ..., [lon1, lat1]]
 # - Path / or geopandas object vector file (e.g. shapefile, geopackage, geojson)
-ROI: [12.9, 52.2, 13.9, 52.7]
+ROI: ../geeo/data/GLANCE_EU_150-X029-Y029.gpkg
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
-
-ROI_TILES: False                        # Use features in ROI vector file as independent 'tiles' (ROI) 
-ROI_TILES_ATTRIBUTE_COLUMN: null        # Attribute column (str) that contains unique IDs (appended to DESC)
-ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/select (null = all)
 
 
 # -------------------------------------------------------------------------------
@@ -59,9 +55,7 @@ ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/sel
 SENSORS:                                 # Options: L9, L8, L7, L5, L4, S2, HLS, HLSL30, HLSS30
 - L9
 - L8
-- L7
-- L5
-- L4
+
 MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
 
 # ------------------------------------
@@ -71,9 +65,8 @@ MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
 EXCLUDE_SLCOFF: false                    # Exclude Landsat-7 ETM+ SLC-off
 GCP_MIN_LANDSAT: 1                       # Min Ground Control Points for Landsat
 MASKS_LANDSAT:                           # Landsat masks (null, cloud, cshadow,
-- cloud                                  # snow, fill, dilated)
+- cloud                                  # snow, fill, dilated, saturated)
 - cshadow
-- snow
 - fill
 - dilated
 MASKS_LANDSAT_CONF: Medium               # Confidence level for Landsat masks (Medium, High)
@@ -86,7 +79,7 @@ MASKS_S2_NIR_THRESH_SHADOW: 0.2          # PROB: Threshold NIR-based shadow mask
 
 # HLS masking (Fmask)
 MASKS_HLS:
-- cloud                                  # snow, fill, dilated)
+- cloud                                  # snow, fill, dilated, saturated)
 - cshadow
 - snow
 
@@ -111,13 +104,11 @@ BLUE_MAX_MASKING: null                   # Maximum blue reflectance to mask [0, 
 # RE1, RE2, RE3, RE4 (Sentinel-2)
 # NDVI, EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR, DEM (Copernicus)
 FEATURES:
-- BLU
-- GRN
-- RED
-- NIR
-- SW1
-- SW2
+- TCG
+- TCB
+- TCW
 - NDVI
+
 #- MY_FORMULA1
 #- MY_FORMULA2
 
@@ -200,18 +191,18 @@ NVO_FOLDING: false
 #                         TIME SERIES INTERPOLATION (TSI)
 # -------------------------------------------------------------------------------
 
-TSI: null                                # (null, WLIN, 1RBF, 2RBF, 3RBF)  
+TSI: 2RBF                                # (null, WLIN, 1RBF, 2RBF, 3RBF)  
 TSI_BASE_IMGCOL: TSS                     # (TSS, TSM, CIC)
 
 # Interpolation settings
 INTERVAL: 16                             # Interpolation interval (days)
 INTERVAL_UNIT: day                       # day, month, year
-INIT_JANUARY_1ST: false                  # Initialize interval on Jan 1st
+INIT_JANUARY_1ST: true                  # Initialize interval on Jan 1st
 SIGMA1: 16                               # Sigma1 of RBF function (in days)
 SIGMA2: 32                               # Sigma2 of RBF function (in days)
 SIGMA3: 64                               # Sigma3 of RBF function (in days)
-WIN1: 16                                 # Window1 for RBF (in days)
-WIN2: 32                                 # Window2 for RBF (in days)
+WIN1: 30                                 # Window1 for RBF (in days)
+WIN2: 90                                 # Window2 for RBF (in days)
 WIN3: 64                                 # Window3 for RBF (in days)
 BW1: 4                                   # Weight for WIN1
 BW2: 8                                   # Weight for WIN2
@@ -230,7 +221,6 @@ STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
 # Folding: temporal subwindows
 STM_FOLDING: false                       # use folding settings from above
 STM_FOLDING_LIST_ITER: false             # false (joining) or true (list iteration)
-                                         # check documentation for details!
 
 
 # -------------------------------------------------------------------------------
@@ -286,13 +276,11 @@ LSP_ADJUST_SEASONAL_MAX_DAYS: 40         # maximum adjustment in days
 
 PIX_RES: 30                              # Pixel resolution (in meters)
 
-CRS: null                                # EPSG code, WKT str, 'UTM', 'Mollweide', 
-                                         # GLANCE continent (AF,AN,AS,EU,OC,NA,SA)
-                                         # null = tries to infer from ROI or simply EPSG:4326
-CRS_TRANSFORM: null                      # [...] Affine transform to use for export        
+CRS: EU                           # EPSG, WKT string, UTM, Mollweide, or GLANCE continent (AF,AN,AS,EU,OC,NA,SA)
+CRS_TRANSFORM: null                      # Affine transform to use for export        
 IMG_DIMENSIONS: null                     # Image dimensions (widthxheight) in pixels (requires CRS_TRANSFORM)
 
-RESAMPLING_METHOD: null                  # null (nearest neighbour), bilinear, bicubic
+RESAMPLING_METHOD: bilinear                  # null (nearest neighbour), bilinear, bicubic
 
 DATATYPE: int16                          # uint8, int8, uint16, int16, uint32, int32, float, double
 DATATYPE_SCALE: 10000                    # Scale factor (check DATATYPE)
@@ -310,7 +298,7 @@ EXPORT_TSS: false                        # Export TSS
 EXPORT_CIC: false                        # Export CIC 
 EXPORT_TSM: false                        # Export TSM
 EXPORT_NVO: false                        # Export NVO 
-EXPORT_TSI: false                        # Export TSI 
+EXPORT_TSI: true                        # Export TSI 
 EXPORT_STM: false                        # Export STM 
 EXPORT_PBC: false                        # Export PBC
 EXPORT_LSP: false                        # Export LSP
@@ -320,19 +308,19 @@ EXPORT_LSP: false                        # Export LSP
 #                           GENERAL EXPORT SETTINGS
 # -------------------------------------------------------------------------------
 
-EXPORT_LOCATION: Drive                   # (Drive, Asset)
-EXPORT_DIRECTORY: null                   # null (Drive main folder) / assetId
-EXPORT_DESC: GEEO                        # Image description included in filename
+EXPORT_LOCATION: Asset                   # (Drive, Asset)
+EXPORT_DIRECTORY: projects/eexnill/assets/geeo_public/landsat-tsi                   
+EXPORT_DESC: HABITAT_EU_150-X029-Y029                        # Image description included in filename
 EXPORT_DESC_DETAIL_TIME: false           # Append detailed time description
 EXPORT_BANDNAMES_AS_CSV: false           # Soft requirement for n-bands > 100
 EXPORT_TABLE_FORMAT: CSV                 # CSV, GeoJSON, KML, KMZ, SHP, TFRecord
 EXPORT_TABLE_METHOD: reduceRegions       # 'reduceRegions' or 'reduceRegion'
-EXPORT_TABLE_TILE_SCALE: 1               # Compute tile size [0.1, 16]
+EXPORT_TABLE_TILE_SCALE: 16               # Compute tile size [0.1, 16]
 EXPORT_TABLE_BUFFER: null                # Buffer features before reduction (meters)
 EXPORT_TABLE_REDUCER: first              # Reducer used to extract values
 EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
 # ATTENTION: The folllowing can result in many exports and be highly inefficient!
-EXPORT_PER_FEATURE: false                # Export separate img per feature/band
+EXPORT_PER_FEATURE: true                # Export separate img per feature/band
 EXPORT_PER_TIME: false                   # Export separate img per time (i.e., every img in imgcol)
 
 # EOF

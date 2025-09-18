@@ -1,22 +1,24 @@
 import ee
 ee.Authenticate()
-ee.Initialize()
+ee.Initialize(project='eexnill')
 import eerepr
 eerepr.initialize()
 
 import geeo
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
 
+glance_eu = geeo.create_glance_tiles(continent_code='EU', tile_size=150000, land_mask=True)
+
 prm = {
     'YEAR_MIN': 2020,
     'YEAR_MAX': 2024,
-    'ROI': [8.026852416992174,46.09966992876708,8.280911254882799,46.25039470654484],
+    'ROI': glance_eu, #[8.026852416992174,46.09966992876708,8.280911254882799,46.25039470654484],
     'FOLD_MONTH': False,
     'FOLD_YEAR': True,
     'STM': ['p50'],
     'TSM': False,
     'TSM_BASE_IMGCOL': 'TSS',
-    'EXPORT_IMAGE': True,
+    'EXPORT_IMAGE': False,
     'EXPORT_TSM': False,
     'RESAMPLING_METHOD': 'bilinear',
     'PBC': 'MAX-RNB',
@@ -28,7 +30,9 @@ prm = {
     'EXPORT_LSP': True,
     'NVO': True,
     'NVO_FOLDING': True,
-    'EXPORT_NVO': False
+    'EXPORT_NVO': False,
+
+    #'CRS': None
 }
 
 # init
@@ -37,6 +41,7 @@ prm = merge_parameters(default_params, prm)
 
 # lvl2
 lvl2 = geeo.run_level2(prm)
+
 TSS = lvl2['TSS']
 CIC = lvl2.get('CIC')
 TSM = lvl2.get('TSM')

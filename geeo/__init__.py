@@ -34,7 +34,7 @@ from geeo.level4.level4 import run_level4
 from geeo.export.export import run_export, export_img, export_table
 
 # extended functions outside main functionality
-from geeo.misc.spacetime import vector_to_chunks, create_glance_tiles, create_tiles, getRegion, create_roi, get_spatial_metadata
+from geeo.misc.spacetime import vector_to_chunks, create_glance_tiles, create_tiles, getRegion, create_roi, get_spatial_metadata, imgcol_to_img
 from .misc.vis import VisMap, plot_rbf_interpolation, plot_getRegion
 from geeo.level4.lsp import lsp
 from geeo.misc.postprocess import process_ee_files
@@ -67,3 +67,4 @@ setattr(sys.modules[__name__], 'create_roi', create_roi)
 setattr(sys.modules[__name__], 'export_img', export_img)
 setattr(sys.modules[__name__], 'export_table', export_table)
 setattr(sys.modules[__name__], 'get_spatial_metadata', get_spatial_metadata)
+setattr(sys.modules[__name__], 'imgcol_to_img', imgcol_to_img)
