@@ -122,23 +122,23 @@ The masking settings are set to typical settings to only consider scenes with le
 | STM                      | list    | null         | min, p5, ..., max, mean, etc.   | Temporal reducers to apply (e.g. min, max, mean, stdDev, p5–p95); null skips. |
 | STM_BASE_IMGCOL          | str     | TSS          | TSS, TSM, TSI, CIC              | Collection supplying time series for statistics. |
 | STM_FOLDING              | bool    | false        | true, false                     | Compute metrics within each active fold (year/month/custom). |
-| STM_FOLDING_LIST_ITER    | bool    | false        | true, false                     | Alternate per-fold implementation (list iteration) for performance tuning. |
+| STM_FOLDING_LIST_ITER    | bool    | false        | true, false                     | Alternate per-fold implementation (list iteration). Use default (False) first. For some large area applications with few temporal fold, setting this to True might perform better. The original implementation for folding uses joins, i.e. creates an ee.ImageCollection for each desired fold, joins the images matching the temporal filter to the collection and then maps over the collection to perform the operations. Setting this to true will inesatd create a list of temporal filters, map over the list and filter the base imgcol iteratively. Usually, for many applications joins are way more efficient than list iterations!. |
 
 
 ### PIXEL-BASED COMPOSITING (PBC)
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| PBC                      | str     | null         | null, BAP, MAX-RNB, NLCD, FEATURE | Compositing: BAP (multi-criteria), MAX-RNB / FEATURE (max value), NLCD (quality-flag logic); null disables. |
+| PBC                      | str     | null         | null, BAP, MAX-RNB, NLCD, FEATURE | Compositing methods are: Best-Available-Pixel compositing ([Griffiths et al. 2019](https://doi.org/10.1109/JSTARS.2012.2228167)) Overview on BAP compositing [here](https://eol.pages.cms.hu-berlin.de/gcg_eo/04_baps.html); MAX-RNB ([Qiu et al. 2023](https://doi.org/10.1016/j.rse.2022.113375)); FEATURE (e.g. NDVI) (max value if not PBC_INVERT_QUALITY_METRIC); NLCD (quality-flag logic) ([Jin et al. 2023](https://doi.org/10.34133/remotesensing.0022)); null disables. |
 | PBC_BASE_IMGCOL          | str     | TSS          | TSS, TSM, TSI, CIC              | Source collection for compositing. |
 | PBC_FOLDING              | bool    | false        | true, false                     | Output separate composites per temporal fold. |
 | PBC_INVERT_QUALITY_METRIC| bool    | false        | true, false                     | For FEATURE composites: select minimum (invert) instead of maximum. |
-| PBC_BAP_DOY_EQ_YEAR      | int     | 30           | days                            | DOY offset where seasonal (DOY) score weight equals YEAR score. |
-| PBC_BAP_MAX_CLOUDDISTANCE| int     | 500          | meters                          | Cloud distance (m) giving CLOUD score = 1. |
-| PBC_BAP_MIN_CLOUDDISTANCE| int     | 0            | meters                          | Cloud distance (m) giving CLOUD score = 0. |
-| PBC_BAP_WEIGHT_DOY       | float   | 0.6          | 0-1                             | Weight for DOY (seasonal proximity) component. |
-| PBC_BAP_WEIGHT_YEAR      | float   | 0.2          | 0-1                             | Weight for YEAR (temporal recency) component. |
-| PBC_BAP_WEIGHT_CLOUD     | float   | 0.2          | 0-1                             | Weight for CLOUD (cloud distance) component. |
+| PBC_BAP_DOY_EQ_YEAR      | int     | 30           | days                            | Only BAP: DOY offset where seasonal (DOY) score weight equals YEAR score. |
+| PBC_BAP_MAX_CLOUDDISTANCE| int     | 500          | meters                          | Only BAP: Cloud distance (m) giving CLOUD score = 1. |
+| PBC_BAP_MIN_CLOUDDISTANCE| int     | 0            | meters                          | Only BAP: Cloud distance (m) giving CLOUD score = 0. |
+| PBC_BAP_WEIGHT_DOY       | float   | 0.6          | 0-1                             | Only BAP: Weight for DOY (seasonal proximity) component. |
+| PBC_BAP_WEIGHT_YEAR      | float   | 0.2          | 0-1                             | Only BAP: Weight for YEAR (temporal recency) component. |
+| PBC_BAP_WEIGHT_CLOUD     | float   | 0.2          | 0-1                             | Only BAP: Weight for CLOUD (cloud distance) component. |
 
 
 ## LEVEL-4
@@ -147,14 +147,20 @@ The masking settings are set to typical settings to only consider scenes with le
 
 | Parameter                 | Type  | Default | Allowed Values / Format | Description |
 |---------------------------|-------|---------|-------------------------|-------------|
-| LSP                       | str   | null    | null, POLAR             | Land Surface Phenology method (POLAR) or disabled (null). |
-| LSP_BASE_IMGCOL           | str   | TSI     | TSI, CIC                | Source collection for phenology (interpolated TSI recommended). |
+| LSP                       | str   | null    | null, POLAR             | Land Surface Phenology method. Currently, only POLAR is implemented. POLAR implements the polar-coordinates-based land surfave phenology retrieval developed by [Brooks et al. 2020](https://doi.org/10.3390/f11060606) and fine-tuned to possible seasonal adjustments by [Frantz et al. 2022](https://doi.org/10.3390/rs14030597). For a concise description the reader is referred to section *"3.2.2. Land Surface Phenology for Vegetation Dynamics 2.0"* in Frantz et al.'s paper. |
+| LSP_BASE_IMGCOL           | str   | TSI     | TSI, CIC                | Source collection for phenology (TSI recommended for a gap-free and equidistant time series). |
 | LSP_BAND                  | str   | NDVI    | Any feature band        | Band providing vegetation signal for phenometrics (e.g. NDVI). |
 | LSP_YEAR_MIN              | int   | null    | year or null            | Override global YEAR_MIN for phenology (null uses global). |
 | LSP_YEAR_MAX              | int   | null    | year or null            | Override global YEAR_MAX for phenology (null uses global). |
-| LSP_ADJUST_SEASONAL       | bool  | false   | true, false             | Enable per-year seasonal start/end DOY adjustment. |
+| LSP_ADJUST_SEASONAL       | bool  | false   | true, false             | Enable per-year seasonal start/end DOY adjustment as introduced by [Frantz et al. 2022](https://doi.org/10.3390/rs14030597). |
 | LSP_ADJUST_SEASONAL_MAX_DAYS | int| 40      | days                    | Max ± days shift allowed when seasonal adjustment enabled. |
 
+The output LSP metrics (bands) are currently: 
+
+- The long-term (entire time series) average vector pointing to the DOY of peak season (`RAVG`), the long-term average vector pointing to the DOY of the off season trough (`THETA`)
+- `t_start` and `t_end` (+ `t_start_adj`; `t_end_adj` for seasonal adjustment) providing the start and end point for each phenological year in days since 1970-01-01.
+- The LSP metrics: start-of-season (SOS; Number of days (or radial angle) corresponding to 15% of cumulative annual LSP_BAND), start-of-peak-season (SOP; 25% cum.), mid-of-season (MOS; 50% cum.), end-of-peak season (EOP; 75% cum.), and end-of-season (EOS; 80% cum.)
+- `valid_firstyear`: binary flag indicating validity of LSP metrics per pixel for first and last year. Set to 1 if first year has valid LSP metrics (then last year has not) for that pixel. 0 means that the valid LSP metrics start at y+1 and the last year has valid LSP metrics. For example: Consider a time series from 2020-2025. 0 means that valid LSP metrics were calculated for 2021-2025. 1 means that valid LSP metrics were calculated for 2020-2024. Varies on per-pixel basis.
 
 ## EXPORT
 
@@ -162,43 +168,43 @@ The masking settings are set to typical settings to only consider scenes with le
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | PIX_RES                  | int     | 30           | meters                          | Output pixel size (meters). |
-| CRS                      | str     | EPSG:4326    | EPSG, WKT, UTM, Mollweide, etc. | Target projection (EPSG code, WKT, named projection). |
+| CRS                      | str     | EPSG:4326    | EPSG, WKT, UTM, Mollweide, etc. | Target projection (EPSG code, WKT string, UTM (automatically finds UTM zone), Mollweide, or [GLANCE](https://github.com/measures-glance/glance-grids) continent identifier (AF, AS, NA, SA, OC, EU)). |
 | CRS_TRANSFORM            | list    | null         | [xScale, xShearing, xTranslation, yShearing, yScale, yTranslation] | Explicit affine transform (required if using IMG_DIMENSIONS). |
 | IMG_DIMENSIONS           | str     | null         | WidthxHeight, e.g. 1000x1000    | Fixed pixel dimensions (requires CRS_TRANSFORM). |
-| RESAMPLING_METHOD        | str     | null         | null, bilinear, bicubic         | Optional resampling for all subsequent operations (null = nearest). |
-| DATATYPE                 | str     | int16        | uint8, int8, uint16, ...        | Export datatype after applying DATATYPE_SCALE. |
-| DATATYPE_SCALE           | int     | 10000        |                                 | Multiplicative factor (e.g. reflectance * 10000 before casting). |
+| RESAMPLING_METHOD        | str     | null         | null, bilinear, bicubic         | Optional resampling for all subsequent operations (null = nearest neighbour). |
+| DATATYPE                 | str     | int16        | uint8, int8, uint16, int16, uint32, int32, float, double        | Export datatype after applying DATATYPE_SCALE. |
+| DATATYPE_SCALE           | int     | 10000        |                                 | Multiplicative factor (e.g. reflectance * 10000 before casting). **Attention**! Must be compatible with datatype. |
 | NODATA_VALUE             | int     | -9999        |                                 | Fill value for masked pixels in exports. |
 
 ### PRODUCTS TO EXPORT
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| EXPORT_IMAGE             | bool    | false        | true, false                     | Export final image product (context: composite / metrics / phenology etc.). |
+| EXPORT_IMAGE             | bool    | false        | true, false                     | Export final image products in general. Still requires the desired products to be selected below. |
 | EXPORT_TABLE             | bool    | false        | true, false                     | Export attribute/sample table (reduceRegions or reduceRegion). |
-| EXPORT_TSS               | bool    | false        | true, false                     | Export preprocessed Time Series Stack (ImageCollection). |
+| EXPORT_TSS               | bool    | false        | true, false                     | Export preprocessed Time Series Stack (TSS). |
 | EXPORT_CIC               | bool    | false        | true, false                     | Export custom ImageCollection (CIC). |
-| EXPORT_TSM               | bool    | false        | true, false                     | Export Time Series Mosaic (per unique date). |
-| EXPORT_NVO               | bool    | false        | true, false                     | Export Number of Valid Observations (image or collection if folded). |
-| EXPORT_TSI               | bool    | false        | true, false                     | Export interpolated time series. |
-| EXPORT_STM               | bool    | false        | true, false                     | Export Spectral Temporal Metrics (image or per-fold collection). |
-| EXPORT_PBC               | bool    | false        | true, false                     | Export pixel-based composites. |
-| EXPORT_LSP               | bool    | false        | true, false                     | Export Land Surface Phenology outputs. |
+| EXPORT_TSM               | bool    | false        | true, false                     | Export Time Series Mosaic (TSM). |
+| EXPORT_NVO               | bool    | false        | true, false                     | Export Number of Valid Observations (NVO). |
+| EXPORT_TSI               | bool    | false        | true, false                     | Export interpolated time series (TSI). |
+| EXPORT_STM               | bool    | false        | true, false                     | Export Spectral Temporal Metrics (STM). |
+| EXPORT_PBC               | bool    | false        | true, false                     | Export pixel-based composites (PBC). |
+| EXPORT_LSP               | bool    | false        | true, false                     | Export Land Surface Phenology (LSP). |
 
 ### GENERAL EXPORT SETTINGS
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | EXPORT_LOCATION          | str     | Drive        | Drive, Asset                    | Destination: Google Drive folder or EE Asset collection. |
-| EXPORT_DIRECTORY         | str     | null         |                                 | Drive subfolder name or full asset ID; null = default/root. |
+| EXPORT_DIRECTORY         | str     | null         |                                 | Drive subfolder name or full asset ID folder; null = default/root. |
 | EXPORT_DESC              | str     | GEEO         |                                 | Prefix for export task & filenames. |
 | EXPORT_DESC_DETAIL_TIME  | bool    | false        | true, false                     | Append detailed temporal window key to export names. |
-| EXPORT_BANDNAMES_AS_CSV  | bool    | false        | true, false                     | Also export CSV listing band names (useful for many bands). |
+| EXPORT_BANDNAMES_AS_CSV  | bool    | false        | true, false                     | Also export CSV listing band names (useful for +100 band images). |
 | EXPORT_TABLE_FORMAT      | str     | CSV          | CSV, GeoJSON, KML, etc.         | Output file format for table export. |
-| EXPORT_TABLE_METHOD      | str     | reduceRegions| reduceRegions, reduceRegion     | Multi-feature vs single-geometry reduction method. |
-| EXPORT_TABLE_TILE_SCALE  | float   | 1            | 0.1-16                          | Tile scale tuning (higher = larger tiles, potentially faster). |
+| EXPORT_TABLE_METHOD      | str     | reduceRegions| reduceRegions, reduceRegion     | Multi-feature vs single-geometry reduction method. See [Earth Engine docs](https://developers.google.com/earth-engine/guides/best_practices#reduceregion_vs_reduceregions_vs_for-loop) for more info. |
+| EXPORT_TABLE_TILE_SCALE  | float   | 1            | 0.1-16                          | Tile scale tuning: smaller tileScale -> larger tiles, poentially faster but may run out of memory. Larger tileScale = smaller tiles, may enable computations that run out of memory with the default. If after setting this to 16, the export still runs out of memory, consider a less complex (smaller) ROI, smaller extent, shorter time series, etc. I.e. run in chunks.|
 | EXPORT_TABLE_BUFFER      | int     | null         | meters                          | Buffer distance applied to features before reduction. |
 | EXPORT_TABLE_REDUCER     | str     | first        | first, ...                      | Reducer applied to intersecting pixels. |
 | EXPORT_TABLE_DROP_NODATA | bool    | false        | true, false                     | Drop rows comprised entirely of nodata. |
-| EXPORT_PER_FEATURE       | bool    | false        | true, false                     | Export separate image per feature / band (can be many tasks). |
-| EXPORT_PER_TIME          | bool    | false        | true, false                     | Export each timestamp image separately. |
+| EXPORT_PER_FEATURE       | bool    | false        | true, false                     | Export separate image per feature / band (**Attention**: can result in many tasks). |
+| EXPORT_PER_TIME          | bool    | false        | true, false                     | Export each timestamp image separately (**Attention**: can result in even more tasks). |
 
 ---
