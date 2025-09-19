@@ -1,10 +1,5 @@
-# GEEO Parameter Reference
-
-
-# Parameter documentation
-
+# GEEO Parameter Documentation
 ## LEVEL-2
-
 ### SPACE AND TIME
 These are the global spatial and temporal filters applied to the ImageCollections. The YEAR, MONTH, and DOY parameters can be combined to
 trigger a logical and filtering. Calendar year wrapping is considered for MONTH and DOY, i.e. MONTH_MIN and DOY_MIN may be greater than MONTH_MAX and DOY_MAX, respectively.
@@ -25,7 +20,10 @@ For filtering ee.ImageCollections spatially, it is recommended to leave ROI_SIMP
 | DATE_MIN                 | str     | null         | YYYYMMDD                        | Absolute start date; overrides YEAR/MONTH/DOY when paired with DATE_MAX. |
 | DATE_MAX                 | str     | null         | YYYYMMDD                        | Absolute end date; effective only if DATE_MIN set. |
 | ROI                      | list / str / GeoDataFrame / ee object | [12.9, 52.2, 13.9, 52.7] | Point [lon, lat]; BBox [xmin, ymin, xmax, ymax]; path to .shp/.gpkg; GeoDataFrame; ee.Geometry / ee.FeatureCollection | Area of Interest; complex polygons can slow filtering and may be bbox-simplified. |
-| ROI_SIMPLIFY_GEOM_TO_BBOX| bool    | true         | true, false                     | Simplifies geometry to bounding box for ee.ImageCollection filtering. Usually desireable, since  providing a complex collection as geometry argument may result in poor performance. A scenario where setting this to false makes sense if a not too complex geometry covers a large area but the bounding box would include ee.Images that are not needed (e.g. points covering distinct regions across a large area with great distances between the points. |
+| ROI_SIMPLIFY_GEOM_TO_BBOX| bool    | true         | true, false                     | Simplifies geometry to bounding box for ee.ImageCollection filtering. Usually desireable, since  providing a complex collection as geometry argument may result in poor performance. A scenario where setting this to false makes sense if a not too complex geometry covers a large area but the bounding box would include ee.Images that are not needed (e.g. points covering distinct regions across a large area with great distances between the points.) |
+| ROI_TILES                 | bool    | false        | true, false                     | Use features in ROI vector as independent tiles (ROIs) for filtering and export; applies only when ROI is a vector file (shp/gpkg/GeoDataFrame). Requires ROI_TILES_ATTRIBUTE_COLUMN to be specified to append to output filenames. |
+| ROI_TILES_ATTRIBUTE_COLUMN| str     | null         | column name or null             | Attribute column containing unique per-feature IDs; appended to EXPORT_DESC for per-tile outputs; used for subsetting via ROI_TILES_ATTRIBUTE_LIST. |
+| ROI_TILES_ATTRIBUTE_LIST  | list    | null         | list of values or null          | Values (matching ROI_TILES_ATTRIBUTE_COLUMN) to select a subset of features; null selects all features. |
 
 ### SENSOR AND DATA QUALITY SETTINGS (TIME SERIES STACK - TSS)
 

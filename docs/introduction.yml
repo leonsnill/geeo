@@ -3,7 +3,7 @@
 #       Geographic and Ecological Earth Observation (GEEO) PARAMETER FILE
 
 #                                   Version 1.0
-#                          Copyright (c) 2025, Leon Nill
+#                              (c) 2025, Leon Nill
 #   Biogeography Lab | Department of Geography | Humboldt-Universität zu Berlin
 #              mail: leon.nill@geo.hu-berlin.de | GitHub: leonsnill
 
@@ -39,6 +39,10 @@ DATE_MAX: null                           # YYYYMMDD
 ROI: [12.9, 52.2, 13.9, 52.7]
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
+ROI_TILES: False                        # Use features in ROI vector file as independent 'tiles' (ROI) 
+ROI_TILES_ATTRIBUTE_COLUMN: null        # Attribute column (str) that contains unique IDs (appended to DESC)
+ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/select (null = all)
+
 
 # -------------------------------------------------------------------------------
 #                            TIME SERIES STACK (TSS)
@@ -67,7 +71,7 @@ MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
 EXCLUDE_SLCOFF: false                    # Exclude Landsat-7 ETM+ SLC-off
 GCP_MIN_LANDSAT: 1                       # Min Ground Control Points for Landsat
 MASKS_LANDSAT:                           # Landsat masks (null, cloud, cshadow,
-- cloud                                  # snow, fill, dilated, saturated)
+- cloud                                  # snow, fill, dilated)
 - cshadow
 - snow
 - fill
@@ -82,7 +86,7 @@ MASKS_S2_NIR_THRESH_SHADOW: 0.2          # PROB: Threshold NIR-based shadow mask
 
 # HLS masking (Fmask)
 MASKS_HLS:
-- cloud                                  # snow, fill, dilated, saturated)
+- cloud                                  # snow, fill, dilated)
 - cshadow
 - snow
 
@@ -226,6 +230,7 @@ STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
 # Folding: temporal subwindows
 STM_FOLDING: false                       # use folding settings from above
 STM_FOLDING_LIST_ITER: false             # false (joining) or true (list iteration)
+                                         # check documentation for details!
 
 
 # -------------------------------------------------------------------------------
@@ -281,8 +286,10 @@ LSP_ADJUST_SEASONAL_MAX_DAYS: 40         # maximum adjustment in days
 
 PIX_RES: 30                              # Pixel resolution (in meters)
 
-CRS: EPSG:4326                           # EPSG, WKT string, UTM, Mollweide, or GLANCE continent (AF,AN,AS,EU,OC,NA,SA)
-CRS_TRANSFORM: null                      # Affine transform to use for export        
+CRS: null                                # EPSG code, WKT str, 'UTM', 'Mollweide', 
+                                         # GLANCE continent (AF,AN,AS,EU,OC,NA,SA)
+                                         # null = tries to infer from ROI or simply EPSG:4326
+CRS_TRANSFORM: null                      # [...] Affine transform to use for export        
 IMG_DIMENSIONS: null                     # Image dimensions (widthxheight) in pixels (requires CRS_TRANSFORM)
 
 RESAMPLING_METHOD: null                  # null (nearest neighbour), bilinear, bicubic
