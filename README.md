@@ -33,7 +33,15 @@ In a new .ipynb-notebook, simply install **geeo** in the first code chunk like s
 !pip install git+https://github.com/leonsnill/geeo.git
 ```
 
-First tutorial notebook: [![here](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_0_introducing-geeo.ipynb).
+**Tutorial notebooks** 
+
+Introducing geeo: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_0_introducing-geeo.ipynb). 
+
+Spatial tiling and metadata: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_1_spatial-tiling-and-metadata.ipynb)
+
+Auxiliary exports: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_2_auxiliary-exports.ipynb)
+
+Worked example of habitat mapping: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/habitat-type-mapping_geeo.ipynb) 
 
 ### Import
 
