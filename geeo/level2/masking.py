@@ -172,8 +172,6 @@ def mask_sentinel2_prob_shadow(nir_drk_thresh=0.2, cld_prj_dst=5, proj_scale=120
             dark_pixels = img.select('NIR').lt(nir_drk_thresh).multiply(not_water)
             # determine the direction to project cloud shadow from clouds (assumes UTM projection).
             shadow_azimuth = ee.Number(90).subtract(ee.Number(img.get('MEAN_SOLAR_AZIMUTH_ANGLE')))
-            # Project shadows from clouds for the "maximum distance (km) to search for cloud shadows from cloud edges"
-            # first, convert maximum distance from km to pixels based on scale
             cld_prj_dst_px = round((cld_prj_dst*1000)/proj_scale)
             cld_prj = (img.select('mask').directionalDistanceTransform(shadow_azimuth, cld_prj_dst_px)
                 .reproject(**{'crs': img.select(0).projection(), 'scale': proj_scale})

@@ -50,6 +50,7 @@ def ensure_ends_with_empty_string(list_of_lists):
 # from the geemap.ml module written by Kel Markert and Qiusheng Wu
 # https://geemap.org/ml/#geemap.ml.tree_to_string
 # Copyright (c) 2020-2024, Qiusheng Wu
+# --------------------------------------------------------------------------
 
 def tree_to_string(tree, features, model_type='classification'):
 
@@ -221,14 +222,13 @@ def dt_string_list_to_df(trees):
     tree_rows = [tree.split('\n') for tree in trees]
     # append another line break to the end of each tree string
     tree_rows= ensure_ends_with_empty_string(tree_rows)
-    # Determine the maximum number of rows
+    # determinne the maximum number of rows
     max_rows = max(len(rows) for rows in tree_rows)
     data = {}
     for i, rows in enumerate(tree_rows):
         col_name = f'tree{i+1}'
-        # Pad the list with 'NA' to match the length of the longest list
         data[col_name] = rows + ['NA'] * (max_rows - len(rows))
-    # Convert the dictionary to a pandas DataFrame
+    # convert dictonary to a pandas DataFrame
     df = pd.DataFrame(data)
     
     # append a row of 'NA': Needed for ee.CLassifier.decisionTreeEnsemble correct formating 
@@ -245,9 +245,9 @@ def dt_df_to_asset(df, folder, name='model', num_chunks=None, overwrite_asset=Fa
     else:
         print(f'Folder {folder} exists.')
 
-    # Get size of df
+    # size of df
     total_size_mb = get_size_in_mb(df)
-    # Should not exceed 10MB, otherwise split
+    # should not exceed 10MB, otherwise split
     if num_chunks is None:
         num_chunks = int(total_size_mb // 10) + 1
     # convert number of chunks to rows
@@ -282,12 +282,12 @@ def dt_df_to_asset(df, folder, name='model', num_chunks=None, overwrite_asset=Fa
         task.start()
         print(f'Started upload number {i + 1} to {asset_id}.')
 
-    # Monitor the task status
+    # task status
     print("Waiting for uploads to complete...")
     while any(task.status()['state'] in ['READY', 'RUNNING'] for task in ee.batch.Task.list()[:num_chunks]):
         time.sleep(5)
 
-    # If chunk size > 1, combine the assets
+    # if chunk size > 1, combine the assets
     if num_chunks > 1:
         uploaded_collections = [ee.FeatureCollection(path) for path in asset_paths]
         combined_feature_collection = ee.FeatureCollection(uploaded_collections).flatten()
@@ -315,22 +315,16 @@ def dt_df_to_asset(df, folder, name='model', num_chunks=None, overwrite_asset=Fa
 
 # function to convert an Earth Engine FeatureCollection asset (df of string decision rules) to a decisionTreeEnsemble
 def dt_table_asset_to_model(asset):
-    # Load the asset
     feature_collection = ee.FeatureCollection(asset)
-
-    # Get the column names
     tree_names = ee.List(list(feature_collection.first().getInfo()['properties'].keys()))
 
-    # Function to get the tree string
     def get_tree_string(tree):
         tree_string = feature_collection.aggregate_array(tree).filter(ee.Filter.neq('item', "NA")).join("\n")
         return tree_string
 
-    # Get the tree strings
     tree_list = ee.List(tree_names.map(get_tree_string))
-
-    # Create the model
     model = ee.Classifier.decisionTreeEnsemble(tree_list)
+
     return model
 
 # function to extract the trees from a model and convert them to a string
@@ -338,12 +332,10 @@ def extract_trees_to_string(trees, feature_names, model_type='classification', n
     if n_jobs == 1:
         tree_strings = [tree_to_string(tree, feature_names, model_type) for tree in trees]
     elif n_jobs == -1:
-        # Run the tree extraction process in parallel using joblib
         tree_strings = Parallel(n_jobs=os.cpu_count())(
             delayed(tree_to_string)(tree, feature_names, model_type) for tree in trees
         )
     else:
-        # Run the tree extraction process in parallel using joblib
         tree_strings = Parallel(n_jobs=n_jobs)(
             delayed(tree_to_string)(tree, feature_names, model_type) for tree in trees
         )
@@ -391,14 +383,10 @@ def dt_model_to_ee(tree_model, features=None, folder=None, upload_asset=True, na
     # check if the tree string size is smaller than 10 MB and if the user wants to upload the asset
     if tree_string_size <= 10 and not upload_asset:
         print('Uploading model ...')
-        # Directly create a model if the size is smaller than 10 MB
         ee_strings = [ee.String(tree) for tree in trees_string]
         model = ee.Classifier.decisionTreeEnsemble(ee_strings)
     else:
-        # Split and upload the trees as a DataFrame
         df = dt_string_list_to_df(trees_string)
         asset = dt_df_to_asset(df, folder, name, overwrite_asset=overwrite_asset)
-
-        # Convert the uploaded asset to a model
         model = dt_table_asset_to_model(asset)
     return model

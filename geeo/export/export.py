@@ -346,16 +346,14 @@ def run_export(params):
     Run the export process from level3 output.
     """
 
-    # Load blueprint defaults
+    # blueprint defaults
     default_params = load_blueprint()
-    
-    # Determine the type of `params` and load/merge accordingly
+
+    # determine the type of `params`
     if isinstance(params, str):
-        # Assume `params` is a path to a YAML file
         yaml_params = load_parameters(params)
         prm = merge_parameters(default_params, yaml_params)
     elif isinstance(params, dict):
-        # Assume `params` is a dictionary of parameters
         prm = merge_parameters(default_params, dict_params=params)
     else:
         raise ValueError("params must be either a path to a YAML file or a dictionary")
@@ -740,8 +738,4 @@ def run_export(params):
     # return dict
     return prm
 
-
-
-
-
-
+# eof

@@ -47,7 +47,6 @@ def get_landsat_imgcol(roi, sensors=['L9', 'L8', 'L7','L5', 'L4'], cloudmax=75, 
         time_l7 = time
 
     # dictonary containing ee.ImageCollections for each Landsat sensor
-    # The collections are Landsat Collection 2 Tier 1 Level 2 products
     dict_imgcols = {
         'L9': (ee.ImageCollection('LANDSAT/LC09/C02/T1_L2') \
                .filterBounds(roi_geom) \
@@ -155,7 +154,7 @@ def get_sentinel2_imgcol(roi, cloudmax=75, link_mask_collection='CPLUS', time=No
         # throw an error if roi is not provided
         raise ValueError("Region of Interest (roi) must be provided.")
     
-    # Import and filter S2 SR according to cloud threshold
+    # import and filter S2 SR according to cloud threshold
     imgcol = (ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED") \
               .filter(time) \
               .filterBounds(roi_geom) \
@@ -173,7 +172,7 @@ def get_sentinel2_imgcol(roi, cloudmax=75, link_mask_collection='CPLUS', time=No
         scale_bands(['AER', 'BLU', 'GRN', 'RED', 'RE1', 'RE2', 'RE3', 'NIR', 'RE4', 'SW1', 'SW2'], scale=0.0001, offset=0)
         )
     
-    # Add bands from other collections for masking
+    # add bands from other collections for masking
     if link_mask_collection == 'CPLUS':
         csPlus = ee.ImageCollection("GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED")
         imgcol = imgcol.linkCollection(csPlus, ['cs', 'cs_cdf'])

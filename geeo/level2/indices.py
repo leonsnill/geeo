@@ -66,7 +66,6 @@ def rnb(img):
     return img.addBands(rnb)
 
 
-
 # Fractional Vegetation Cover (FVC); Jimenez-Munoz et al. (2009)
 def fvc(ndvi_soil=0.15, ndvi_vegetation=0.9):
     """

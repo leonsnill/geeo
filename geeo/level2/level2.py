@@ -117,7 +117,7 @@ def run_level2(params):
     IMG_DIMENSIONS = dict_spatial_metadata['img_dimensions']
     CRS_TRANSFORM = dict_spatial_metadata['crs_transform']
 
-    # Update parameters
+    # update parameters
     prm['CRS'] = CRS
     prm['IMG_DIMENSIONS'] = IMG_DIMENSIONS
     prm['CRS_TRANSFORM'] = CRS_TRANSFORM
@@ -328,12 +328,6 @@ def run_level2(params):
 
 
 def main(params=None):
-    """
-    Main function to run level2 either from a YAML file or directly provided parameters.
-
-    Args:
-        params (str or dict, optional): Path to the YAML file or a dictionary of parameters.
-    """
     run_level2(params)
 
 if __name__ == "__main__":

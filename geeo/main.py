@@ -118,7 +118,7 @@ if __name__ == "__main__":
             import json
             params = json.loads(args.params)
         except json.JSONDecodeError:
-            params = args.params  # It's a YAML file path
+            params = args.params
     else:
         params = None
 

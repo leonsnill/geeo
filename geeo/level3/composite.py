@@ -92,34 +92,33 @@ def bap_score(year_target, year_offset, doy_target, doy_offset, doy_offset_eq_ye
                 .multiply(-0.5) \
                 .exp()
                 )
-        # Convert the inputs to ee.Number
+        # convert inputs to ee.Number
         year = ee.Image(ee.Number.parse(img.date().format("YYYY")))
-        # Calculate the absolute difference between the year and the target year
+        # absolute difference between the year and target year
         year_difference = year.subtract(year_target).abs()
-        # Define the conditions for the scoring
-        condition_exact = year_difference.eq(1)  # Difference within ±1 year
-        condition_within_offset = year_difference.gt(1).And(year_difference.lte(year_offset))  # Between 1 and year_offset
-        # Linearly interpolate the score for years within the offset range but outside the exact match
+        # define conditions for scoring
+        condition_exact = year_difference.eq(1)  # difference within +-1 year
+        condition_within_offset = year_difference.gt(1).And(year_difference.lte(year_offset))
+
         interpolated_score = doy_vs_year_score.multiply(
             ee.Image(1).subtract(year_difference.subtract(1).divide(year_offset.subtract(1)))
         )
-        # Create the final scoring image based on conditions
+
+        # final scoring image based on conditions
         YEAR_SCORE = ee.Image(1) \
             .where(condition_exact, doy_vs_year_score) \
             .where(condition_within_offset, interpolated_score) \
             .where(year_difference.gt(year_offset), 0)  # Set score to 0 for differences greater than the offset
-        # Rename the final image to 'YEAR_SCORE'
         YEAR_SCORE = YEAR_SCORE.rename('YEAR_SCORE')
 
         # CLOUD score
         distance = mask.Not().distance(ee.Kernel.euclidean(radius=max_clouddistance, units='meters'))
-        # Create conditions for the final image
+        # conditions for the final image
         condition1 = mask.eq(0)  # Cloud pixels
-        condition2 = distance.lte(min_clouddistance)  # Pixels less than or equal to the lower threshold
+        condition2 = distance.lte(min_clouddistance)
         condition3 = distance.gt(min_clouddistance).And(distance.lte(max_clouddistance))  # Pixels in between
-        # Linear interpolation between lower_threshold and max_clouddistance
         interpolated = distance.subtract(ee.Image(min_clouddistance)).divide(ee.Image(max_clouddistance).subtract(min_clouddistance))
-        # Combine conditions to create the final image
+
         CLOUD_SCORE = ee.Image(1) \
             .where(condition1, 0) \
             .where(condition2, 0) \
@@ -127,7 +126,7 @@ def bap_score(year_target, year_offset, doy_target, doy_offset, doy_offset_eq_ye
             .where(distance.gt(max_clouddistance), 1)
         CLOUD_SCORE = CLOUD_SCORE.rename('CLOUD_SCORE')
 
-        # FINAL score
+        # FINAL
         BAP_SCORE = ee.Image(
             CLOUD_SCORE.multiply(weight_cloud).add(DOY_SCORE.multiply(weight_doy)).add(YEAR_SCORE.multiply(weight_year))
             ).toFloat().rename('SCORE')
