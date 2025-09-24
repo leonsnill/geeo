@@ -11,12 +11,12 @@ For filtering ee.ImageCollections spatially, it is recommended to leave ROI_SIMP
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| YEAR_MIN                 | int     | 2023         | Any year                        | Start year (inclusive) when DATE_* not set. |
-| YEAR_MAX                 | int     | 2023         | Any year                        | End year (inclusive); paired with MONTH/DOY filters when DATE_* absent. |
-| MONTH_MIN                | int     | 1            | 1-12                            | First month in seasonal window; can exceed MONTH_MAX to wrap (e.g. 11→2). |
-| MONTH_MAX                | int     | 12           | 1-12                            | Last month in window; wrapping applied when < MONTH_MIN. |
-| DOY_MIN                  | int     | 1            | 1-366                           | First Day-Of-Year; can exceed DOY_MAX to express wrap (e.g. 300→60). |
-| DOY_MAX                  | int     | 366          | 1-366                           | Last DOY; wrapping logic applied when < DOY_MIN. |
+| YEAR_MIN                 | int     | 2023         | YYYY                        | Start year (inclusive) when DATE_* not set. |
+| YEAR_MAX                 | int     | 2023         | YYYY                       | End year (inclusive); paired with MONTH/DOY filters when DATE_* absent. |
+| MONTH_MIN                | int     | 1            | [1, 12]                            | First month in seasonal window; can exceed MONTH_MAX to wrap (e.g. 11→2). |
+| MONTH_MAX                | int     | 12           | [1, 12]                            | Last month in window; wrapping applied when < MONTH_MIN. |
+| DOY_MIN                  | int     | 1            | [1, 366]                           | First Day-Of-Year; can exceed DOY_MAX to express wrap (e.g. 300→60). |
+| DOY_MAX                  | int     | 366          | [1, 366]                           | Last DOY; wrapping logic applied when < DOY_MIN. |
 | DATE_MIN                 | str     | null         | YYYYMMDD                        | Absolute start date; overrides YEAR/MONTH/DOY when paired with DATE_MAX. |
 | DATE_MAX                 | str     | null         | YYYYMMDD                        | Absolute end date; effective only if DATE_MIN set. |
 | ROI                      | list / str / GeoDataFrame / ee object | [12.9, 52.2, 13.9, 52.7] | Point [lon, lat]; BBox [xmin, ymin, xmax, ymax]; path to .shp/.gpkg; GeoDataFrame; ee.Geometry / ee.FeatureCollection | Area of Interest; complex polygons can slow filtering and may be bbox-simplified. |
