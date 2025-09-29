@@ -328,7 +328,7 @@ def dt_table_asset_to_model(asset):
     return model
 
 # function to extract the trees from a model and convert them to a string
-def extract_trees_to_string(trees, feature_names, model_type='classification', n_jobs=-1):
+def extract_trees_to_string(trees, feature_names, model_type='classification', n_jobs=1):
     if n_jobs == 1:
         tree_strings = [tree_to_string(tree, feature_names, model_type) for tree in trees]
     elif n_jobs == -1:
@@ -343,7 +343,7 @@ def extract_trees_to_string(trees, feature_names, model_type='classification', n
     return tree_strings
 
 # wrapper function to convert a list of tree strings to a decisionTreeEnsemble model
-def dt_model_to_ee(tree_model, features=None, folder=None, upload_asset=True, name='model', overwrite_asset=False, n_jobs=-1):
+def dt_model_to_ee(tree_model, features=None, folder=None, upload_asset=True, name='model', overwrite_asset=False, n_jobs=1):
     
     # create list of trees for different inputs.
     if isinstance(tree_model, sklearn.ensemble._forest.RandomForestClassifier) \
