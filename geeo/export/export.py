@@ -29,6 +29,7 @@ def export_img(
         px_res=None, region=None, crs=None, crsTransform=None, dimensions=None, fileDimensions=None,
         adjust_crsTransform_to_region=True,  # get crsTransform using crs + px_res, and region
         resampling_method=None,  # None (nearest neighbour), bilinear, bicubic
+        pyramidingPolicy={'.default': 'mean'},
         nodata=0, scale=1, dtype=None, export_bandnames=False):
     
     """
@@ -192,6 +193,7 @@ def export_img(
             region=region,
             crs=crs,
             crsTransform=crsTransform,
+            pyramidingPolicy=pyramidingPolicy,
             assetId=out_dir+'/'+outname,
             maxPixels=1e13
         )
