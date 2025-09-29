@@ -2,7 +2,7 @@
 import ee
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
 from geeo.misc.formatting import scale_and_dtype
-from geeo.misc.spacetime import imgcol_to_img, create_roi, reduction, get_time_dict_subwindows, get_spatial_metadata
+from geeo.misc.spacetime import imgcol_to_img, create_roi, reduction, get_time_dict_subwindows, get_spatial_metadata, wkt_dict
 
 # ----------------------------------------------------------------------------
 
@@ -127,6 +127,8 @@ def export_img(
     
     if crs is None:
         crs = img.select(0).projection()
+    elif crs in wkt_dict.keys():
+        crs = wkt_dict[crs]
     # check crs
     crs = ee.Projection(crs)
     try:
