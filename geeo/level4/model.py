@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.base import is_classifier, is_regressor
+from tqdm import tqdm
 import ee
 
 # ==============================================================================
@@ -330,14 +331,14 @@ def dt_table_asset_to_model(asset):
 # function to extract the trees from a model and convert them to a string
 def extract_trees_to_string(trees, feature_names, model_type='classification', n_jobs=1):
     if n_jobs == 1:
-        tree_strings = [tree_to_string(tree, feature_names, model_type) for tree in trees]
+        tree_strings = [tree_to_string(tree, feature_names, model_type) for tree in tqdm(trees, desc="Converting trees")]
     elif n_jobs == -1:
         tree_strings = Parallel(n_jobs=os.cpu_count())(
-            delayed(tree_to_string)(tree, feature_names, model_type) for tree in trees
+            delayed(tree_to_string)(tree, feature_names, model_type) for tree in tqdm(trees, desc="Converting trees")
         )
     else:
         tree_strings = Parallel(n_jobs=n_jobs)(
-            delayed(tree_to_string)(tree, feature_names, model_type) for tree in trees
+            delayed(tree_to_string)(tree, feature_names, model_type) for tree in tqdm(trees, desc="Converting trees")
         )
 
     return tree_strings
