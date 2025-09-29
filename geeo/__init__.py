@@ -4,13 +4,15 @@ from .utils import LazyLoader
 import ee
 
 # do not init and/or auth; let user do it; maybe in future find robust way to set project
-'''
+
 try:
     ee.Initialize()
 except Exception as e:
-    ee.Authenticate()
-    ee.Initialize()
-'''
+    try:
+        ee.Authenticate()
+        ee.Initialize()
+    except:
+        raise RuntimeError("Failed to initialize Earth Engine. Import ee module, then (authenticate+) initialize.")
     
 misc = LazyLoader('geeo.misc')
 level2 = LazyLoader('geeo.level2')
