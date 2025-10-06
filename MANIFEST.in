@@ -1,3 +1,3 @@
 include geeo/config/*.yml
 include geeo/data/GLANCE-tiles/*.gpkg
-include geeo/data/ne_10m_land.gpkg
+include geeo/data/*.gpkg
