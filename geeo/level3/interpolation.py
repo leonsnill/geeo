@@ -276,9 +276,9 @@ def _rbf_interpolate_timeseries(times_np, values_2d, mode,
 
 def tsi_rbf_df(
     df,
-    group_col,
-    value_cols,
-    date_col='YYYYMMDD',
+    group_col=None,
+    value_cols=None,
+    date_col=None,
     mode='1RBF',
     step_days=16,
     sigma1=16, win1=16,
@@ -288,20 +288,38 @@ def tsi_rbf_df(
     nodata_value=-9999,
     drop_all_nan=True
 ):
+    """
+    Interpolate values in a DataFrame using RBF, optionally grouped by group_col.
+    If group_col is None, interpolate all rows together.
+    If date_col is None, the DataFrame index is used as datetime.
+    """
     out_frames = []
     print('Interpolating DF ...')
-    for g, gdf in tqdm(df.groupby(group_col)):
+    if group_col is not None:
+        group_iter = df.groupby(group_col)
+    else:
+        group_iter = [(None, df)]
+        if value_cols is None:
+            raise ValueError("value_cols must be specified if group_col is None")
+    for g, gdf in tqdm(group_iter):
         sub = gdf[value_cols].copy()
         sub = sub.replace(nodata_value, np.nan)
         if drop_all_nan:
             sub = sub.loc[sub.notna().any(axis=1)]
         if sub.empty:
             continue
-        t_raw = gdf.loc[sub.index, date_col].values
-        if np.issubdtype(gdf[date_col].dtype, np.datetime64):
+        if date_col is None:
+            t_raw = gdf.loc[sub.index].index.values
+            # Ensure index is datetime64
+            if not np.issubdtype(t_raw.dtype, np.datetime64):
+                raise ValueError("Index must be datetime64 if date_col is None")
             times_np = t_raw.astype('datetime64[ns]')
         else:
-            times_np = np.array([np.datetime64(datetime.strptime(str(d), "%Y%m%d")) for d in t_raw])
+            t_raw = gdf.loc[sub.index, date_col].values
+            if np.issubdtype(gdf[date_col].dtype, np.datetime64):
+                times_np = t_raw.astype('datetime64[ns]')
+            else:
+                times_np = np.array([np.datetime64(datetime.strptime(str(d), "%Y%m%d")) for d in t_raw])
         vals = sub.to_numpy(dtype='float32')  # (t,n)
         arr = vals
         out_arr, target_times = _rbf_interpolate_timeseries(
@@ -310,10 +328,14 @@ def tsi_rbf_df(
         )
         data_dict = {col: out_arr[i] for i, col in enumerate(value_cols)}
         tmp = pd.DataFrame(data_dict, index=pd.to_datetime(target_times))
-        tmp.insert(0, group_col, g)
+        if group_col is not None:
+            tmp.insert(0, group_col, g)
         out_frames.append(tmp)
     if not out_frames:
-        return pd.DataFrame(columns=[group_col, *value_cols])
+        if group_col is not None:
+            return pd.DataFrame(columns=[group_col, *value_cols])
+        else:
+            return pd.DataFrame(columns=value_cols)
     long_df = pd.concat(out_frames)
     long_df.index.name = 'time'
     return long_df
