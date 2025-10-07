@@ -144,7 +144,7 @@ print('STM bands: ', stm.first().bandNames().getInfo())
 
 We left many parameters to default values for illustrational purposes. This includes export settings regarding resampling, projection and metadata, as well as quality masking settings. They are all set to reasonable, - and if possible - common/generic settings (e.g. cloud masking). Nevertheless, being explicit about these settings for your actual implementations is highly recommended!
 
-What we now did inn essence with just these few lines of setttings, is:
+What we now did in essence with just these few lines of code, is:
 
 - Combine Landsat-8 and Landsat-9 Collection 2 Tier 1 Surface Reflectance collections into one collection, including scaling the band to actual reflectance values (0-100)
 - Apply quality masks to 'invalid' pixels (cloud, cloud shadow, snow/ice, fill, dilated clouds)
