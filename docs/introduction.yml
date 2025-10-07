@@ -4,7 +4,8 @@
 
 #                                   Version 1.0
 #                              (c) 2025, Leon Nill
-#   Biogeography Lab | Department of Geography | Humboldt-Universität zu Berlin
+#                     Biogeography Lab / Earth Observation Lab
+#            Department of Geography | Humboldt-Universität zu Berlin
 #              mail: leon.nill@geo.hu-berlin.de | GitHub: leonsnill
 
 
@@ -125,12 +126,12 @@ FEATURES:
 #   Custom Features from Functions
 # ------------------------------------
 CUSTOM_FORMULAS:                         # custom formulas (optional)
-  MY_FORMULA1:                                  # will become also the bandname if in FEATURES
+  MY_FORMULA1:                           # will also become the bandname if in FEATURES
     formula: "(G-SW1)/(G+SW1)"
     variable_map:
       G: GRN
       SW1: SW1
-  MY_FORMULA2:                                  # will become also the bandname if in FEATURES
+  MY_FORMULA2:                           # will also become the bandname if in FEATURES
     formula: "MY_FORMULA/2"
     variable_map:
       MY_FORMULA: MY_FORMULA1

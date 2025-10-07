@@ -110,7 +110,7 @@ BLUE_MAX_MASKING: null                   # Maximum blue reflectance to mask [0, 
 # BLU, GRN, RED, NIR, SW1, SW2 (Landsat+Sentinel-2)
 # LST (Landsat, if LST was processed for scene)
 # RE1, RE2, RE3, RE4 (Sentinel-2)
-# NDVI, EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR, DEM (Copernicus)
+# NDVI, EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR
 FEATURES:
 - BLU
 - GRN
@@ -184,7 +184,7 @@ FOLD_MONTH: false                        # Fold per month
 FOLD_CUSTOM: {
   year: null,                            # [YYYY-YYYY, ...] / [YYYY+-OFFSET, ...]
   month: null,                           # [MM-MM, ...] / [MM+-OFFSET, ...]
-  doy: null,                             # [DOY-DOY, ...] / [DOY+-OFFSET, ...
+  doy: null,                             # [DOY-DOY, ...] / [DOY+-OFFSET, ...]
   date: null                             # [YYYYMMDD-YYYYMMDD, ...] / [YYYYMMDD+-OFFSET, ...]
 }
 

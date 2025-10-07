@@ -53,40 +53,44 @@ The masking settings are set to typical settings to only consider scenes with le
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| FEATURES                 | list    | [BLU, GRN, RED, NIR, SW1, SW2, NDVI] | See description | Bands / indices / custom formula outputs kept in pipeline; include DEM or unmixing outputs here for export. |
-| CUSTOM_FORMULAS  | dict  | null    | {NAME: {formula: "(G-SW1)/(G+SW1)", variable_map: {G: GRN, SW1: SW1}}, ...} | Per-image EE expression definitions; add NAME to FEATURES to include resulting band. |
-| UMX                      | dict    | null         | See description                 | Endmember dictionary: {Class: [vals...]}; vector order must match FEATURES. |
-| UMX_SUM_TO_ONE           | bool    | true         | true, false                     | Enforce abundance fractions sum to 1. |
-| UMX_NON_NEGATIVE         | bool    | true         | true, false                     | Constrain abundance fractions to ≥ 0. |
+| FEATURES                 | list    | [BLU, GRN, RED, NIR, SW1, SW2, NDVI] | BLU, GRN, RED, NIR, SW1, SW2 (Landsat+Sentinel-2), LST (Landsat, if LST was processed for scene), RE1, RE2, RE3, RE4 (Sentinel-2), NDVI, EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR | Bands / indices / custom formula outputs kept in pipeline; include DEM or unmixing outputs here for export. |
+| CUSTOM_FORMULAS  | dict  | null    | {NAME: {formula: "(G-SW1)/(G+SW1)", variable_map: {G: GRN, SW1: SW1}}, ...} | Per-image EE expression definitions; add NAME to FEATURES to include resulting band. Custom formulas can be used in chains, i.e. output (NAME) from previous formula may be called in subsequent formula. |
+| UMX                      | dict    | null         | {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...}                 | Order in endmember dictionary must match order defined in FEATURES. For example, if {'PV': [0.08, 0.1, 0.07, 0.24, 0.11, 0.08], 'Soil': [0.2, 0.3, 0.3, 0.4, 0.45, 0.55]} and FEATURES [BLU, GRN, RED, NIR, SW1, SW2], then corresponding feature-value combinations will be used (e.g. Soil 0.2 for BLU). Attention must be paid that values in UMX match scale of FEATURES. Wrapper for [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix). See also [unmixing example](https://developers.google.com/earth-engine/guides/image_transforms#spectral-unmixing) from Earth Engine. |
+| UMX_SUM_TO_ONE           | bool    | true         | true, false                     | Enforce abundance fractions sum to 1. See [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix).|
+| UMX_NON_NEGATIVE         | bool    | true         | true, false                     | Constrain abundance fractions to ≥ 0. See [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix).|
 | UMX_REMOVE_INPUT_FEATURES| bool    | true         | true, false                     | Keep only abundance (unmixed) bands if true; otherwise append. |
 
 ### CUSTOM IMAGE COLLECTION (CIC)
+A custom image collection (CIC) can be specified for use in Level-3 and Level-4 analyses. However, Level-2 routines designed for the TSS—such as cloud masking—are not compatible with a CIC and must be performed by the user beforehand. Using a CIC typically requires additional attention; refer to the software documentation for CIC usage examples.
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| CIC             | str   | null    | ee.ImageCollection path | Use external ImageCollection instead of constructing TSS. |
+| CIC             | str   | null    | ee.ImageCollection path | Use specified ImageCollection (instead of constructing TSS). |
 | CIC_FEATURES    | list  | null    | band names or null      | Optional band subset; null keeps all CIC bands. |
 
 ### TIME SERIES MOSAIC (TSM)
+TSM generates a harmonized spatial mosaic from images acquired on the same day. Satellite data products like Landsat or Sentinel-2 are organized in tiling schemes where image scenes can overlap, meaning the same measurement may appear in multiple images for a given date. Using TSMs helps streamline time series exports, reducing the need for post-processing and preventing bias or errors in statistical calculations—such as double-counting the same measurement in image metrics.
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| TSM                      | bool    | false        | true, false                     | Build one spatial mosaic per unique acquisition date in TSS or CIC. |
+| TSM                      | bool    | false        | true, false                     | Build one spatial mosaic per unique acquisition date in TSS or CIC. The Time Series Mosaic is closely related to the Time Series Stack, but converts spatially overlapping, individual images into mosaics containing only a single image for each unique acquisition date. |
 | TSM_BASE_IMGCOL          | str     | TSS          | TSS, CIC                        | Source collection for mosaicking (raw TSS or custom CIC). |
 
 
 ## LEVEL-3
 
 ### TEMPORAL SUBWINDOWS | FOLDING
+Temporal folding is a setting to be used for NVO, STM, and PBC. It allows to create temporal subwindows within the global time settings (SPACE AND TIME). All settings below will be combined into all possible unique combinations: For example, if the user specifies FOLD_YEAR=True and FOLD_MONTH=True and YEAR_MIN=2020, YEAR_MAX=2021, MONTH_MIN=1, MONTH_MAX=12, there are 2x12=24 subwindows (each month for each year). 
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| FOLD_YEAR                | bool    | false        | true, false                     | Partition time series into yearly subwindows. |
-| FOLD_MONTH               | bool    | false        | true, false                     | Partition into monthly subwindows (Jan..Dec across years). |
-| FOLD_CUSTOM              | dict    | {year: null, month: null, doy: null, date: null} | See description | Additional custom windows via ranges or target±offset lists (e.g. [2020-2021], [265+-30]). |
+| FOLD_YEAR                | bool    | false        | true, false                     | Partition time series into yearly subwindows for each unique year from YEAR_MIN to YEAR_MAX. |
+| FOLD_MONTH               | bool    | false        | true, false                     | Partition into monthly subwindows for each unique month from MONTH_MIN to MONTH_MAX. (Jan..Dec across years). |
+| FOLD_CUSTOM              | dict    | {year: null, month: null, doy: null, date: null} | year: [YYYY-YYYY, ...] / [YYYY+-OFFSET, ...]; month: [MM-MM, ...] / [MM+-OFFSET, ...]; doy: [DOY-DOY, ...] / [DOY+-OFFSET, ...]; date: [YYYYMMDD-YYYYMMDD, ...] / [YYYYMMDD+-OFFSET, ...]  | Custom windows via ranges or target±offset lists. For example, {year: [2020-2021], doy: [192+-30, 240+-30]}. |
 
 
 ### NUMBER OF VALID OBSERVATIONS (NVO)
+Determines the number of valid (unmasked) observations per pixel within a specified temporal window, providing a measure of the reliability and robustness of resulting data products. Since clouds, snow, and shadows are masked at the pixel level, it is important to evaluate data availability for each study area and time period individually ([Lewińska et al., 2024](https://doi.org/10.1016/j.dib.2024.111054)). For instance, image features like STMs may not be reliable if they are based on only a small number of observations ([Frantz et al., 2023](https://doi.org/10.1016/j.rse.2023.113823)).
 
 | Parameter     | Type | Default | Allowed Values / Format | Description |
 |---------------|------|---------|-------------------------|-------------|
@@ -95,10 +99,11 @@ The masking settings are set to typical settings to only consider scenes with le
 
 
 ### TIME SERIES INTERPOLATION (TSI)
+Many applications require spatial-temporal continuity, equidistant observations, and cannot deal with missing pixel values. TSI addresses this by applying interpolation techniques to generate a gap-free, equidistant time series from the TSS, TSM, or CIC. Users define the desired time interval (e.g., every 10 days) and select an interpolation method with relevant parameters. GEEO supports two interpolation approaches: weighted linear interpolation (based on proximity to the nearest observation) and Radial Basis Function (RBF, or ‘Gaussian’) interpolation. See the Juypter Notebook 'geeo/docs/habitat-type-mapping_geeo.ipynb' for a worked example of TSI. 
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| TSI                      | str     | null         | null, WLIN, 1RBF, 2RBF, 3RBF    | Interpolation method: WLIN (weighted linear) or Radial-Basis-Function (RBF) using one to three Gaussian kernels; null disables. |
+| TSI                      | str     | null         | null, WLIN, 1RBF, 2RBF, 3RBF    | Interpolation method: WLIN (weighted linear) or Radial-Basis-Function (RBF) using one to three Gaussian kernels; null disables. Up to three RBF kernels with different settings can be chosen, allowing the time series to be adaptively smoothed according to data availability ([Frantz, 2019](https://doi.org/10.3390/rs11091124)). |
 | TSI_BASE_IMGCOL          | str     | TSS          | TSS, TSM, CIC                   | Collection to interpolate (raw, mosaicked, or custom). |
 | INTERVAL                 | int     | 16           | days                            | Desired spacing between interpolated timestamps. |
 | INTERVAL_UNIT            | str     | day          | day, month, year                | Unit used for INTERVAL spacing. |
@@ -113,17 +118,19 @@ The masking settings are set to typical settings to only consider scenes with le
 | BW2                      | int     | 8            |                                 | Weight for 3rd kernel (3RBF), see BW1. |
 
 
-### SPECTRAL TEMPORAL METRICS (STM)
+### SPECTRAL-TEMPORAL-METRICS (STM)
+STMs are a commonly applied dimensionality reduction in remote sensing, in which pixel-wise statistics across individual bands/features are calculated for a given set of imagery over time. They capture spectral information over time and can be retrieved for different temporal sub-windows (years, seasons, months, etc.). STMs are robust, spatially continuous, and can be efficiently calculated, and as such, underpin a huge amount of remote sensing products that are currently available.  
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
-| STM                      | list    | null         | min, p5, ..., max, mean, etc.   | Temporal reducers to apply (e.g. min, max, mean, stdDev, p5–p95); null skips. |
-| STM_BASE_IMGCOL          | str     | TSS          | TSS, TSM, TSI, CIC              | Collection supplying time series for statistics. |
-| STM_FOLDING              | bool    | false        | true, false                     | Compute metrics within each active fold (year/month/custom). |
+| STM                      | list    | null         | mean, median, sum, min, max, stdDev, variance, p1, p5, p10, p15, p20, p25, p30, p35, p40, p45, p50, p55, p60, p65, p70, p75, p80, p85, p90, p95, p99, skew, kurtosis, count, first, last  | Metrics to calculate for FEATURES and TIME (possibly FOLDING if STM_FOLDING set to True); null skips STM calculation.  |
+| STM_BASE_IMGCOL          | str     | TSS          | TSS, TSM, TSI, CIC              | Collection to use for STM calculation. |
+| STM_FOLDING              | bool    | false        | true, false                     | Compute metrics for folds specified in FOLD_YEAR, FOLD_MONTH, or FOLD_CUSTOM. |
 | STM_FOLDING_LIST_ITER    | bool    | false        | true, false                     | Alternate per-fold implementation (list iteration). Use default (False) first. For some large area applications with few temporal fold, setting this to True might perform better. The original implementation for folding uses joins, i.e. creates an ee.ImageCollection for each desired fold, joins the images matching the temporal filter to the collection and then maps over the collection to perform the operations. Setting this to true will inesatd create a list of temporal filters, map over the list and filter the base imgcol iteratively. Usually, for many applications joins are way more efficient than list iterations!. |
 
 
-### PIXEL-BASED COMPOSITING (PBC)
+### PIXEL-BASED COMPOSITES (PBC)
+PBC produces cloud-free, radiometrically, and potentially phenologically consistent imagery that is spatially continuous across large regions. Various parameters can be used to rank pixels by their suitability, guiding how the mosaic is assembled. A typical PBC method is maximum NDVI compositing, which selects imagery from periods of peak photosynthetic activity.
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
@@ -142,6 +149,7 @@ The masking settings are set to typical settings to only consider scenes with le
 ## LEVEL-4
 
 ### LAND SURFACE PHENOLOGY (LSP)
+LSP metrics are intended to characterize seasonal events in vegetation life cycles. Typically, a vegetation index like NDVI is used to detect phenological stages - such as start-of-season or peak-season - by linking changes in the spectral curve over time to these stages, often through straightforward thresholding approaches.
 
 | Parameter                 | Type  | Default | Allowed Values / Format | Description |
 |---------------------------|-------|---------|-------------------------|-------------|
@@ -161,18 +169,21 @@ The output LSP metrics (bands) are currently:
 - `valid_firstyear`: binary flag indicating validity of LSP metrics per pixel for first and last year. Set to 1 if first year has valid LSP metrics (then last year has not) for that pixel. 0 means that the valid LSP metrics start at y+1 and the last year has valid LSP metrics. For example: Consider a time series from 2020-2025. 0 means that valid LSP metrics were calculated for 2021-2025. 1 means that valid LSP metrics were calculated for 2020-2024. Varies on per-pixel basis.
 
 ## EXPORT
+Image or table export of the above products to Google Drive or as Earth Engine Asset. Allows to specify, and takes care of, spatial and image metadata, including projection, resampling method, data type and scale.
 
 ### IMAGE SETTINGS
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | PIX_RES                  | int     | 30           | meters                          | Output pixel size (meters). |
-| CRS                      | str     | EPSG:4326    | EPSG, WKT, UTM, Mollweide, etc. | Target projection (EPSG code, WKT string, UTM (automatically finds UTM zone), Mollweide, or [GLANCE](https://github.com/measures-glance/glance-grids) continent identifier (AF, AS, NA, SA, OC, EU)). |
+| CRS                      | str     | EPSG:4326    | (EPSG), (WKT-string), UTM; Mollweide; (GLANCE) AF, AS, NA, SA, OC, EU | Target projection (EPSG code, WKT string, UTM (automatically finds UTM zone), Mollweide, or [GLANCE](https://github.com/measures-glance/glance-grids) continent identifier (AF, AS, NA, SA, OC, EU)). |
 | CRS_TRANSFORM            | list    | null         | [xScale, xShearing, xTranslation, yShearing, yScale, yTranslation] | Explicit affine transform (required if using IMG_DIMENSIONS). |
 | IMG_DIMENSIONS           | str     | null         | WidthxHeight, e.g. 1000x1000    | Fixed pixel dimensions (requires CRS_TRANSFORM). |
 | RESAMPLING_METHOD        | str     | null         | null, bilinear, bicubic         | Optional resampling for all subsequent operations (null = nearest neighbour). |
 | DATATYPE                 | str     | int16        | uint8, int8, uint16, int16, uint32, int32, float, double        | Export datatype after applying DATATYPE_SCALE. |
 | DATATYPE_SCALE           | int     | 10000        |                                 | Multiplicative factor (e.g. reflectance * 10000 before casting). **Attention**! Must be compatible with datatype. |
 | NODATA_VALUE             | int     | -9999        |                                 | Fill value for masked pixels in exports. |
+
+If the ROI, CRS and PIX_RES facilitate exact matching of the pixel grid, the ouput image will perfectly align with the specified spatial extent. See the Jupyter Notebook 'geeo/docs/tutorial_1_spatial-tiling-and-metadata.ipynb' for an example and further descriptions.
 
 ### PRODUCTS TO EXPORT
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
