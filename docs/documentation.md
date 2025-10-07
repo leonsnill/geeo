@@ -99,7 +99,7 @@ Determines the number of valid (unmasked) observations per pixel within a specif
 
 
 ### TIME SERIES INTERPOLATION (TSI)
-Many applications require spatial-temporal continuity, equidistant observations, and cannot deal with missing pixel values. TSI addresses this by applying interpolation techniques to generate a gap-free, equidistant time series from the TSS, TSM, or CIC. Users define the desired time interval (e.g., every 10 days) and select an interpolation method with relevant parameters. GEEO supports two interpolation approaches: weighted linear interpolation (based on proximity to the nearest observation) and Radial Basis Function (RBF, or ‘Gaussian’) interpolation. See the Juypter Notebook 'geeo/docs/habitat-type-mapping_geeo.ipynb' for a worked example of TSI. 
+Many applications require spatial-temporal continuity, equidistant observations, and cannot deal with missing pixel values. TSI addresses this by applying interpolation techniques to generate a gap-free, equidistant time series from the TSS, TSM, or CIC. Users define the desired time interval (e.g., every 10 days) and select an interpolation method with relevant parameters. GEEO supports two interpolation approaches: weighted linear interpolation (based on proximity to the nearest observation) and Radial Basis Function (RBF, or ‘Gaussian’) interpolation. See the Juypter Notebook 'docs/habitat-type-mapping_geeo.ipynb' for a worked example of TSI. 
 
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
@@ -183,7 +183,7 @@ Image or table export of the above products to Google Drive or as Earth Engine A
 | DATATYPE_SCALE           | int     | 10000        |                                 | Multiplicative factor (e.g. reflectance * 10000 before casting). **Attention**! Must be compatible with datatype. |
 | NODATA_VALUE             | int     | -9999        |                                 | Fill value for masked pixels in exports. |
 
-If the ROI, CRS and PIX_RES facilitate exact matching of the pixel grid, the ouput image will perfectly align with the specified spatial extent. See the Jupyter Notebook 'geeo/docs/tutorial_1_spatial-tiling-and-metadata.ipynb' for an example and further descriptions.
+If the ROI, CRS and PIX_RES facilitate exact matching of the pixel grid, the ouput image will perfectly align with the specified spatial extent. See the Jupyter Notebook 'docs/tutorial_1_spatial-tiling-and-metadata.ipynb' for an example and further descriptions.
 
 ### PRODUCTS TO EXPORT
 | Parameter                | Type    | Default      | Allowed Values / Format         | Description                                      |
