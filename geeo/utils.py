@@ -41,7 +41,7 @@ def load_blueprint():
 
 def create_parameter_file(destination="", overwrite=False):
     """
-    Copies the blueprint YAML parameter file to the specified destination.
+    Copies the bluprint YAML parameter file to the specified destination.
     Handles cases where the destination is a directory, a file without .yml suffix, a full file path, 
     or the current working directory if no destination is provided.
 
@@ -86,20 +86,23 @@ def create_parameter_file(destination="", overwrite=False):
 # =============================================================================
 # load parameter file
 import yaml
+import requests
 
 def load_parameters(yaml_file=None):
     """
-    Load parameters from a YAML file or use the blueprint if no file is provided.
-
-    Args:
-        yaml_file (str, optional): Path to the YAML file. Defaults to None.
-
+    load parameters from a YAML file (local or URL) or use the blueprint if no file is provided.
+    
     Returns:
         dict: Dictionary of parameters.
     """
     if yaml_file:
-        with open(yaml_file, 'r') as file:
-            parameters = yaml.safe_load(file)
+        if isinstance(yaml_file, str) and yaml_file.startswith(('http://', 'https://')):
+            response = requests.get(yaml_file)
+            response.raise_for_status()
+            parameters = yaml.safe_load(response.text)
+        else:
+            with open(yaml_file, 'r') as file:
+                parameters = yaml.safe_load(file)
     else:
         parameters = load_blueprint()
     return parameters

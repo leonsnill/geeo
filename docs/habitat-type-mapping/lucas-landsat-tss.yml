@@ -21,8 +21,8 @@
 # -------------------------------------------------------------------------------
 
 # Global time settings
-YEAR_MIN: 2023                           # Minimum year
-YEAR_MAX: 2023                           # Maximum year
+YEAR_MIN: 2014                           # Minimum year
+YEAR_MAX: 2019                           # Maximum year
 MONTH_MIN: 1                             # Minimum month
 MONTH_MAX: 12                            # Maximum month
 DOY_MIN: 1                               # Minimum day of year
@@ -37,7 +37,7 @@ DATE_MAX: null                           # YYYYMMDD
 # - Rectangle as [lon, lat, lon, lat]
 # - Polygon as [[lon1, lat1], [lon2, lat2], ..., [lon1, lat1]]
 # - Path / or geopandas object vector file (e.g. shapefile, geopackage, geojson)
-ROI: [12.9, 52.2, 13.9, 52.7]
+ROI: null
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
 ROI_TILES: False                        # Use features in ROI vector file as independent 'tiles' (ROI) 
@@ -61,8 +61,7 @@ SENSORS:                                 # Options: L9, L8, L7, L5, L4, S2, HLS,
 - L9
 - L8
 - L7
-- L5
-- L4
+
 MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
 
 # ------------------------------------
@@ -74,7 +73,6 @@ GCP_MIN_LANDSAT: 1                       # Min Ground Control Points for Landsat
 MASKS_LANDSAT:                           # Landsat masks (null, cloud, cshadow,
 - cloud                                  # snow, fill, dilated)
 - cshadow
-- snow
 - fill
 - dilated
 MASKS_LANDSAT_CONF: Medium               # Confidence level for Landsat masks (Medium, High)
@@ -119,6 +117,8 @@ FEATURES:
 - SW1
 - SW2
 - NDVI
+- MDWI
+- NBR
 #- MY_FORMULA1
 #- MY_FORMULA2
 
@@ -293,7 +293,7 @@ CRS: null                                # EPSG code, WKT str, 'UTM', 'Mollweide
 CRS_TRANSFORM: null                      # [...] Affine transform to use for export        
 IMG_DIMENSIONS: null                     # Image dimensions (widthxheight) in pixels (requires CRS_TRANSFORM)
 
-RESAMPLING_METHOD: null                  # null (nearest neighbour), bilinear, bicubic
+RESAMPLING_METHOD: bilinear                  # null (nearest neighbour), bilinear, bicubic
 
 DATATYPE: int16                          # uint8, int8, uint16, int16, uint32, int32, float, double
 DATATYPE_SCALE: 10000                    # Scale factor (check DATATYPE)
@@ -305,9 +305,9 @@ NODATA_VALUE: -9999                      # Output no data value (for certain exp
 # -------------------------------------------------------------------------------
 
 EXPORT_IMAGE: false                      # Export Image
-EXPORT_TABLE: false                      # Export Table 
+EXPORT_TABLE: true                      # Export Table 
 
-EXPORT_TSS: false                        # Export TSS
+EXPORT_TSS: true                        # Export TSS
 EXPORT_CIC: false                        # Export CIC 
 EXPORT_TSM: false                        # Export TSM
 EXPORT_NVO: false                        # Export NVO 
@@ -321,14 +321,14 @@ EXPORT_LSP: false                        # Export LSP
 #                           GENERAL EXPORT SETTINGS
 # -------------------------------------------------------------------------------
 
-EXPORT_LOCATION: Drive                   # (Drive, Asset)
-EXPORT_DIRECTORY: null                   # null (Drive main folder) / assetId
+EXPORT_LOCATION: Asset                   # (Drive, Asset)
+EXPORT_DIRECTORY: projects/eexnill/assets/geeo_public/landsat-tss                   # null (Drive main folder) / assetId
 EXPORT_DESC: GEEO                        # Image description included in filename
 EXPORT_DESC_DETAIL_TIME: false           # Append detailed time description
 EXPORT_BANDNAMES_AS_CSV: false           # Soft requirement for n-bands > 100
 EXPORT_TABLE_FORMAT: CSV                 # CSV, GeoJSON, KML, KMZ, SHP, TFRecord
 EXPORT_TABLE_METHOD: reduceRegions       # 'reduceRegions' or 'reduceRegion'
-EXPORT_TABLE_TILE_SCALE: 1               # Compute tile size [0.1, 16]
+EXPORT_TABLE_TILE_SCALE: 16               # Compute tile size [0.1, 16]
 EXPORT_TABLE_BUFFER: null                # Buffer features before reduction (meters)
 EXPORT_TABLE_REDUCER: first              # Reducer used to extract values
 EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
