@@ -16,7 +16,7 @@ You need to have [access to Google Earth Engine](https://developers.google.com/e
 Make sure you have a Python 3 distribution of our choice installed (e.g. Anaconda). Prior to installing **GEEO**, you preferably want to set up a new environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing **GEEO**):
 
 ```bash
-conda create -n geeo_env python=3.12 ipykernel earthengine-api pyyaml pandas geopandas matplotlib tqdm ipyleaflet ipywidgets gdal scikit-learn eerepr geemap
+conda create -n geeo_env -c conda-forge python=3.12 ipykernel earthengine-api pyyaml pandas geopandas matplotlib tqdm ipyleaflet ipywidgets gdal scikit-learn eerepr geemap
 conda activate geeo_env
 ```
 
