@@ -13,7 +13,7 @@ Processing instructions are readily defined using a .yml-file or python dictiona
 You need to have [access to Google Earth Engine](https://developers.google.com/earth-engine/guides/access) and its [Python API](https://developers.google.com/earth-engine/guides/python_install). Read the following sections how to set up the latter for your local Python environment or by using a Jupyter Notebook hosted on Google Colab.  
 
 ## Local Python environment
-Make sure you have a Python 3 distribution of our choice installed (e.g. Anaconda). Prior to installing **GEEO**, you preferably want to set up a new environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing **GEEO**):
+Make sure you have a Python 3 distribution of our choice installed (e.g., [install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install)). Prior to installing **GEEO**, you preferably want to set up a new environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing **GEEO**):
 
 ```bash
 conda create -n geeo_env -c conda-forge python=3.12 ipykernel earthengine-api pyyaml pandas geopandas matplotlib tqdm ipyleaflet ipywidgets gdal scikit-learn eerepr geemap
