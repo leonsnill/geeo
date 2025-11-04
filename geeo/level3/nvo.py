@@ -7,7 +7,7 @@ def calc_nvo(imgcol):
     ))
     img_nvo = ee.Image(imgcol.select('DATE').reduce(ee.Reducer.countDistinctNonNull())).rename('NVO')
     img = imgcol.first()
-    return img_nvo.copyProperties(source=img).set('system:time_start', img.get('system:time_start'))
+    return ee.Image(img_nvo).copyProperties(source=img).set('system:time_start', img.get('system:time_start'))
 
 def folding_nvo(imgcol):
     def wrap(fold):
