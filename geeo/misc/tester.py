@@ -31,9 +31,13 @@ prm = {
     'NVO': True,
     'NVO_FOLDING': True,
     'EXPORT_NVO': False,
-
+    'NO_EXIST': 1,
+    '2': 1
     #'CRS': None
 }
+
+test_full = geeo.run_param(prm)
+
 
 # init
 default_params = load_blueprint()

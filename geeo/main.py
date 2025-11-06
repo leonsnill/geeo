@@ -42,6 +42,12 @@ def run_param(params):
     else:
         raise ValueError("params must be either a path to a YAML file or a dictionary")
     
+    # sanity check of parameters to assure all parameter names (keys) are valid
+    invalid_keys = [key for key in prm.keys() if key not in default_params]
+    if invalid_keys:
+        bullet_list = "\n".join(f"- {key}" for key in invalid_keys)
+        raise ValueError(f"Invalid parameter(s):\n{bullet_list}")
+    
     # ROI datacube/tiling scheme detection
     ROI_TILES = prm.get('ROI_TILES')
 
