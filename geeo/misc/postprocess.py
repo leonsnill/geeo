@@ -32,7 +32,7 @@ def bandnames_from_img(ds):
 # Function to process files
 def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
                   nodata=None, dtype=None, delete_old=True,
-                  calc_stats=True, compress=True, pyramids=False,
+                  calc_stats=True, compress='ZSTD', pyramids=False,
                   num_threads='1'):  # [ALL_CPUS​/​<integer>]
 
     # Check if input_path is a directory or a file
@@ -80,7 +80,7 @@ def process_ee_files(input_path, bandname_file=False, pattern="*.tif",
 
         # Build translate options / add compression if desired
         opt = gdal.TranslateOptions(
-            format="GTiff", noData=nodata, outputType=dtype, creationOptions=["COMPRESS=DEFLATE"] if compress else []
+            format="GTiff", noData=nodata, outputType=dtype, creationOptions=["COMPRESS=" + compress] if compress else []
         )
         
         # Translate
