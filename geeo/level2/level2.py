@@ -215,12 +215,12 @@ def run_level2(params):
         # create user-defined masking function if masking is requested
         if MASKS_HLS is not None:
             if ERODE_DILATE:
-                mask_function = mask_hls_erodil(MASKS_HLS, conf=MASKS_LANDSAT_CONF,
+                mask_function = mask_hls_erodil(MASKS_HLS,
                                                 kernel_erode=ee.Kernel.circle(radius=ERODE_RADIUS, units='meters'),
                                                 kernel_dilate=ee.Kernel.circle(radius=DILATE_RADIUS, units='meters'),
                                                 scale=ERODE_DILATE_SCALE)
             else:
-                mask_function = mask_hls(MASKS_HLS, conf=MASKS_LANDSAT_CONF)
+                mask_function = mask_hls(MASKS_HLS)
             # apply masking function to the HLS ImageCollection
             hls = hls.map(mask_function)
 
