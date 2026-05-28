@@ -5,11 +5,11 @@ import geeo
 
 # 'classical' parameter file approach:
 # 1) create parameter file
-geeo.create_parameter_file('habitat-metrics.prm')
+geeo.create_parameter_file('habitat-metrics.yml')
 # 2) edit parameter file with desired processing settings and save
 # showing here a preview of the relevant settings in parameter YAML file:
 # 3) run pipeline with parameter file as input
-geeo.run_pipeline('habitat-metrics.prm')
+geeo.run_pipeline('habitat-metrics.yml')
 
 # for illustrational purposes, we can also directly define the parameters in the script and run the pipeline without a parameter file
 # settings
