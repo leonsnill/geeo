@@ -57,6 +57,36 @@ def preprocess_image(image):
 tss = sentinel2.map(preprocess_image).select(['NDVI']).sort('system:time_start')
 
 # -----------------------------------------------------------------------------
+# create time series mosaic (i.e. duplicate observations due to scene/sensor/tile overlap)
+
+def imgcol_dates_to_featcol(imgcol, format='YYYYMMdd'):
+    dates = imgcol.map(
+        lambda img: ee.Feature(None, {'system:time_start': img.date().millis(),
+                                      'YYYYMMDD': img.date().format(format)})
+    )
+    return ee.FeatureCollection(dates)
+
+# mosaic images in imgcol using joins (way more efficient than list iteration)
+def mosaic_imgcol(imgcol):
+    unique_dates = imgcol_dates_to_featcol(imgcol).distinct('YYYYMMDD')  # unique YYYYMMDD
+    newcol = ee.ImageCollection(
+        ee.Join.saveAll('images').apply(
+            primary=unique_dates, secondary=imgcol,
+            condition=ee.Filter.maxDifference(  
+                difference=0.5*1000*60*60*24,  # 1/2 day to milliseconds
+                leftField='system:time_start', rightField='system:time_start'
+            )
+        )
+    )
+    mosaics = newcol.map(
+        lambda x: ee.ImageCollection(ee.List(x.get('images'))).mosaic().set('system:time_start', x.get('system:time_start'))
+    ).sort("system:time_start")
+    return mosaics
+
+tsm = mosaic_imgcol(tss)
+
+
+# -----------------------------------------------------------------------------
 # helper functions for interpolation
 
 def days_to_milliseconds(days):
@@ -167,9 +197,9 @@ def interpolate_2rbf(target_image):
 # -----------------------------------------------------------------------------
 # build regular interpolation dates and join source images to each target date
 
-interpolation_dates = build_interpolation_dates(tss, interval_days=20) # 12
-interpolation_dates = join_window(interpolation_dates, tss, window_days=20, join_key='window1')
-interpolation_dates = join_window(interpolation_dates, tss, window_days=60, join_key='window2')
+interpolation_dates = build_interpolation_dates(tsm, interval_days=20) # 12
+interpolation_dates = join_window(interpolation_dates, tsm, window_days=20, join_key='window1')
+interpolation_dates = join_window(interpolation_dates, tsm, window_days=60, join_key='window2')
 
 # -----------------------------------------------------------------------------
 # apply 2RBF interpolation
