@@ -1,4 +1,40 @@
 # GEEO Parameter Documentation
+
+This introductory tutorial provides an overview on the basic structure and usage of **GEEO**. 
+
+**GEEO** is a processing pipeline and collection of algorithms for obtaining Analysis-Ready-Data (ARD) and higher-level image products from multispectral image archives, including the Landsat and Sentinel-2 archive, using the Google Earth Engine Python API. 
+The processing modules are organized along different hierarchical levels:
+
+- LEVEL-2 (`geeo/level2`): Preprocessed, harmonized, spatio-temporally subsetted surface reflectance time series stacks (TSS) and mosaics (TSM)   
+- LEVEL-3 (`geeo/level3`): Advanced spectral features including Spectral-Temporal-Metrics (STM) and Pixel-based Composits (PBC), as well as Time Series Interpolation (TSI)
+- LEVEL-4 (`geeo/level4`): Semantic features, i.e. information derived from spectral signals. Currently implemented are Land Surface Phenology (LSP) metrics   
+- EXPORT (`geeo/export`): Export module handling metadata and projection settings, and constructing export tasks.
+
+Below is the documentation of all available methods and parameter options within the standard workflow. For the documentation on how to interact with GEEO, please see [here](/docs/tutorials/tutorial_0_introducing-geeo.ipynb).
+
+## Table of Contents
+[Level-2](#level-2)
+- [Space and Time](#space-and-time)
+- [Sensor and Data Quality Settings (Time Series Stack - TSS)](#sensor-and-data-quality-settings-time-series-stack---tss)
+- [Bands \| Indices \| Features](#bands--indices--features)
+- [Custom Image Collection (CIC)](#custom-image-collection-cic)
+- [Time Series Mosaic (TSM)](#time-series-mosaic-tsm)
+
+[Level-3](#level-3)
+- [Temporal Subwindows \| Folding](#temporal-subwindows--folding)
+- [Number of Valid Observations (NVO)](#number-of-valid-observations-nvo)
+- [Time Series Interpolation (TSI)](#time-series-interpolation-tsi)
+- [Spectral-Temporal-Metrics (STM)](#spectral-temporal-metrics-stm)
+- [Pixel-Based Composites (PBC)](#pixel-based-composites-pbc)
+
+[Level-4](#level-4)
+- [Land Surface Phenology (LSP)](#land-surface-phenology-lsp)
+
+[Export](#export)
+- [Image Settings](#image-settings)
+- [Products to Export](#products-to-export)
+- [General Export Settings](#general-export-settings)
+
 ## LEVEL-2
 ### SPACE AND TIME
 These are the global spatial and temporal filters applied to the ImageCollections. The YEAR, MONTH, and DOY parameters can be combined to

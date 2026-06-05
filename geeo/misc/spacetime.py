@@ -798,7 +798,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
     wkt_continent = wkt_dict[continent_code]
 
     if zone_mask:
-        # Load zone mask GeoDataFrame
+        # get valid area for specified continent 
         zone_mask_gdf = gpd.read_file(
             os.path.join(os.path.dirname(__file__), f'../data/GLANCE-tiles/GLANCE_V01_{continent_code}_PROJ_ZONE.gpkg')
         )
@@ -834,7 +834,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
         ul_x, ul_y = upper_left
         (row_min, row_max), (col_min, col_max) = grid_limits
 
-        base_tile_size = 150000  # Reference tile size
+        base_tile_size = 150000  # og reference tile size
         scale_factor = base_tile_size / tile_size
         row_min_scaled = int(row_min * scale_factor)
         row_max_scaled = int(row_max * scale_factor)
@@ -881,7 +881,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             grid_gdf = grid_gdf.drop(columns=zone_mask_colnames, errors='ignore')
             grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry='geometry', crs=zone_mask_gdf.crs)
 
-        # Apply land mask if required
+        # apply land mask if required
         if land_mask:
             print("Filtering grid tiles using the land mask...")
             land_mask_gdf = land_mask_gdf.to_crs(wkt_continent)
@@ -891,7 +891,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             grid_gdf = grid_gdf.drop(columns=land_mask_colnames)
             grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry='geometry', crs=land_mask_gdf.crs)
 
-        # Clip to ROI if provided
+        # clip to ROI if provided
         if vector_roi is not None:
             if isinstance(vector_roi, str):
                 user_gdf = gpd.read_file(vector_roi)
@@ -900,15 +900,15 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
             else:
                 raise ValueError("User input must be a file path or a GeoDataFrame")
 
-            # Ensure CRS consistency
+            # CRS consistency
             if user_gdf.crs != grid_gdf.crs:
                 user_gdf = user_gdf.to_crs(grid_gdf.crs)
 
-            # Intersect grid with ROI
-            grid_gdf = grid_gdf[grid_gdf.geometry.intersects(user_gdf.unary_union)]
+            # intersect grid with ROI
+            grid_gdf = grid_gdf[grid_gdf.geometry.intersects(user_gdf.union_all())]
             grid_gdf = grid_gdf.drop_duplicates(subset="geometry")  # Remove duplicates after ROI intersection
 
-        # Save the result to output directory if specified
+        # optiionally save
         if output_dir:
             output_filename = f"{output_dir}/GLANCE_{continent}_{tile_size // 1000}km.gpkg"
             grid_gdf.to_file(output_filename, driver="GPKG")
@@ -921,7 +921,7 @@ def create_glance_tiles(continent_code, tile_size=150000, vector_roi=None, outpu
 
 # --------------------------------------------------------------------------------------------
 # general creat_tile funciton
-# ...existing code...
+
 def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=None, output_dir=None, land_mask=False, land_mask_path=None):
     import geopandas as gpd
     from shapely.geometry import Polygon, box
@@ -943,7 +943,7 @@ def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=Non
         if roi_gdf.crs is None:
             raise ValueError("vector_roi must have a valid CRS.")
         roi_gdf_crs = roi_gdf.to_crs(crs)
-        roi_union_crs = roi_gdf_crs.unary_union
+        roi_union_crs = roi_gdf_crs.union_all()
     else:
         roi_gdf_crs = None
         roi_union_crs = None
@@ -1016,8 +1016,6 @@ def create_tiles(crs, extent=None, tile_size=150000, origin=None, vector_roi=Non
         grid_gdf.to_file(output_filename, driver="GPKG")
 
     return grid_gdf
-
-
 
 # -------------------------------------------------------------------------------
 #                                Temporal Functions                               
