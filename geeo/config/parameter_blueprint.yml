@@ -303,10 +303,11 @@ NODATA_VALUE: -9999                      # Output no data value (for certain exp
 # -------------------------------------------------------------------------------
 #                            PRODUCTS TO EXPORT
 # -------------------------------------------------------------------------------
-
+# Choose if products should be exported as image and/or table (still requires specific product selection below)
 EXPORT_IMAGE: false                      # Export Image
-EXPORT_TABLE: false                      # Export Table 
+EXPORT_TABLE: false                      # Export Table
 
+# Choose which products to export (if EXPORT_IMAGE and/or EXPORT_TABLE = true)
 EXPORT_TSS: false                        # Export TSS
 EXPORT_CIC: false                        # Export CIC 
 EXPORT_TSM: false                        # Export TSM
