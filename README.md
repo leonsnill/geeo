@@ -4,7 +4,15 @@ Processing instructions are readily defined using a .yml-file or python dictiona
 
 ![sample SVG image](geeo/data/fig/geeo_workflow_manuscript.svg)
 
-**GEEO** includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. The selection of routines is primarily influenced by work conducted in the [Biogeography Lab](https://pages.cms.hu-berlin.de/biogeo/website/) and [Earth Observation Lab](https://eolab.geographie.hu-berlin.de/) at Humboldt University of Berlin. Inspiration for the modular structure and parameter file communication comes from David Frantz' [Framework for Operational Radiometric Correction for Environmental monitoring (FORCE)](https://force-eo.readthedocs.io/en/latest/index.html), a highly-advanced all-in-one processing engine for medium-resolution Earth Observation image archives for your computing infrastructure.
+**GEEO** includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. 
+The processing modules are organized along different hierarchical levels:
+
+- LEVEL-2 (`geeo/level2`): Preprocessed, harmonized, spatio-temporally subsetted surface reflectance time series stacks (TSS) and mosaics (TSM)   
+- LEVEL-3 (`geeo/level3`): Advanced spectral features including Spectral-Temporal-Metrics (STM) and Pixel-based Composits (PBC), as well as Time Series Interpolation (TSI)
+- LEVEL-4 (`geeo/level4`): Semantic features, i.e. information derived from spectral signals. Currently implemented are Land Surface Phenology (LSP) metrics   
+- EXPORT (`geeo/export`): Export module handling metadata and projection settings, and constructing export tasks.
+
+The selection of routines is primarily influenced by work conducted in the [Biogeography Lab](https://pages.cms.hu-berlin.de/biogeo/website/) and [Earth Observation Lab](https://eolab.geographie.hu-berlin.de/) at Humboldt University of Berlin. Inspiration for the modular structure and parameter file communication comes from David Frantz' [Framework for Operational Radiometric Correction for Environmental monitoring (FORCE)](https://force-eo.readthedocs.io/en/latest/index.html), a highly-advanced all-in-one processing engine for medium-resolution Earth Observation image archives for your computing infrastructure.
 
 <br>
 
@@ -65,7 +73,7 @@ Additional tutorials
 More tutorials are in development and the list will be updated in the future.
 
 
-### Quick use overview
+### Getting started
 
 Import, authenticate and initialize the Earth Engine python API, then import **GEEO**:
 
