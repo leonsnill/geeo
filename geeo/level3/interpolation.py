@@ -24,7 +24,7 @@ def moving_average_outlier(imgcol, window=20, std_multi=3, band=['*']):
 
 # ----------------------------------------------------------------------------------------------------------
 # RBF smoothing
-
+'''
 def rbf_weight(sigma):
     def wrap(img):
         # 1. Use trusted original expression for weight calculation
@@ -167,9 +167,10 @@ def rbf_weight(sigma):
                     't_std': sigma,
             }
         )
+        rbf_weight = rbf_weight.updateMask(img.select(0).mask())  # mask weight band!!!
         weighted = ee.Image(img.multiply(rbf_weight))  # weight image with weight
         weighted = ee.Image(weighted.copyProperties(img, ['system:time_start']))
-        rbf_weight = rbf_weight.updateMask(img.select(0).mask())  # mask weight band!!!
+        #rbf_weight = rbf_weight.updateMask(img.select(0).mask())  # mask weight band!!!
         return weighted.addBands(rbf_weight.rename('rbf_weight'))
     return wrap
 
@@ -181,7 +182,8 @@ def tsi_rbf(sigma=16):
         imgcol = imgcol.map(rbf_weight(sigma))
         # calculate weighted sum
         bandNames = imgcol.first().bandNames()
-        result = ee.Image(imgcol.reduce(ee.Reducer.sum())).divide(imgcol.select('rbf_weight').reduce(ee.Reducer.sum())).rename(bandNames)
+        reduced = imgcol.reduce(ee.Reducer.sum())
+        result = reduced.divide(reduced.select('rbf_weight_sum')).rename(bandNames)
         return result.copyProperties(img, ['system:time_start'])
     return wrap
 
@@ -202,8 +204,10 @@ def tsi_rbf_duo(s1=8, s2=16, bw1=8):
         # get bandnames
         bandNames = imgcol_window1.first().bandNames()
         # calc results
-        result1 = (ee.Image(imgcol_window1.reduce(ee.Reducer.sum())).divide(imgcol_window1.select('rbf_weight').reduce(ee.Reducer.sum()))).multiply(weight)
-        result2 = (ee.Image(imgcol_window2.reduce(ee.Reducer.sum())).divide(imgcol_window2.select('rbf_weight').reduce(ee.Reducer.sum()))).multiply(weight2)
+        reduced1 = imgcol_window1.reduce(ee.Reducer.sum())
+        reduced2 = imgcol_window2.reduce(ee.Reducer.sum())
+        result1 = (reduced1.divide(reduced1.select('rbf_weight_sum'))).multiply(weight)
+        result2 = (reduced2.divide(reduced2.select('rbf_weight_sum'))).multiply(weight2)
         final = ee.Image(result1.unmask(0).add(result2)).rename(bandNames)
 
         return final.copyProperties(img, ['system:time_start'])
@@ -232,14 +236,17 @@ def tsi_rbf_trio(s1=8, s2=16, s3=32, bw1=8, bw2=16):
         # get bandnames
         bandNames = imgcol_window1.first().bandNames()
         # calc results
-        result1 = (ee.Image(imgcol_window1.reduce(ee.Reducer.sum())).divide(imgcol_window1.select('rbf_weight').reduce(ee.Reducer.sum()))).multiply(weight)
-        result2 = (ee.Image(imgcol_window2.reduce(ee.Reducer.sum())).divide(imgcol_window2.select('rbf_weight').reduce(ee.Reducer.sum()))).multiply(weight2)
-        result3 = (ee.Image(imgcol_window3.reduce(ee.Reducer.sum())).divide(imgcol_window3.select('rbf_weight').reduce(ee.Reducer.sum()))).multiply(weight3)
+        reduced1 = imgcol_window1.reduce(ee.Reducer.sum())
+        reduced2 = imgcol_window2.reduce(ee.Reducer.sum())
+        reduced3 = imgcol_window3.reduce(ee.Reducer.sum())
+        result1 = (reduced1.divide(reduced1.select('rbf_weight_sum'))).multiply(weight)
+        result2 = (reduced2.divide(reduced2.select('rbf_weight_sum'))).multiply(weight2)
+        result3 = (reduced3.divide(reduced3.select('rbf_weight_sum'))).multiply(weight3)
         # weigh results according to weight band
         final = ee.Image(result1.unmask(0).add(result2.unmask(0)).add(result3))
         return final.rename(bandNames).copyProperties(img, ['system:time_start'])
     return wrap
-'''
+
 
 # ----------------------------------------------------------------------------------------------------------
 # Linear interpolation
