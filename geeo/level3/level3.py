@@ -1,6 +1,6 @@
 import ee
 from geeo.level2.indices import rnb
-from geeo.misc.spacetime import add_timeband, combine_reducers, generate_key, imgcol_to_img
+from geeo.misc.spacetime import add_timeband, combine_reducers, generate_key, imgcol_to_img, int_to_datestring
 from geeo.level3.interpolation import tsi_rbf, tsi_rbf_duo, tsi_rbf_trio, tsi_linear_weighted
 from geeo.level3.initimgcol import init_imgcol, init_and_join
 from geeo.level3.stm import stm_initimgcol, stm_iterList
@@ -83,7 +83,20 @@ def run_level3(prm):
         time_end = str(YEAR_MAX)
         time_desc = time_start + '-' + time_end
 
-    prm['TIME_DESC'] = time_desc    
+    prm['TIME_DESC'] = time_desc
+
+    # determine exact EE dates for imgcol init (TSI)
+    if DATE_MIN and DATE_MAX:
+        if INIT_JANUARY_1ST:
+            time_start_ee = ee.Date(f"{YEAR_MIN}-01-01")
+        else:
+            time_start_ee = ee.Date(int_to_datestring(DATE_MIN))
+        time_end_ee = ee.Date(int_to_datestring(DATE_MAX))
+    elif YEAR_MIN and YEAR_MAX:
+        time_start_ee = ee.Date(f"{YEAR_MIN}-01-01")
+        time_end_ee = ee.Date(f"{YEAR_MAX}-12-31")
+    else:
+        time_start_ee, time_end_ee = None, None
 
     # NVO
     if NVO:
@@ -147,7 +160,8 @@ def run_level3(prm):
             imgcol=tsi_base_imgcol, interval=INTERVAL, interval_unit=INTERVAL_UNIT,
             timeband=True,
             join_window=WINDOW, january_first = INIT_JANUARY_1ST,
-            split_window=split_window
+            split_window=split_window,
+            time_start=time_start_ee, time_end=time_end_ee
         )
 
         # apply interpolation

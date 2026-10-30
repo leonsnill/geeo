@@ -106,36 +106,27 @@ def join_collections_from_dict(new_img_col, existing_img_col, combined_filter):
 # create empty ImageCollection from exisiting imgcol and interval
 def init_imgcol(imgcol, interval=5, interval_unit='day', day_offset=0,
                 timeband=False, join_window=None, split_window=False,
-                january_first=True, type_key='interpolated'):
+                january_first=True, type_key='interpolated',
+                time_start=None, time_end=None):
     """
-    Creates an empty / artificial ImageCollection based on a user-defined time input. 
-    The resulting collection holds the specified bands (empty) and encompasses the specified time window.
-
-    Arguments:
-        imgcol:         (ee.ImageCollection) Optional blueprint to copy band names from. If None, no bands are copied.
-        interval:       (int) Time step interval in days.
-        day_offset:     (int) Starting day offset.
-        timeband:       (bool) Whether to add a timeband to the images.
-        join_window:    (int or list) Window size for joining images.
-        split_window:   (bool) Whether to split the join window.
-        january_first:  (bool) Whether to start the time interval from January 1st.
-        type_key:       (str) Type key for the images.
-        years:          (list) List of years to initialize the collection with.
-        doys:           (list) List of Day of Year (DOY) to initialize the collection with.
+    creates an artificial imgcol for interpolation
     """
     
-    # evaluate if imgcol is provided; if yes, extract time information
-    if imgcol:
-        if january_first:  # set start to january 1st
-            time_start = ee.Date(ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=True).first()).get('system:time_start')).format("YYYY"))
-        else:  # set start to first image in imgcol
-            time_start = ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=True).first()).get('system:time_start'))
-        time_end = ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=False).first()).get('system:time_start'))
-        
-        # total number of days in interval (interval defined by imgcol)
-        delta_days = time_end.difference(time_start, 'day')
+    if time_start is None or time_end is None:
+            if imgcol:
+                if january_first:
+                    time_start = ee.Date(ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=True).first()).get('system:time_start')).format("YYYY"))
+                else:
+                    time_start = ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=True).first()).get('system:time_start'))
+                time_end = ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=False).first()).get('system:time_start'))
+            else:
+                raise ValueError("No ImageCollection or date range provided to initialize from.")
     else:
-        raise ValueError("No ImageCollection provided to initialize from.")
+        time_start = ee.Date(time_start)
+        time_end = ee.Date(time_end)
+    
+    # total number of days in interval (interval defined by imgcol)
+    delta_days = time_end.difference(time_start, 'day')
 
     # initialize empty image
     initImage = ee.Image()

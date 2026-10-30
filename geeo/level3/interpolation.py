@@ -25,10 +25,102 @@ def moving_average_outlier(imgcol, window=20, std_multi=3, band=['*']):
 # ----------------------------------------------------------------------------------------------------------
 # RBF smoothing
 
+# update: 2026-10-30
 def rbf_weight(sigma):
+    def wrap(img):
+        delta_days = ee.Number(img.get('delta')).divide(86400000)
+        weight = ee.Number(-0.5).multiply(delta_days.divide(sigma).pow(2)).exp()
+        weighted = img.multiply(weight)
+        # band-specific weight bands (in case of resolution differences between bands):
+        band_names = img.bandNames()
+        weight_names = band_names.map(lambda b: ee.String(b).cat('_w'))
+        weights_per_band = img.mask().multiply(weight).rename(weight_names)
+        return weighted.addBands(weights_per_band).copyProperties(img, ['system:time_start'])
+    return wrap
+
+def tsi_rbf(sigma=16):
+    def wrap(img):
+        img = ee.Image(img)
+        imgcol = ee.ImageCollection.fromImages(img.get('window1'))
+        band_names = ee.Image(imgcol.first()).bandNames()
+        weight_names = band_names.map(lambda b: ee.String(b).cat('_w'))
+        imgcol_w = imgcol.map(rbf_weight(sigma))
+        reduced = imgcol_w.reduce(ee.Reducer.sum())
+        sum_data = reduced.select(band_names)
+        sum_weights = reduced.select(weight_names)
+        result = sum_data.divide(sum_weights).rename(band_names)
+        return result.copyProperties(img, ['system:time_start'])
+    return wrap
+
+def tsi_rbf_duo(s1=8, s2=16, bw1=8):
+    def wrap(img):
+        img = ee.Image(img)
+        imgcol_window1 = ee.ImageCollection.fromImages(img.get('window1')).map(rbf_weight(s1))
+        imgcol_window2 = ee.ImageCollection.fromImages(img.get('window2')).map(rbf_weight(s2))
+        
+        band_names = ee.Image(imgcol_window1.first()).bandNames()
+        weight_names = band_names.map(lambda b: ee.String(b).cat('_w'))
+
+        nonzero1 = imgcol_window1.select(weight_names).reduce(ee.Reducer.count()).unmask(0)
+        
+        weight1 = nonzero1.divide(ee.Image(bw1)).clamp(0.0, 1.0)
+        weight2 = ee.Image(1).subtract(weight1)
+        
+        reduced1 = imgcol_window1.reduce(ee.Reducer.sum())
+        result1 = reduced1.select(band_names).divide(reduced1.select(weight_names))
+        
+        reduced2 = imgcol_window2.reduce(ee.Reducer.sum())
+        result2 = reduced2.select(band_names).divide(reduced2.select(weight_names))
+
+        final = result1.multiply(weight1).unmask(0).add(result2.multiply(weight2).unmask(0))
+        return final.rename(band_names).copyProperties(img, ['system:time_start'])
+    return wrap
+
+def tsi_rbf_trio(s1=8, s2=16, s3=32, bw1=8, bw2=16):
     '''
-    sigma:      (int) StdDev of RBF-kernel in days.
+    Triple-window adaptive RBF interpolation.
+    Blends narrow (s1), medium (s2), and wide (s3) windows based on data density.
     '''
+    def wrap(img):
+        img = ee.Image(img)
+
+        imgcol_window1 = ee.ImageCollection.fromImages(img.get('window1')).map(rbf_weight(s1))
+        imgcol_window2 = ee.ImageCollection.fromImages(img.get('window2')).map(rbf_weight(s2))
+        imgcol_window3 = ee.ImageCollection.fromImages(img.get('window3')).map(rbf_weight(s3))
+        
+        band_names = ee.Image(imgcol_window1.first()).bandNames()
+        weight_names = band_names.map(lambda b: ee.String(b).cat('_w'))
+        
+        nonzero1 = imgcol_window1.select(weight_names).reduce(ee.Reducer.count()).unmask(0)
+        nonzero2 = imgcol_window2.select(weight_names).reduce(ee.Reducer.count()).unmask(0)
+        
+        weight1 = nonzero1.divide(ee.Image(bw1)).clamp(0.0, 1.0)
+        remainder1 = ee.Image(1).subtract(weight1)
+        
+        weight2 = nonzero2.divide(ee.Image(bw2)).clamp(0.0, 1.0).multiply(remainder1)
+        weight3 = ee.Image(1).subtract(weight1.add(weight2))
+        
+        reduced1 = imgcol_window1.reduce(ee.Reducer.sum())
+        result1 = reduced1.select(band_names).divide(reduced1.select(weight_names))
+        
+        reduced2 = imgcol_window2.reduce(ee.Reducer.sum())
+        result2 = reduced2.select(band_names).divide(reduced2.select(weight_names))
+        
+        reduced3 = imgcol_window3.reduce(ee.Reducer.sum())
+        result3 = reduced3.select(band_names).divide(reduced3.select(weight_names))
+        
+        final = (result1.multiply(weight1).unmask(0)
+                 .add(result2.multiply(weight2).unmask(0))
+                 .add(result3.multiply(weight3).unmask(0)))
+        
+        return final.rename(band_names).copyProperties(img, ['system:time_start'])
+    return wrap
+
+'''
+# ------------------------------------------------------------------------
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# previous versions, now updated (above) for minor efficiency gains and less memory usage. 
+def rbf_weight(sigma):
     def wrap(img):
         rbf_weight = img.expression(
             'exp(-0.5*pow(((delta/86400000)/t_std), 2))',
@@ -43,11 +135,7 @@ def rbf_weight(sigma):
         return weighted.addBands(rbf_weight.rename('rbf_weight'))
     return wrap
 
-
 def tsi_rbf(sigma=16):
-    '''
-    sigma:      (int) StdDev of RBF-kernel in days.
-    '''
     def wrap(img):
         img = ee.Image(img)
         # get collection and add weight band
@@ -58,7 +146,6 @@ def tsi_rbf(sigma=16):
         result = ee.Image(imgcol.reduce(ee.Reducer.sum())).divide(imgcol.select('rbf_weight').reduce(ee.Reducer.sum())).rename(bandNames)
         return result.copyProperties(img, ['system:time_start'])
     return wrap
-
 
 def tsi_rbf_duo(s1=8, s2=16, bw1=8):
     def wrap(img):
@@ -114,7 +201,8 @@ def tsi_rbf_trio(s1=8, s2=16, s3=32, bw1=8, bw2=16):
         final = ee.Image(result1.unmask(0).add(result2.unmask(0)).add(result3))
         return final.rename(bandNames).copyProperties(img, ['system:time_start'])
     return wrap
-
+# ------------------------------------------------------------------------
+'''
 
 # ----------------------------------------------------------------------------------------------------------
 # Linear interpolation
