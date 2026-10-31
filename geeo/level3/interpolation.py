@@ -167,7 +167,9 @@ def rbf_weight(sigma):
                     't_std': sigma,
             }
         )
-        rbf_weight = rbf_weight.updateMask(img.select(0).mask())  # mask weight band!!!
+        common_mask = img.mask().reduce(ee.Reducer.min())
+        #rbf_weight = rbf_weight.updateMask(img.select(0).mask())  # mask weight band!!!
+        rbf_weight = rbf_weight.updateMask(common_mask)  # mask weight band!!!
         weighted = ee.Image(img.multiply(rbf_weight))  # weight image with weight
         weighted = ee.Image(weighted.copyProperties(img, ['system:time_start']))
         #rbf_weight = rbf_weight.updateMask(img.select(0).mask())  # mask weight band!!!
