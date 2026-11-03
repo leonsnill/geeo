@@ -308,14 +308,14 @@ EXPORT_IMAGE: false                      # Export Image
 EXPORT_TABLE: false                      # Export Table
 
 # Choose which products to export (if EXPORT_IMAGE and/or EXPORT_TABLE = true)
-EXPORT_TSS: false                        # Export TSS
-EXPORT_CIC: false                        # Export CIC 
-EXPORT_TSM: false                        # Export TSM
-EXPORT_NVO: false                        # Export NVO 
-EXPORT_TSI: false                        # Export TSI 
-EXPORT_STM: false                        # Export STM 
-EXPORT_PBC: false                        # Export PBC
-EXPORT_LSP: false                        # Export LSP
+EXPORT_TSS: false                        # Export Time-Series-Stack (TSS)
+EXPORT_CIC: false                        # Export Custom Image Collection (CIC)
+EXPORT_TSM: false                        # Export Time-Series-Mosaic (TSM)
+EXPORT_NVO: false                        # Export Number of Valid Observations (NVO)
+EXPORT_TSI: false                        # Export Time-Series-Interpolation (TSI)
+EXPORT_STM: false                        # Export Spectral-Temporal-Metrics (STM)
+EXPORT_PBC: false                        # Export Pixel-Based-Composite (PBC)
+EXPORT_LSP: false                        # Export Land-Surface-Phenology (LSP)
 
 
 # -------------------------------------------------------------------------------
