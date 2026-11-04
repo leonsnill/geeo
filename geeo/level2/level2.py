@@ -152,6 +152,9 @@ def run_level2(params):
                 mask_function = mask_landsat(MASKS_LANDSAT, conf=MASKS_LANDSAT_CONF)
             # apply masking function to the Landsat ImageCollection
             landsat = landsat.map(mask_function)
+        else:
+            # append constant valid mask to all images in the collection
+            landsat = landsat.map(lambda img: img.addBands(ee.Image(1).rename('mask')))
 
         # additional masking based on blue band reflectance
         if BLUE_MAX_MASKING is not None:
@@ -199,6 +202,9 @@ def run_level2(params):
                 sentinel2 = sentinel2.map(mask_sentinel2_prob_shadow(
                     nir_drk_thresh=MASKS_S2_NIR_THRESH_SHADOW,
                     cld_prj_dst=5, proj_scale=120))
+        else:
+            # append constant valid mask to all images in the collection
+            sentinel2 = sentinel2.map(lambda img: img.addBands(ee.Image(1).rename('mask')))
 
         # additional masking based on blue band reflectance
         if BLUE_MAX_MASKING is not None:
@@ -223,6 +229,9 @@ def run_level2(params):
                 mask_function = mask_hls(MASKS_HLS)
             # apply masking function to the HLS ImageCollection
             hls = hls.map(mask_function)
+        else:
+            # append constant valid mask to all images in the collection
+            hls = hls.map(lambda img: img.addBands(ee.Image(1).rename('mask')))
 
         # additional masking based on blue band reflectance
         if BLUE_MAX_MASKING is not None:
