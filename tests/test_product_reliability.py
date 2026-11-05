@@ -184,57 +184,82 @@ def test_stm_and_folding_reliability(ee_session, tiny_roi_berlin, make_synth_img
 @pytest.mark.online
 def test_tsi_wlin_and_rbf_reliability(ee_session, tiny_roi_berlin, make_synth_img, sample_pixel):
     """
-    Tests Time Series Interpolation (TSI) for WLIN, 1RBF, and adaptive 2RBF:
-    - Scenario A (symmetric gap filling on 10-day grid: Jan 1, Jan 11, Jan 21):
-      * 2023-01-01: NDVI=0.2 (valid=True)
-      * 2023-01-11: NDVI=0.0 (valid=False, masked gap at middle step)
-      * 2023-01-21: NDVI=0.8 (valid=True)
-      At 2023-01-11, both neighbors are 10 days away, so both WLIN and 1RBF must output 0.5.
-    - Scenario B (adaptive bandwidth blending in 2RBF around Jan 11 with WIN1=5, WIN2=15, BW1=2):
-      * two valid observations inside WIN1 (Jan 9 and Jan 13) both have NDVI=0.4
-      * one extreme observation in WIN2 (Jan 1) has NDVI=10.0
-      Because WIN1 already has 2 valid observations (== BW1), weight1=1.0 and weight2=0.0,
-      so 2RBF at Jan 11 must ignore the WIN2 outlier and output 0.4.
+    Tests Time Series Interpolation (TSI) with asymmetric weights and adaptive blending:
+    - Scenario A (asymmetric WLIN on 10-day grid: Jan 1, Jan 11, Jan 21):
+      * 2023-01-06 (dt = -5d from Jan 11): NDVI=0.2 (valid=True)
+      * 2023-01-11 (dt =  0d):             NDVI=0.0 (valid=False, masked gap)
+      * 2023-01-21 (dt = +10d from Jan 11): NDVI=0.8 (valid=True)
+      Linear ratio at Jan 11 is (11 - 6) / (21 - 6) = 5 / 15 = 1/3, so
+      WLIN = 0.2 + (0.8 - 0.2) * (1/3) = 0.4.
+    - Scenario B (asymmetric 1RBF with SIGMA1=10, WIN1=10 at Jan 11):
+      * 2023-01-11 (dt =  0d): NDVI=0.2 -> weight w0 = exp(0) = 1.0
+      * 2023-01-21 (dt = 10d): NDVI=0.8 -> weight w1 = exp(-0.5 * (10/10)^2) = exp(-0.5)
+      Expected 1RBF at Jan 11 = (1.0 * 0.2 + exp(-0.5) * 0.8) / (1.0 + exp(-0.5)) ~ 0.42653.
+    - Scenario C (adaptive 2RBF around Jan 11 with WIN1=5, WIN2=15, SIGMA1=5, SIGMA2=10, BW1=2):
+      1) Full saturation (2 valid obs in WIN1 == BW1): weight1=1.0, weight2=0.0 -> ignores WIN2
+         outlier (10.0) and outputs 0.4.
+      2) Partial 50/50 blend (1 valid obs in WIN1 < BW1=2): weight1=0.5 (result1=0.2) and
+         weight2=0.5 (result2=0.42653) -> outputs 0.5 * 0.2 + 0.5 * 0.42653 ~ 0.31327.
     """
     ee = ee_session
 
-    # scenario a: symmetric gap at 2023-01-11
-    tss_gap = ee.ImageCollection([
-        make_synth_img("2023-01-01", {"NDVI": 0.2}, valid=True),
+    # scenario a: asymmetric wlin (dt1 = 5d, dt2 = 10d -> ratio = 1/3)
+    tss_wlin = ee.ImageCollection([
+        make_synth_img("2023-01-01", {"NDVI": 0.0}, valid=True),
+        make_synth_img("2023-01-06", {"NDVI": 0.2}, valid=True),
         make_synth_img("2023-01-11", {"NDVI": 0.0}, valid=False),
         make_synth_img("2023-01-21", {"NDVI": 0.8}, valid=True),
     ])
+    prm_wlin = init_param({
+        "ROI": tiny_roi_berlin,
+        "DATE_MIN": 20230101,
+        "DATE_MAX": 20230121,
+        "INIT_JANUARY_1ST": False,
+        "FEATURES": ["NDVI"],
+        "TSI": "WLIN",
+        "INTERVAL": 10,
+        "INTERVAL_UNIT": "day",
+        "WIN1": 15,
+    })
+    prm_wlin["TSS"] = tss_wlin
+    prm_wlin = run_level3(prm_wlin)
+    mid_wlin = ee.Image(prm_wlin["TSI"].sort("system:time_start").toList(3).get(1))
+    assert sample_pixel(mid_wlin)["NDVI"] == pytest.approx(0.4, abs=1e-4)
 
-    for method in ["WLIN", "1RBF"]:
-        prm = init_param({
-            "ROI": tiny_roi_berlin,
-            "DATE_MIN": 20230101,
-            "DATE_MAX": 20230121,
-            "INIT_JANUARY_1ST": False,
-            "FEATURES": ["NDVI"],
-            "TSI": method,
-            "INTERVAL": 10,
-            "INTERVAL_UNIT": "day",
-            "WIN1": 15,
-            "SIGMA1": 10,
-        })
-        prm["TSS"] = tss_gap
-        prm = run_level3(prm)
+    # scenario b: asymmetric 1rbf (dt0 = 0d with w=1.0, dt1 = 10d=sigma with w=exp(-0.5))
+    w_sigma = math.exp(-0.5)
+    expected_rbf = (1.0 * 0.2 + w_sigma * 0.8) / (1.0 + w_sigma)
 
-        # index 1 corresponds to the middle timestamp (2023-01-11)
-        mid_img = ee.Image(prm["TSI"].sort("system:time_start").toList(3).get(1))
-        px_mid = sample_pixel(mid_img)
-        assert px_mid["NDVI"] == pytest.approx(0.5, abs=1e-4)
+    tss_1rbf = ee.ImageCollection([
+        make_synth_img("2023-01-01", {"NDVI": 0.0}, valid=False),
+        make_synth_img("2023-01-11", {"NDVI": 0.2}, valid=True),
+        make_synth_img("2023-01-21", {"NDVI": 0.8}, valid=True),
+    ])
+    prm_1rbf = init_param({
+        "ROI": tiny_roi_berlin,
+        "DATE_MIN": 20230101,
+        "DATE_MAX": 20230121,
+        "INIT_JANUARY_1ST": False,
+        "FEATURES": ["NDVI"],
+        "TSI": "1RBF",
+        "INTERVAL": 10,
+        "INTERVAL_UNIT": "day",
+        "WIN1": 10,
+        "SIGMA1": 10,
+    })
+    prm_1rbf["TSS"] = tss_1rbf
+    prm_1rbf = run_level3(prm_1rbf)
+    mid_1rbf = ee.Image(prm_1rbf["TSI"].sort("system:time_start").toList(3).get(1))
+    assert sample_pixel(mid_1rbf)["NDVI"] == pytest.approx(expected_rbf, abs=1e-4)
 
-    # scenario b: adaptive 2rbf ignores win2 outlier when win1 count >= bw1
-    tss_adaptive = ee.ImageCollection([
+    # scenario c1: adaptive 2rbf full saturation (2 obs in win1 == bw1 -> weight2 = 0)
+    tss_2rbf_full = ee.ImageCollection([
         make_synth_img("2023-01-01", {"NDVI": 10.0}, valid=True),
         make_synth_img("2023-01-09", {"NDVI": 0.4}, valid=True),
         make_synth_img("2023-01-13", {"NDVI": 0.4}, valid=True),
         make_synth_img("2023-01-21", {"NDVI": 0.4}, valid=True),
     ])
-
-    prm_2rbf = init_param({
+    base_2rbf = {
         "ROI": tiny_roi_berlin,
         "DATE_MIN": 20230101,
         "DATE_MAX": 20230121,
@@ -246,30 +271,38 @@ def test_tsi_wlin_and_rbf_reliability(ee_session, tiny_roi_berlin, make_synth_im
         "WIN1": 5,
         "WIN2": 15,
         "SIGMA1": 5,
-        "SIGMA2": 15,
+        "SIGMA2": 10,
         "BW1": 2,
-    })
-    prm_2rbf["TSS"] = tss_adaptive
-    prm_2rbf = run_level3(prm_2rbf)
+    }
+    prm_full = init_param(base_2rbf)
+    prm_full["TSS"] = tss_2rbf_full
+    prm_full = run_level3(prm_full)
+    mid_full = ee.Image(prm_full["TSI"].sort("system:time_start").toList(3).get(1))
+    assert sample_pixel(mid_full)["NDVI"] == pytest.approx(0.4, abs=1e-4)
 
-    mid_2rbf = ee.Image(prm_2rbf["TSI"].sort("system:time_start").toList(3).get(1))
-    px_2rbf = sample_pixel(mid_2rbf)
-    assert px_2rbf["NDVI"] == pytest.approx(0.4, abs=1e-4)
+    # scenario c2: adaptive 2rbf partial blend (1 obs in win1 < bw1=2 -> weight1=0.5, weight2=0.5)
+    prm_blend = init_param(base_2rbf)
+    prm_blend["TSS"] = tss_1rbf
+    prm_blend = run_level3(prm_blend)
+    mid_blend = ee.Image(prm_blend["TSI"].sort("system:time_start").toList(3).get(1))
+    expected_blend = 0.5 * 0.2 + 0.5 * expected_rbf
+    assert sample_pixel(mid_blend)["NDVI"] == pytest.approx(expected_blend, abs=1e-4)
 
 
 @pytest.mark.online
 def test_pbc_composites_reliability(ee_session, tiny_roi_berlin, make_synth_img, sample_pixel):
     """
     Tests Pixel-Based Compositing (PBC) methods (MAX-NDVI, inverted FEATURE, NLCD, and BAP):
-    - input TSS has 3 images in summer 2023 tagged via BLU = 0.1, 0.5, 0.9:
-      * img 1 (2023-06-05, DOY ~156): spectral bands = 0.1, NDVI = 0.2 (minimum NDVI)
-      * img 2 (2023-06-20, DOY ~171): spectral bands = 0.5, NDVI = 0.5 (exact median across all bands)
-      * img 3 (2023-07-02, DOY ~182): spectral bands = 0.9, NDVI = 0.9 (maximum NDVI & exact DOY target)
-    - expected selection:
-      * MAX-NDVI selects img 3 (BLU=0.9, NDVI=0.9)
-      * inverted NDVI (PBC='NDVI', PBC_INVERT_QUALITY_METRIC=True) selects img 1 (BLU=0.1, NDVI=0.2)
-      * NLCD (closest to spectral median) selects img 2 (BLU=0.5, NDVI=0.5)
-      * BAP (with target window DOY 152-212 centered at DOY 182) selects img 3 (BLU=0.9, NDVI=0.9)
+    - Part 1 (MAX-NDVI, MIN-NDVI, NLCD on 3 summer 2023 scenes tagged via BLU = 0.1, 0.5, 0.9):
+      * img 1 (2023-06-05): spectral bands = 0.1, NDVI = 0.2 (minimum NDVI)
+      * img 2 (2023-06-20): spectral bands = 0.5, NDVI = 0.5 (exact median across all bands)
+      * img 3 (2023-07-02): spectral bands = 0.9, NDVI = 0.9 (maximum NDVI)
+    - Part 2 (BAP trade-off between DOY offset and YEAR offset via PBC_BAP_DOY_EQ_YEAR):
+      Target window is 2021-2023 (year_center=2022, year_offset=1) and DOY 152-212 (doy_center=182):
+      * scene A (2022-07-22, target year 2022, DOY ~202 -> 20 days off target DOY): BLU=0.2
+      * scene B (2021-07-02, 1 year off target year, DOY ~182 -> 0 days off target DOY): BLU=0.8
+      When PBC_BAP_DOY_EQ_YEAR=30 (1 year offset penalized like 30 DOY days > 20d), scene A wins (0.2).
+      When PBC_BAP_DOY_EQ_YEAR=10 (1 year offset penalized like 10 DOY days < 20d), scene B wins (0.8).
     """
     ee = ee_session
     bands = ["BLU", "GRN", "RED", "NIR", "SW1", "SW2", "NDVI"]
@@ -281,73 +314,83 @@ def test_pbc_composites_reliability(ee_session, tiny_roi_berlin, make_synth_img,
             "NDVI": ndvi_val
         }
 
-    # build 3 candidate scenes with distinct spectral levels and dates
+    # part 1: max-ndvi, inverted feature, and nlcd median composite
     tss = ee.ImageCollection([
         make_synth_img("2023-06-05", _band_vals(0.1, 0.2), valid=True),
         make_synth_img("2023-06-20", _band_vals(0.5, 0.5), valid=True),
         make_synth_img("2023-07-02", _band_vals(0.9, 0.9), valid=True),
     ])
 
-    def _run_pbc(extra_params):
+    def _run_pbc(imgcol, year_min, year_max, extra_params):
         prm = init_param({
             "ROI": tiny_roi_berlin,
-            "YEAR_MIN": 2023,
-            "YEAR_MAX": 2023,
+            "YEAR_MIN": year_min,
+            "YEAR_MAX": year_max,
             "FEATURES": bands,
             **extra_params,
         })
-        prm["TSS"] = tss
+        prm["TSS"] = imgcol
         prm = run_level3(prm)
         return sample_pixel(prm["PBC"].first())
 
-    # max-ndvi composite
-    px_max = _run_pbc({"PBC": "MAX-NDVI"})
+    px_max = _run_pbc(tss, 2023, 2023, {"PBC": "MAX-NDVI"})
     assert px_max["BLU"] == pytest.approx(0.9, abs=1e-4)
-    assert px_max["NDVI"] == pytest.approx(0.9, abs=1e-4)
 
-    # inverted feature composite (min-ndvi)
-    px_min = _run_pbc({"PBC": "NDVI", "PBC_INVERT_QUALITY_METRIC": True})
+    px_min = _run_pbc(tss, 2023, 2023, {"PBC": "NDVI", "PBC_INVERT_QUALITY_METRIC": True})
     assert px_min["BLU"] == pytest.approx(0.1, abs=1e-4)
-    assert px_min["NDVI"] == pytest.approx(0.2, abs=1e-4)
 
-    # nlcd median-distance composite
-    px_nlcd = _run_pbc({"PBC": "NLCD"})
+    px_nlcd = _run_pbc(tss, 2023, 2023, {"PBC": "NLCD"})
     assert px_nlcd["BLU"] == pytest.approx(0.5, abs=1e-4)
-    assert px_nlcd["NDVI"] == pytest.approx(0.5, abs=1e-4)
 
-    # bap composite with doy fold centered at doy 182 (2023-07-02)
-    px_bap = _run_pbc({
+    # part 2: bap doy-vs-year score trade-off
+    tss_bap = ee.ImageCollection([
+        make_synth_img("2022-07-22", _band_vals(0.2, 0.5), valid=True),
+        make_synth_img("2021-07-02", _band_vals(0.8, 0.5), valid=True),
+    ])
+    bap_base = {
         "PBC": "BAP",
         "PBC_FOLDING": True,
         "FOLD_CUSTOM": {"doy": ["152-212"]},
-    })
-    assert px_bap["BLU"] == pytest.approx(0.9, abs=1e-4)
+        "PBC_BAP_WEIGHT_DOY": 0.4,
+        "PBC_BAP_WEIGHT_YEAR": 0.4,
+        "PBC_BAP_WEIGHT_CLOUD": 0.2,
+    }
+
+    # doy_eq_year=30 penalizes 1-year offset more than 20-day doy offset -> 2022 scene (0.2) wins
+    px_bap_30 = _run_pbc(tss_bap, 2021, 2023, {**bap_base, "PBC_BAP_DOY_EQ_YEAR": 30})
+    assert px_bap_30["BLU"] == pytest.approx(0.2, abs=1e-4)
+
+    # doy_eq_year=10 penalizes 1-year offset less than 20-day doy offset -> 2021 scene (0.8) wins
+    px_bap_10 = _run_pbc(tss_bap, 2021, 2023, {**bap_base, "PBC_BAP_DOY_EQ_YEAR": 10})
+    assert px_bap_10["BLU"] == pytest.approx(0.8, abs=1e-4)
 
 
 @pytest.mark.online
-def test_lsp_polar_reliability(ee_session, tiny_roi_berlin, test_point, sample_pixel):
+def test_lsp_polar_reliability(ee_session, tiny_roi_berlin, sample_pixel):
     """
-    Tests Land Surface Phenology (LSP='POLAR') on a synthetic 3-year equidistant time series:
-    - constructs a 16-day time series across 2021-2023 where NDVI follows a clean seasonal
-      cosine curve peaking at mid-year (DOY 182.5):
-      NDVI(doy) = 0.5 - 0.4 * cos(2 * pi * doy / 365)
-    - expected phenometrics for the bracketed year 2022:
-      * long-term peak vector RAVG is near DOY 182 (within 1 interpolation step, +-16 days)
-      * middle of season (MOS, 50% cumulative NDVI) is near DOY 182 (+-16 days)
-      * seasonal percentiles follow strict chronological order: SOS < SOP < MOS < EOP < EOS.
+    Tests Land Surface Phenology (LSP='POLAR') on a 3-year constant-rate boxcar growing season:
+    - constructs a 5-day time series across 2021-2023 where NDVI = 1.0 during the 100-day
+      window [DOY 100, DOY 200] (centered at DOY 150) and NDVI = 0.0 outside [100, 200].
+    - because cumulative NDVI grows strictly linearly from 0% at DOY 100 to 100% at DOY 200,
+      every phenometric in 2022 has an exact analytical DOY expectation (within 1 step = +-5 days):
+      * RAVG (peak vector) = 150
+      * SOS  (15th percentile) = 115
+      * SOP  (25th percentile) = 125
+      * MOS  (50th percentile) = 150
+      * EOP  (75th percentile) = 175
+      * EOS  (80th percentile) = 180
     """
     ee = ee_session
 
-    # generate 3 years of 16-day timestamps (2021-01-01 to 2023-12-31) on the server
+    # generate 3 years of 5-day steps (2021-01-01 to 2023-12-31) with boxcar ndvi in [doy 100, 200]
     start_date = ee.Date("2021-01-01")
-    steps = ee.List.sequence(0, 365 * 3, 16)
+    steps = ee.List.sequence(0, 365 * 3, 5)
 
-    def _make_cosine_step(day_offset):
+    def _make_boxcar_step(day_offset):
         d = start_date.advance(day_offset, "day")
         doy = d.getRelative("day", "year")
-        angle = doy.divide(365.0).multiply(2.0 * math.pi)
-        ndvi_val = ee.Number(0.5).subtract(angle.cos().multiply(0.4))
-        img = ee.Image.constant(ndvi_val).rename("NDVI").toFloat()
+        in_season = doy.gte(100).And(doy.lte(200))
+        img = ee.Image.constant(in_season).rename("NDVI").toFloat()
         mask = ee.Image.constant(1).rename("mask").toUint8()
         return (
             img.updateMask(mask)
@@ -356,7 +399,7 @@ def test_lsp_polar_reliability(ee_session, tiny_roi_berlin, test_point, sample_p
             .set({"system:time_start": d.millis()})
         )
 
-    tsi_synth = ee.ImageCollection.fromImages(steps.map(_make_cosine_step))
+    tsi_synth = ee.ImageCollection.fromImages(steps.map(_make_boxcar_step))
 
     prm = init_param({
         "ROI": tiny_roi_berlin,
@@ -374,10 +417,11 @@ def test_lsp_polar_reliability(ee_session, tiny_roi_berlin, test_point, sample_p
 
     px_lsp = sample_pixel(prm["LSP"].first())
 
-    # peak vector (ravg) and middle of season (mos) must align with mid-year peak (~doy 182)
-    assert px_lsp["RAVG"] == pytest.approx(182, abs=16)
-    assert px_lsp["MOS"] == pytest.approx(182, abs=16)
-
-    # phenological stages must be strictly ordered in day-of-year
-    assert px_lsp["SOS"] < px_lsp["SOP"] < px_lsp["MOS"] < px_lsp["EOP"] < px_lsp["EOS"]
+    # verify exact analytical doy quantiles (within 1 sampling step = 5 days)
+    assert px_lsp["RAVG"] == pytest.approx(150, abs=5)
+    assert px_lsp["SOS"] == pytest.approx(115, abs=5)
+    assert px_lsp["SOP"] == pytest.approx(125, abs=5)
+    assert px_lsp["MOS"] == pytest.approx(150, abs=5)
+    assert px_lsp["EOP"] == pytest.approx(175, abs=5)
+    assert px_lsp["EOS"] == pytest.approx(180, abs=5)
 
