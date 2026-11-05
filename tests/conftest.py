@@ -43,6 +43,39 @@ def tiny_roi_berlin():
     return [12.9, 52.2, 13.9, 52.7]
 
 @pytest.fixture(scope="session")
+def test_point(ee_session):
+    # single point inside tiny_roi_berlin for fast pixel sampling
+    return ee_session.Geometry.Point([13.4, 52.5])
+
+@pytest.fixture(scope="session")
+def make_synth_img(ee_session):
+    # create a constant server-side ee.Image with band values, mask, and timestamp
+    def _make(date_str, band_dict, valid=True):
+        ee = ee_session
+        names = list(band_dict.keys())
+        vals = [float(band_dict[k]) for k in names]
+        img = ee.Image.constant(vals).rename(names).toFloat()
+        mask_val = 1 if valid else 0
+        mask = ee.Image.constant(mask_val).rename("mask").toUint8()
+        img = img.updateMask(mask).addBands(mask)
+        img = img.setDefaultProjection("EPSG:4326", None, 30)
+        t_ms = ee.Date(date_str).millis()
+        return img.set({"system:time_start": t_ms, "system:index": date_str})
+    return _make
+
+@pytest.fixture(scope="session")
+def sample_pixel(ee_session, test_point):
+    # evaluate band values of an ee.Image at test_point on the server
+    def _sample(img):
+        ee = ee_session
+        return img.reduceRegion(
+            reducer=ee.Reducer.first(),
+            geometry=test_point,
+            scale=30
+        ).getInfo()
+    return _sample
+
+@pytest.fixture(scope="session")
 def minimal_l2_params(tiny_roi_berlin):
     # minimal parameters expected to work with defaults filled by the package
     return {

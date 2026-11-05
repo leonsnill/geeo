@@ -3,11 +3,11 @@ from geeo.misc.spacetime import construct_calendarRange_filter
 
 def calc_nvo(imgcol):
     imgcol = imgcol.map(lambda img: img.addBands(
-        ee.Image(ee.Image.constant(ee.Number.parse(img.date().format('YYYYMMdd'))).int().rename('DATE')).updateMask(img.mask().reduce(ee.Reducer.min()))
+        ee.Image(ee.Image.constant(ee.Number.parse(img.date().format('YYYYMMdd'))).int().rename('DATE')).updateMask(img.select(0).mask())
     ))
     img_nvo = ee.Image(imgcol.select('DATE').reduce(ee.Reducer.countDistinctNonNull())).rename('NVO')
     img = imgcol.first()
-    return ee.Image(img_nvo).copyProperties(source=img).set('system:time_start', img.get('system:time_start'))
+    return ee.Image(ee.Image(img_nvo).copyProperties(source=img).set('system:time_start', img.get('system:time_start')))
 
 def folding_nvo(imgcol):
     def wrap(fold):

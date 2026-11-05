@@ -261,7 +261,7 @@ def tsi_linear_weighted(band):
         mosaic_after = ee.ImageCollection.fromImages(img.get('after')).mosaic()
         t1 = ee.Image(mosaic_before.select('time')).rename('t1')
         t2 = ee.Image(mosaic_after.select('time')).rename('t2')
-        t = ee.Image(img.get('system:time_start')).rename('t')
+        t = ee.Image.constant(img.get('system:time_start')).rename('t').toFloat()
         time_img = ee.Image.cat([t1, t2, t])
         linear_ratio = time_img.expression(
             '(t - t1) / (t2 - t1)',
@@ -271,10 +271,10 @@ def tsi_linear_weighted(band):
                 't2': time_img.select('t2'),
             }
         )
+        linear_ratio = linear_ratio.where(t1.eq(t2), 0)
         mosaic_before = mosaic_before.select(band)
         mosaic_after = mosaic_after.select(band)
         interpolated = ee.Image(mosaic_before.add((mosaic_after.subtract(mosaic_before).multiply(linear_ratio)))).rename(band)
-        interpolated = ee.Image(img.select(band).unmask(interpolated))  # replace masked pixels with interpolated data
         return interpolated.copyProperties(img, ['system:time_start'])
     return wrap
 
