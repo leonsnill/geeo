@@ -46,9 +46,6 @@ def test_level2_s2_smoke_online(ee_session, minimal_l2_params):
     assert "TSS" in prm
     assert isinstance(prm["TSS"], ee.imagecollection.ImageCollection)
 
-    # quick size sanity (best-effort)
-    try:
-        size = int(prm["TSS"].size().getInfo())
-        assert size != 0
-    except Exception:
-        pass
+    # verify collection has non-zero size on server
+    size = int(prm["TSS"].size().getInfo())
+    assert size > 0, "TSS collection is empty or failed to compute"

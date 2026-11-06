@@ -3,80 +3,56 @@ ee.Authenticate()
 ee.Initialize(project='eexnill')
 import eerepr
 eerepr.initialize()
-
+import geemap
 import geeo
 from geeo.utils import load_parameters, merge_parameters, load_blueprint
 
-glance_eu = geeo.create_glance_tiles(continent_code='EU', tile_size=150000, land_mask=True)
+
+M = geemap.Map(center=[44, 7], zoom=7)
+M.add_basemap('HYBRID')
+vis_params = {'color': 'red', 'width': 2, 'lineType': 'solid','fillColor': '00000000'}
+M
+
+point = [6.315344, 44.569117] # forest/shrub grass mosaic
+point = [6.717050, 44.459844]
 
 prm = {
-    'YEAR_MIN': 2020,
+    'YEAR_MIN': 2014,
     'YEAR_MAX': 2024,
-    'ROI': glance_eu, #[8.026852416992174,46.09966992876708,8.280911254882799,46.25039470654484],
-    'FOLD_MONTH': False,
-    'FOLD_YEAR': True,
-    'STM': ['p50'],
-    'TSM': False,
-    'TSM_BASE_IMGCOL': 'TSS',
-    'EXPORT_IMAGE': False,
-    'EXPORT_TSM': False,
-    'RESAMPLING_METHOD': 'bilinear',
-    'PBC': 'MAX-RNB',
-    'PBC_FOLDING': True,
+    'MONTH_MIN': 1,                                 # we include all months at first, the seasonal subwindows are defined in the folding section
+    'MONTH_MAX': 12,
+    'ROI': point,                              # our study area, note we could also supply the path to our .gpkg here
+    'SENSORS': ['L8', 'L9'],                        # Landsat-8 and Landsat-9 Collection 2 Tier 1 surface reflectance data
+    'MAX_CLOUD': 75,                                # only include scenes with less or equal 75% cloud cover
+    'MASKS_LANDSAT': [                              # mask all pixels of this kind
+        'cloud', 'cshadow', 
+        'fill', 'dilated',
+        ],
+    'FEATURES': ['NDVI'],              # Tasseled Cap greenness, brightness, and wetness
+    'FOLD_CUSTOM': {                                # Temporal folding allows to calculate habitat metrics for custom time windows, e.g. month ranges
+        'month': ['3-5', '6-8', '9-11', '12-2'],    # instead, we want a custom range of months
+        },
+    'TSM': True,
+    'NVO': False,                                    # Number of Valid Observations (NVO) is a quality metric that measures data availability for each pixel over time
+    'NVO_FOLDING': False,                            # we want to calculate the quality layer for each of the custom time windows defined in the folding section
+    'STM': ['p10', 'p50', 'p90', 'stdDev'],         # statistical metrics/reducers: 10th, 50th, 90th percentiles, and the standard deviation
+    'STM_BASE_IMGCOL': 'TSS',                       # collection on which to calculate the STMs; here we use the basic Time-Series-Stack (TSS)
+    'STM_FOLDING': False,                            # actually apply the custom folding settings when calculating the STMs
+    'STM_FOLDING_LIST_ITER': False,
     'TSI': '2RBF',
-    'WIN2': 64,
-    'LSP': 'POLAR',
-    'LSP_ADJUST_SEASONAL': False,
-    'EXPORT_LSP': True,
-    'NVO': True,
-    'NVO_FOLDING': True,
-    'EXPORT_NVO': False,
-    'NO_EXIST': 1,
-    '2': 1
-    #'CRS': None
+    'WIN1': 25,
+    'WIN2': 50
+
 }
 
-test_full = geeo.run_param(prm)
+run = geeo.run_param(prm)
 
 
-# init
-default_params = load_blueprint()
-prm = merge_parameters(default_params, prm)
+from geeo import plot_getRegion
+import matplotlib.pyplot as plt
 
-# lvl2
-lvl2 = geeo.run_level2(prm)
-
-TSS = lvl2['TSS']
-CIC = lvl2.get('CIC')
-TSM = lvl2.get('TSM')
-
-# lvl3
-lvl3 = geeo.run_level3(lvl2)
-PBC = lvl3.get('PBC')
-LSP = lvl3.get('LSP')
-NVO = lvl3.get('NVO')
-
-# export
-export = geeo.run_export(lvl3)
-
-
-# ---------------------------------------------------------------------------------------------------------------
-
-import ee
-ee.Initialize()
-from geeo.level3.interpolation import rbf_interpolation_df, rbf_time_series_array, rbf_time_series_tif_gdal
-
-inp_file = ''
-
-test = rbf_time_series_tif_gdal(
-    src_path=inp_file,
-    step_days=12,
-    mode='2RBF',
-    sigma1=16, win1=16,
-    sigma2=32, win2=48,
-    sigma3=64, win3=64,
-    bw1=4, bw2=8,
-    n_cores=1,
-    chunk_x=None, chunk_y=None,
-    creation_options=None
-)
+TSM = run['TSM']
+TSI = run['TSI']
+fig, ax = plt.subplots(figsize=(16, 4))
+plot_getRegion(TSM, band='NDVI', roi=point, scale=30, axis=ax, style='x')
+plot_getRegion(TSI, band='NDVI', roi=point, scale=30, axis=ax, style='.-', color='orangered')

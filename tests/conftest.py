@@ -1,10 +1,15 @@
 # shared pytest config and fixtures with required ee initialization
 
 import os
+import sys
 import pytest
 import copy
 
+EE_INITIALIZED = False
+EE_INIT_ERROR = None
+
 def _ensure_ee_initialized():
+    global EE_INITIALIZED, EE_INIT_ERROR
     # initialize earth engine once when this file is imported
     import ee
     proj = os.getenv("EARTHENGINE_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT")
@@ -13,15 +18,27 @@ def _ensure_ee_initialized():
             ee.Initialize(project=proj)
         else:
             ee.Initialize()
-    except Exception:
-        # fall back to interactive auth, then initialize again
-        ee.Authenticate()
-        if proj:
-            ee.Initialize(project=proj)
+        # verify server roundtrip
+        _ = ee.String("ping").getInfo()
+        EE_INITIALIZED = True
+        return
+    except Exception as err:
+        # only attempt interactive authentication if running in an interactive terminal and not in CI
+        is_interactive = sys.stdin.isatty() and "CI" not in os.environ
+        if is_interactive:
+            try:
+                ee.Authenticate()
+                if proj:
+                    ee.Initialize(project=proj)
+                else:
+                    ee.Initialize()
+                _ = ee.String("ping").getInfo()
+                EE_INITIALIZED = True
+                return
+            except Exception as auth_err:
+                EE_INIT_ERROR = str(auth_err)
         else:
-            ee.Initialize()
-    # verify server roundtrip
-    _ = ee.String("ping").getInfo()
+            EE_INIT_ERROR = str(err)
 
 # initialize now, before any geeo import can happen
 _ensure_ee_initialized()
@@ -31,9 +48,16 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "smoke: fast surface-level checks for core entry points")
     config.addinivalue_line("markers", "online: requires authenticated earth engine")
 
+def pytest_runtest_setup(item):
+    # automatically skip online tests when earth engine is unauthenticated
+    if "online" in item.keywords and not EE_INITIALIZED:
+        pytest.skip(f"Earth Engine authentication required: {EE_INIT_ERROR}")
+
 @pytest.fixture(scope="session")
 def ee_session():
     # provide ee handle for tests
+    if not EE_INITIALIZED:
+        pytest.skip(f"Earth Engine authentication required: {EE_INIT_ERROR}")
     import ee
     return ee
 
