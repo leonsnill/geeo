@@ -136,16 +136,6 @@ CUSTOM_FORMULAS:                         # custom formulas (optional)
     variable_map:
       MY_FORMULA: MY_FORMULA1
 
-# ------------------------------------
-#        Linear Unmixing (UMX)
-# ------------------------------------
-UMX: null                                # endmeber dictionary
-# {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
-# Unmixing settings
-UMX_SUM_TO_ONE: true                     # Sum to one constraint
-UMX_NON_NEGATIVE: true                   # Non-negative constraint
-UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
-
 
 # -------------------------------------------------------------------------------
 #                           CUSTOM IMAGE COLLECTION (CIC)
@@ -195,6 +185,18 @@ FOLD_CUSTOM: {
 
 NVO: false
 NVO_FOLDING: false
+
+# -------------------------------------------------------------------------------
+#                        LINEAR SPECTRAL UNMIXING (UMX)
+# -------------------------------------------------------------------------------
+UMX: null                                # endmeber dictionary
+# {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
+UMX_BASE_IMGCOL: TSS
+
+# Unmixing settings
+UMX_SUM_TO_ONE: true                     # Sum to one constraint
+UMX_NON_NEGATIVE: true                   # Non-negative constraint
+UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
 
 
 # -------------------------------------------------------------------------------

@@ -15,6 +15,7 @@ For the documentation on how to start using and interacting with GEEO, please be
 [Level-3](#level-3)
 - [Temporal Subwindows \| Folding](#temporal-subwindows--folding)
 - [Number of Valid Observations (NVO)](#number-of-valid-observations-nvo)
+- [Linear Spectral Unmixing (UMX)](#linear-spectral-unmixing-umx)
 - [Time Series Interpolation (TSI)](#time-series-interpolation-tsi)
 - [Spectral-Temporal-Metrics (STM)](#spectral-temporal-metrics-stm)
 - [Pixel-Based Composites (PBC)](#pixel-based-composites-pbc)
@@ -88,10 +89,6 @@ In this section the user specifies the desired bands, indices and features to be
 |--------------------------|---------|--------------|---------------------------------|--------------------------------------------------|
 | `FEATURES`                 | list    | [BLU, GRN, RED, NIR, SW1, SW2, NDVI] | BLU, GRN, RED, NIR, SW1, SW2 (Landsat+Sentinel-2), LST (Landsat, if LST was processed for scene), RE1, RE2, RE3, RE4 (Sentinel-2), NDVI, EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR | Bands / indices / custom formula outputs kept in pipeline; include DEM or unmixing outputs here for export. |
 | `CUSTOM_FORMULAS`  | dict  | See parameter file    | For example: <br> INDEX_NAME: <br> formula: "(X-Y)/(X+Y)" <br> variable_map: {X: NIR, Y: RED} | Users can specify `CUSTOM_FORMULAS` to calculate their own features. Users must provide a name to be used as bandname, the formula for calculating the feature, and the bands used within the formula matching existing bandnames in the TSS. Custom formulas can be used in chains, i.e. output (NAME) from previous formula may be called in subsequent formula. Note that to append the custom formula to the TSS, also add the name to the `FEATURES` list |
-| `UMX`                     | dict    | null         | {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...}                 | Order in endmember dictionary must match order defined in FEATURES. For example, if {'PV': [0.08, 0.1, 0.07, 0.24, 0.11, 0.08], 'Soil': [0.2, 0.3, 0.3, 0.4, 0.45, 0.55]} and FEATURES [BLU, GRN, RED, NIR, SW1, SW2], then corresponding feature-value combinations will be used (e.g. Soil 0.2 for BLU). Attention must be paid that values in UMX match scale of FEATURES. Wrapper for [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix). See also [unmixing example](https://developers.google.com/earth-engine/guides/image_transforms#spectral-unmixing) from Earth Engine. <br> See [`unmix()`](../geeo/level2/indices.py) for implementation details. |
-| `UMX_SUM_TO_ONE`           | bool    | true         | true, false                     | Enforce abundance fractions sum to 1. See [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix).|
-| `UMX_NON_NEGATIVE`         | bool    | true         | true, false                     | Constrain abundance fractions to ≥ 0. See [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix).|
-| `UMX_REMOVE_INPUT_FEATURES`| bool    | true         | true, false                     | Keep only abundance (unmixed) bands if true; otherwise append. |
 
 ### CUSTOM IMAGE COLLECTION (CIC)
 A custom image collection (CIC) can be specified to be used for Level-3 and Level-4 analyses. Note that Level-2 routines, such as cloud masking, are specifically designed for the Time Series Stack (TSS) and are not compatible with a CIC. As such, filtering (spatially, temporally, quality, etc.) must be performed by the user beforehand. Using a CIC generally requires additional attention by the user and is ideally performed in interactive mode (see [Introduction](/docs/tutorials/tutorial_0_introducing-geeo.ipynb) for interactive mode).
@@ -136,6 +133,17 @@ Determines the number of valid (unmasked) observations per pixel within a specif
 |---------------|------|---------|-------------------------|-------------|
 | `NVO`           | bool | false   | true, false             | Compute per-pixel count of valid (unmasked) observations from TSS. <br> See [`calc_nvo()`](../geeo/level3/nvo.py) for implementation details. |
 | `NVO_FOLDING`   | bool | false   | true, false             | If true, the counts are produced per temporal fold (see [Temporal Subwindows \| Folding](#temporal-subwindows--folding)). Usefull to assess the number of observations that were used to generate STMs, for example. <br> See [`folding_nvo()`](../geeo/level3/nvo.py) for implementation details. |
+
+### LINEAR SPECTRAL UNMIXING (UMX)
+UMX estimates the fractional abundance of each endmember in every pixel by modelling its spectrum as a linear combination of the provided endmember spectra. It is based on Earth Engine's [`ee.Image.unmix`](https://developers.google.com/earth-engine/apidocs/ee-image-unmix) implementation.
+
+| Parameter     | Type | Default | Allowed Values / Format | Description |
+|---------------|------|---------|-------------------------|-------------|
+| `UMX`                     | dict    | null         | {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...}                 | Order in endmember dictionary must match order defined in FEATURES. For example, if {'PV': [0.08, 0.1, 0.07, 0.24, 0.11, 0.08], 'Soil': [0.2, 0.3, 0.3, 0.4, 0.45, 0.55]} and FEATURES [BLU, GRN, RED, NIR, SW1, SW2], then corresponding feature-value combinations will be used (e.g. Soil 0.2 for BLU). Attention must be paid that values in UMX match scale of FEATURES. Wrapper for [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix). See also [unmixing example](https://developers.google.com/earth-engine/guides/image_transforms#spectral-unmixing) from Earth Engine. <br> See [`unmix()`](../geeo/level2/indices.py) for implementation details. |
+| `UMX_BASE_IMGCOL`         | str     | TSS          | TSS, TSM, CIC            | Source collection to use for unmixing. |
+| `UMX_SUM_TO_ONE`           | bool    | true         | true, false                     | Enforce abundance fractions sum to 1. See [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix).|
+| `UMX_NON_NEGATIVE`         | bool    | true         | true, false                     | Constrain abundance fractions to ≥ 0. See [ee.Image.unmix](https://developers.google.com/earth-engine/apidocs/ee-image-unmix).|
+| `UMX_REMOVE_INPUT_FEATURES`| bool    | true         | true, false                     | Keep only abundance (unmixed) bands if true; otherwise append. |
 
 
 ### TIME SERIES INTERPOLATION (TSI)

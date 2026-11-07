@@ -65,11 +65,6 @@ def run_level2(params):
     BLUE_MAX_MASKING = prm.get('BLUE_MAX_MASKING')
     FEATURES = prm.get('FEATURES')
     CUSTOM_FORMULAS = prm.get('CUSTOM_FORMULAS')
-    # UNMX
-    UMX = prm.get('UMX')
-    UMX_SUM_TO_ONE = prm.get('UMX_SUM_TO_ONE')
-    UMX_NON_NEGATIVE = prm.get('UMX_NON_NEGATIVE')
-    UMX_REMOVE_INPUT_FEATURES = prm.get('UMX_REMOVE_INPUT_FEATURES')
     # CIC
     CIC = prm.get('CIC')
     CIC_FEATURES = prm.get('CIC_FEATURES')
@@ -273,37 +268,6 @@ def run_level2(params):
 
     # subset to selected features
     imgcol = imgcol.select(FEATURES + ['mask'])
-
-    # DEM for now not easily addable, rather move to external export
-    '''
-    # check if DEM is requested
-    if DEM:
-        # Digitial Elevation Model (DEM): Copernicus DEM
-        copernicus_dem = get_copernicus_dem(roi=ROI_GEOM, crs=CRS, crs_transform=CRS_TRANSFORM, scale=PIX_RES, resample_method=RESAMPLING_METHOD)
-        imgcol = imgcol.map(lambda img: img.addBands(copernicus_dem))
-        SPECIAL_FEATURES = ['DEM']
-    else:
-        SPECIAL_FEATURES = []
-    prm['SPECIAL_FEATURES'] = SPECIAL_FEATURES
-    '''
-    SPECIAL_FEATURES = []
-
-    # UNMIXING (UMX)
-    if UMX:
-        UMX_VALUES = list(UMX.values())
-        UMX_NAMES = list(UMX.keys())
-        imgcol = imgcol.map(unmix(bands=FEATURES, 
-                                  endmember_values=UMX_VALUES, 
-                                  endmember_names=UMX_NAMES, 
-                                  sumToOne=UMX_SUM_TO_ONE, 
-                                  nonNegative=UMX_NON_NEGATIVE))
-        if UMX_REMOVE_INPUT_FEATURES:
-            FEATURES = UMX_NAMES
-            imgcol = imgcol.select(FEATURES+['mask']+SPECIAL_FEATURES)
-        else:
-            FEATURES = FEATURES + UMX_NAMES
-        # return updated feature names
-        prm['FEATURES'] = FEATURES
 
     # return preprocessed time-series stack (TSS) ImageCollection
     TSS = imgcol
