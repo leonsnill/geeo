@@ -717,4 +717,292 @@ def tsi_rbf_tif(src_path, dst_path=None,
     src = None
     return dst_path
 
+# --------------------------------------------------------------------------------------------------------------------------------
+# plotting: TSS observations + client-side RBF interpolation
+
+def _to_lonlat(roi):
+    """Accept [lon, lat], (lon, lat) or ee.Geometry.Point -> (lon, lat)."""
+    if isinstance(roi, ee.Geometry):
+        roi = roi.centroid(1).coordinates().getInfo()
+    lon, lat = roi[:2]
+    return float(lon), float(lat)
+
+
+def _unmasked_prm(prm, roi):
+    """Slim copy of prm: ROI replaced, all masking disabled, no TSI/STM/export."""
+    p = dict(prm)
+    p['ROI'] = list(roi)
+    # masking (parameter_blueprint.yml / level2.py)
+    p['MASKS_LANDSAT'] = None
+    p['MASKS_S2'] = None
+    p['MASKS_HLS'] = None
+    p['BLUE_MAX_MASKING'] = None
+    p['ERODE_DILATE'] = False
+    # not needed for the unmasked sample
+    p['TSI'] = None
+    p['STM'] = None
+    p['PBC'] = None
+    p['LSP'] = None
+    p['NVO'] = False
+    p['UMX'] = None
+    for k in list(p):
+        if k.startswith('EXPORT_'):
+            p[k] = False
+    return p
+
+
+def _tss_to_df(imgcol, roi, feature, scale):
+    from geeo import getRegion  # lazy import (avoid circular import)
+    df = getRegion(imgcol, list(roi), scale=scale)
+    df.index = pd.to_datetime(df.index)
+    # several tiles/images per day -> one value per day
+    return df[[feature]].astype(float).groupby(level=0).mean().sort_index()
+
+
+def plot_tsi_timeseries(
+    source,
+    roi=None,
+    feature='NDVI',
+    unmasked=None,
+    scale=20,
+    interp=None,          # dict overriding interpolation settings (mode, step_days, sigma1, ...)
+    show_masked=True,
+    ax=None,
+    color='orangered',
+    legend_loc='lower left',
+    ylim=(-0.5, 1.0),
+    boxplot=True,
+    density_bar=True,      # stripe showing n valid obs. within kernel window per interpolation date
+    density_window=None,   # window (days) for density; None = WIN1 of the interpolation kernel
+    density_cmap='inferno',  # any matplotlib colormap name/object; low density = dark, high = bright
+    coord_lines=1,         # 1 or 2 lines for coordinate label
+    savepath=None,        # e.g. 'plot.pdf' (svg/png also work)
+    return_data=False,
+):
+    """
+    Plot valid observations (black), masked observations (grey) and an RBF interpolation
+    for a single point, based on the Time-Series-Stack (TSS).
+
+    source : dict | str | dict(level3) | ee.ImageCollection
+        - prm dict or path to a prm json file -> run_param is called (ROI optionally overridden)
+        - level3 result dict of an earlier run_param -> level3['TSS'] is used
+        - ee.ImageCollection (TSS) -> used directly
+    roi : [lon, lat] | ee.Geometry.Point, optional
+        Point used for sampling. Required for ImageCollection / level3 inputs
+        (or falls back to nothing -> error), overrides prm['ROI'] for prm inputs.
+    unmasked : ee.ImageCollection | level3 dict, optional
+        TSS without masking for the grey points. Created automatically for prm inputs.
+    interp : dict, optional
+        Overrides of RBF settings. Defaults are read from the prm (TSI, INTERVAL, SIGMA1, WIN1, ...)
+        when available, otherwise 2RBF / 12 days / 20,20 / 40,60.
+    """
+    import json
+    import matplotlib.pyplot as plt
+    from geeo import run_param  # lazy import
+
+    prm = None
+    # ---- resolve input -> masked TSS (+ optional unmasked TSS) ---------------------------------
+    if isinstance(source, str):
+        with open(source) as f:
+            source = json.load(f)
+
+    if isinstance(source, ee.ImageCollection):
+        tss = source
+    elif isinstance(source, dict) and 'TSS' in source:        # already-run prm (level3 dict)
+        tss = source['TSS']
+        prm = source
+    elif isinstance(source, dict):                             # prm
+        prm = dict(source)
+        if roi is not None:
+            prm['ROI'] = list(_to_lonlat(roi))
+        roi = _to_lonlat(prm['ROI'])                           # must be a point for reduceRegions
+        prm['ROI'] = list(roi)
+        tss = run_param(prm)['TSS']
+        if show_masked and unmasked is None:
+            unmasked = run_param(_unmasked_prm(prm, roi))['TSS']
+    else:
+        raise TypeError("source must be prm dict/path, level3 dict or ee.ImageCollection")
+
+    if roi is None:
+        raise ValueError("roi is required when source is an ImageCollection or an already-run level3 dict")
+    roi = _to_lonlat(roi)
+
+    if isinstance(unmasked, dict):
+        unmasked = unmasked['TSS']
+
+    # ---- to pandas ----------------------------------------------------------------------------
+    df_valid = _tss_to_df(tss, roi, feature, scale)
+    df_masked = None
+    if show_masked and unmasked is not None:
+        df_all = _tss_to_df(unmasked, roi, feature, scale)
+        # masked = observed without mask, but missing/NaN with mask
+        valid_idx = df_valid[feature].dropna().index
+        df_masked = df_all[~df_all.index.isin(valid_idx)].dropna()
+        if df_masked.empty:
+            import warnings
+            warnings.warn("show_masked=True but no masked observations found "
+                          "(unmasked TSS identical to masked TSS?). Check the MASKS_* keys of your prm.")
+
+    # ---- interpolation settings ---------------------------------------------------------------
+    p = prm or {}
+    cfg = dict(mode=p.get('TSI', '2RBF'), step_days=p.get('INTERVAL', 12),
+               sigma1=p.get('SIGMA1', 20), win1=p.get('WIN1', 20),
+               sigma2=p.get('SIGMA2', 40), win2=p.get('WIN2', 60),
+               sigma3=p.get('SIGMA3', 64), win3=p.get('WIN3', 64),
+               bw1=p.get('BW1', 8), bw2=p.get('BW2', 16))
+    if not isinstance(cfg['mode'], str):
+        cfg['mode'] = '2RBF'
+    cfg.update(interp or {})
+
+    df_obs = df_valid.dropna()
+    df_tsi = tsi_rbf_df(df_obs, value_cols=feature, nodata_value=None, **cfg)
+
+    # ---- data density per interpolation date ---------------------------------------------------
+    # number of valid observations inside the kernel window around every interpolation date
+    win_d = density_window if density_window is not None else cfg['win1']
+    tgt = df_tsi.index
+    obs_d = df_obs.index.values.astype('datetime64[D]').astype(int)
+    tgt_d = tgt.values.astype('datetime64[D]').astype(int)
+    dens = (np.abs(obs_d[:, None] - tgt_d[None, :]) <= win_d).sum(axis=0)
+    if density_window is None and cfg['mode'] in ('2RBF', '3RBF'):
+        dens_vmax = cfg['bw1']          # weight of the narrow kernel saturates at bw1 observations
+    else:
+        dens_vmax = max(int(dens.max()), 1)
+
+    # ---- figure -------------------------------------------------------------------------------
+    from matplotlib.gridspec import GridSpec
+    LW = 1.5
+    def _frame(a):
+        for sp in a.spines.values():
+            sp.set_visible(True)
+            sp.set_linewidth(LW)
+            sp.set_color('black')
+    own_fig = ax is None
+    ax_box = ax_coord = ax_leg = ax_dens = ax_corner = None
+    if own_fig:
+        fig_w = 6.0
+        L, R, T, B = 0.10, 0.92, 0.97, 0.09
+        wr_full = [2.0, 1.0, 0.12]                       # legend : coordinates : boxplot
+        box_w = fig_w * (R - L) * wr_full[2] / sum(wr_full)   # width of boxplot column in inches
+        # rows: header | data plot | density bar (as tall as boxplot is wide); year labels sit below the bar
+        hr = [0.85, 2.2] + ([box_w] if density_bar else [])
+        fig = plt.figure(figsize=(fig_w, sum(hr) / (T - B)))
+        wr = wr_full if boxplot else wr_full[:2]
+        gs = GridSpec(len(hr), len(wr), figure=fig, width_ratios=wr, height_ratios=hr,
+                      wspace=0, hspace=0, left=L, right=R, top=T, bottom=B)
+        r_main = 1
+        ax = fig.add_subplot(gs[r_main, :2])
+        ax_leg = fig.add_subplot(gs[0, 0])
+        ax_coord = fig.add_subplot(gs[0, 1])
+        if density_bar:
+            ax_dens = fig.add_subplot(gs[2, :2], sharex=ax)
+            if boxplot:
+                ax_corner = None   # no frame in the empty corner below the boxplot
+        if boxplot:
+            ax_box = fig.add_subplot(gs[r_main, 2], sharey=ax)
+    else:
+        fig = ax.figure
+    if df_masked is not None and len(df_masked):
+        ax.plot(df_masked.index, df_masked[feature], 'x', color='grey', alpha=0.5,
+                markersize=4, label='Masked Observations')
+    ax.plot(df_obs.index, df_obs[feature], 'kx', markersize=4, label='Valid Observations')
+    ax.plot(df_tsi.index, df_tsi[feature], color=color, marker='.', markersize=5, linewidth=1,
+            label=f"Equidistant {cfg['step_days']}-day Interpolation")
+    ax.set_ylabel(feature)
+    ax.grid(True, color='black', alpha=0.2, linewidth=1)
+    _frame(ax)
+    ax.tick_params(width=LW, length=6)
+    # x-axis: limits snapped outwards to whole years (Jan 1st) around the interpolated (TSI) time range
+    t_min, t_max = df_tsi.index.min(), df_tsi.index.max()
+    x0 = pd.Timestamp(f'{t_min.year}-01-01')
+    x1 = pd.Timestamp(f'{t_max.year}-01-01')
+    if t_max > x1:
+        x1 = pd.Timestamp(f'{t_max.year + 1}-01-01')
+    ax.set_xlim(x0, x1)
+    years = [y for y in range(x0.year, x1.year + 1)
+             if x0 <= pd.Timestamp(f'{y}-01-01') <= x1]
+    ax.set_xticks([pd.Timestamp(f'{y}-01-01') for y in years])
+    ax.set_xticklabels([str(y) for y in years])
+    if ylim is not None:
+        ax.set_ylim(*ylim)
+    lon, lat = roi
+    lon_s = f"{abs(lon):.4f}°{'E' if lon >= 0 else 'W'}"
+    lat_s = f"{abs(lat):.4f}°{'N' if lat >= 0 else 'S'}"
+    coord_str = f"{lon_s}\n{lat_s}" if coord_lines == 2 else f"{lon_s} {lat_s}"
+    handles, labels = ax.get_legend_handles_labels()
+    # order: valid, masked, interpolation
+    _order = sorted(range(len(labels)), key=lambda i: (0 if labels[i].startswith('Valid') else
+                                                       1 if labels[i].startswith('Masked') else 2, i))
+    handles = [handles[i] for i in _order]
+    labels = [labels[i] for i in _order]
+    if own_fig:
+        # header, right cell (1/3 width): coordinates
+        ax_coord.set_xticks([]); ax_coord.set_yticks([])
+        ax_coord.text(0.5, 0.5, coord_str, ha='center', va='center', fontsize=9,
+                      linespacing=1.4, transform=ax_coord.transAxes)
+        _frame(ax_coord)
+        # header, left cell (2/3 width): legend, one entry per line
+        ax_leg.set_xticks([]); ax_leg.set_yticks([])
+        ax_leg.legend(handles, labels, loc='center left', bbox_to_anchor=(0.03, 0.5), ncol=1,
+                      frameon=False, fontsize=9, handlelength=1.8, labelspacing=0.35,
+                      handletextpad=0.6, borderaxespad=0.0)
+        _frame(ax_leg)
+        # data density bar ("climate stripes"): one stripe per interpolation date
+        if ax_dens is not None and len(tgt):
+            cmap_obj = plt.get_cmap(density_cmap)
+            ax_dens.set_facecolor(cmap_obj(0.0))
+            step = pd.Timedelta(days=cfg['step_days'])
+            edges = (tgt - step / 2).append(pd.DatetimeIndex([tgt[-1] + step / 2]))
+            # close small gaps (< one interval) to the year boundaries
+            if pd.Timedelta(0) <= (edges[0] - x0) < step:
+                edges = edges.delete(0).insert(0, x0)
+            if pd.Timedelta(0) <= (x1 - edges[-1]) < step:
+                edges = edges.delete(len(edges) - 1).insert(len(edges) - 1, x1)
+            ax_dens.pcolormesh(edges.values, [0, 1], dens[None, :], cmap=density_cmap,
+                               vmin=0, vmax=dens_vmax, shading='flat',
+                               edgecolor='face', linewidth=0.3)
+            ax_dens.set_xlim(ax.get_xlim())
+            ax_dens.set_ylim(0, 1)
+            ax_dens.set_yticks([])
+            # year ticks/labels live on the bar (bottom of the figure); hide them on the data plot
+            ax_dens.tick_params(axis='x', bottom=True, labelbottom=True, width=LW, length=6)
+            # year ticks also on the lower edge of the data plot (pointing inwards)
+            ax.tick_params(axis='x', bottom=True, direction='in', labelbottom=False, width=LW, length=6)
+            # number of valid observation dates (NVO) per year, centred between the year ticks inside the main plot
+            for y in range(x0.year, x1.year):
+                ya, yb = pd.Timestamp(f'{y}-01-01'), pd.Timestamp(f'{y + 1}-01-01')
+                n_valid = int((df_obs.index.year == y).sum())
+                ax.annotate(str(n_valid), xy=(ya + (yb - ya) / 2, 0.02), xycoords=('data', 'axes fraction'),
+                            ha='center', va='bottom', fontsize=8, color='black', annotation_clip=False)
+            _frame(ax_dens)
+        if ax_corner is not None:
+            ax_corner.set_xticks([]); ax_corner.set_yticks([])
+            _frame(ax_corner)
+    else:
+        ax.legend(loc=legend_loc, frameon=True, facecolor='white', edgecolor='black',
+                  fancybox=False, framealpha=1.0, fontsize=8)
+    if ax_box is not None:
+        box = ax_box.boxplot(
+            [df_tsi[feature].dropna()], vert=True, patch_artist=True, widths=0.6,
+            boxprops=dict(facecolor='black', color='black', linewidth=LW),
+            medianprops=dict(color='white', linewidth=2),
+            whiskerprops=dict(color='black', linewidth=LW, linestyle='-'),
+            capprops=dict(color='black', linewidth=0),
+            flierprops=dict(marker='o', markerfacecolor='black', markersize=3,
+                            linestyle='none', markeredgecolor='none'))
+        for cap in box['caps']:
+            cap.set_visible(False)
+        ax_box.set_xticks([])
+        ax_box.yaxis.tick_right()
+        ax_box.tick_params(axis='y', width=LW, length=6)
+        _frame(ax_box)
+        for yt in ax.get_yticks():
+            ax_box.axhline(yt, color='black', alpha=0.2, linewidth=1)
+        ax_box.set_ylim(ax.get_ylim())
+    if own_fig and savepath:
+        fig.savefig(savepath, bbox_inches='tight', dpi=300)
+    if return_data:
+        return fig, ax, dict(valid=df_obs, masked=df_masked, tsi=df_tsi, density=pd.Series(dens, index=tgt))
+    return fig, ax
+
 # EOF
