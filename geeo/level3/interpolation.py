@@ -770,11 +770,12 @@ def plot_tsi_timeseries(
     ax=None,
     color='orangered',
     legend_loc='lower left',
-    ylim=(-0.5, 1.0),
-    boxplot=True,
-    density_bar=True,      # stripe showing n valid obs. within kernel window per interpolation date
-    density_window=None,   # window (days) for density; None = WIN1 of the interpolation kernel
-    density_cmap='inferno',  # any matplotlib colormap name/object; low density = dark, high = bright
+    ylim=None,
+    boxplot=False,
+    density_bar=True,      # stripe showing observation density per month (12 stripes per year)
+    density_window=None,   # optional override for max density scale (vmax); None = auto
+    density_cmap='gray_r',   # any matplotlib colormap name/object; default black (few) to white (many)
+    figsize=None,          # (width, height) in inches; if None, defaults to (6.0, auto)
     coord_lines=1,         # 1 or 2 lines for coordinate label
     savepath=None,        # e.g. 'plot.pdf' (svg/png also work)
     return_data=False,
@@ -857,17 +858,26 @@ def plot_tsi_timeseries(
     df_obs = df_valid.dropna()
     df_tsi = tsi_rbf_df(df_obs, value_cols=feature, nodata_value=None, **cfg)
 
-    # ---- data density per interpolation date ---------------------------------------------------
-    # number of valid observations inside the kernel window around every interpolation date
-    win_d = density_window if density_window is not None else cfg['win1']
-    tgt = df_tsi.index
-    obs_d = df_obs.index.values.astype('datetime64[D]').astype(int)
-    tgt_d = tgt.values.astype('datetime64[D]').astype(int)
-    dens = (np.abs(obs_d[:, None] - tgt_d[None, :]) <= win_d).sum(axis=0)
-    if density_window is None and cfg['mode'] in ('2RBF', '3RBF'):
-        dens_vmax = cfg['bw1']          # weight of the narrow kernel saturates at bw1 observations
-    else:
-        dens_vmax = max(int(dens.max()), 1)
+    # x-axis boundaries snapped outwards to whole years (Jan 1st)
+    t_min, t_max = df_tsi.index.min(), df_tsi.index.max()
+    x0 = pd.Timestamp(f'{t_min.year}-01-01')
+    x1 = pd.Timestamp(f'{t_max.year}-01-01')
+    if t_max > x1:
+        x1 = pd.Timestamp(f'{t_max.year + 1}-01-01')
+    years = [y for y in range(x0.year, x1.year + 1)
+             if x0 <= pd.Timestamp(f'{y}-01-01') <= x1]
+
+    # ---- data density per month (12 stripes per year) ------------------------------------------
+    # Generate monthly edge boundaries from x0 to x1
+    month_edges = pd.date_range(x0, x1, freq='MS')
+    if month_edges[-1] < x1:
+        month_edges = month_edges.append(pd.DatetimeIndex([x1]))
+    # Count valid observations occurring within each monthly interval [start, end)
+    m_starts = month_edges[:-1]
+    m_ends = month_edges[1:]
+    obs_dt = df_obs.index
+    dens = np.array([int(((obs_dt >= s) & (obs_dt < e)).sum()) for s, e in zip(m_starts, m_ends)])
+    dens_vmax = density_window if density_window is not None else max(int(dens.max()), 1)
 
     # ---- figure -------------------------------------------------------------------------------
     from matplotlib.gridspec import GridSpec
@@ -880,13 +890,22 @@ def plot_tsi_timeseries(
     own_fig = ax is None
     ax_box = ax_coord = ax_leg = ax_dens = ax_corner = None
     if own_fig:
-        fig_w = 6.0
+        fig_w = figsize[0] if (figsize is not None and len(figsize) >= 1) else 6.0
         L, R, T, B = 0.10, 0.92, 0.97, 0.09
         wr_full = [2.0, 1.0, 0.12]                       # legend : coordinates : boxplot
         box_w = fig_w * (R - L) * wr_full[2] / sum(wr_full)   # width of boxplot column in inches
-        # rows: header | data plot | density bar (as tall as boxplot is wide); year labels sit below the bar
-        hr = [0.85, 2.2] + ([box_w] if density_bar else [])
-        fig = plt.figure(figsize=(fig_w, sum(hr) / (T - B)))
+        # rows: header | data plot | density bar | NVO count bar; year labels sit below count bar
+        bar_h = 0.22  # height of density and NVO subboxes in inches
+        if figsize is not None and len(figsize) >= 2 and figsize[1] is not None:
+            tot_h = figsize[1]
+            # scale the main data plot height to fill the requested figure height
+            sub_h = 0.70 + (2 * bar_h if density_bar else 0.0)
+            main_h = max(tot_h * (T - B) - sub_h, 0.5)
+            hr = [0.70, main_h] + ([bar_h, bar_h] if density_bar else [])
+        else:
+            hr = [0.70, 2.2] + ([bar_h, bar_h] if density_bar else [])
+            tot_h = sum(hr) / (T - B)
+        fig = plt.figure(figsize=(fig_w, tot_h))
         wr = wr_full if boxplot else wr_full[:2]
         gs = GridSpec(len(hr), len(wr), figure=fig, width_ratios=wr, height_ratios=hr,
                       wspace=0, hspace=0, left=L, right=R, top=T, bottom=B)
@@ -896,6 +915,7 @@ def plot_tsi_timeseries(
         ax_coord = fig.add_subplot(gs[0, 1])
         if density_bar:
             ax_dens = fig.add_subplot(gs[2, :2], sharex=ax)
+            ax_nvo = fig.add_subplot(gs[3, :2], sharex=ax)
             if boxplot:
                 ax_corner = None   # no frame in the empty corner below the boxplot
         if boxplot:
@@ -904,27 +924,42 @@ def plot_tsi_timeseries(
         fig = ax.figure
     if df_masked is not None and len(df_masked):
         ax.plot(df_masked.index, df_masked[feature], 'x', color='grey', alpha=0.5,
-                markersize=4, label='Masked Observations')
-    ax.plot(df_obs.index, df_obs[feature], 'kx', markersize=4, label='Valid Observations')
+                markersize=4, label='Masked Observation')
+    ax.plot(df_obs.index, df_obs[feature], 'kx', markersize=4, label='Valid Observation')
+    unit_str = prm.get('INTERVAL_UNIT', 'day') if prm else 'day'
+    interp_label = f"Interpolated Value ({cfg['step_days']}-{unit_str})"
     ax.plot(df_tsi.index, df_tsi[feature], color=color, marker='.', markersize=5, linewidth=1,
-            label=f"Equidistant {cfg['step_days']}-day Interpolation")
+            label=interp_label)
     ax.set_ylabel(feature)
     ax.grid(True, color='black', alpha=0.2, linewidth=1)
     _frame(ax)
     ax.tick_params(width=LW, length=6)
     # x-axis: limits snapped outwards to whole years (Jan 1st) around the interpolated (TSI) time range
-    t_min, t_max = df_tsi.index.min(), df_tsi.index.max()
-    x0 = pd.Timestamp(f'{t_min.year}-01-01')
-    x1 = pd.Timestamp(f'{t_max.year}-01-01')
-    if t_max > x1:
-        x1 = pd.Timestamp(f'{t_max.year + 1}-01-01')
     ax.set_xlim(x0, x1)
-    years = [y for y in range(x0.year, x1.year + 1)
-             if x0 <= pd.Timestamp(f'{y}-01-01') <= x1]
     ax.set_xticks([pd.Timestamp(f'{y}-01-01') for y in years])
     ax.set_xticklabels([str(y) for y in years])
     if ylim is not None:
         ax.set_ylim(*ylim)
+    else:
+        v_min = df_obs[feature].min()
+        v_max = df_obs[feature].max()
+        rng = v_max - v_min if v_max > v_min else 1.0
+        # Determine tick step (e.g. 0.25, 0.5, 1, 2, etc.)
+        raw_step = rng / 5.0
+        magnitude = 10 ** np.floor(np.log10(raw_step))
+        residual = raw_step / magnitude
+        if residual > 5:
+            step = 5 * magnitude
+        elif residual > 2:
+            step = 2 * magnitude
+        else:
+            step = magnitude
+        # Add buffer and round outward to nearest tick multiple
+        buf = 0.5 * step
+        y_lower = np.floor((v_min - buf) / step) * step
+        y_upper = np.ceil((v_max + buf) / step) * step
+        ax.set_ylim(y_lower, y_upper)
+
     lon, lat = roi
     lon_s = f"{abs(lon):.4f}°{'E' if lon >= 0 else 'W'}"
     lat_s = f"{abs(lat):.4f}°{'N' if lat >= 0 else 'S'}"
@@ -936,45 +971,68 @@ def plot_tsi_timeseries(
     handles = [handles[i] for i in _order]
     labels = [labels[i] for i in _order]
     if own_fig:
-        # header, right cell (1/3 width): coordinates
-        ax_coord.set_xticks([]); ax_coord.set_yticks([])
-        ax_coord.text(0.5, 0.5, coord_str, ha='center', va='center', fontsize=9,
-                      linespacing=1.4, transform=ax_coord.transAxes)
-        _frame(ax_coord)
         # header, left cell (2/3 width): legend, one entry per line
         ax_leg.set_xticks([]); ax_leg.set_yticks([])
-        ax_leg.legend(handles, labels, loc='center left', bbox_to_anchor=(0.03, 0.5), ncol=1,
-                      frameon=False, fontsize=9, handlelength=1.8, labelspacing=0.35,
-                      handletextpad=0.6, borderaxespad=0.0)
-        _frame(ax_leg)
-        # data density bar ("climate stripes"): one stripe per interpolation date
-        if ax_dens is not None and len(tgt):
+        leg = ax_leg.legend(handles, labels, loc='center left', bbox_to_anchor=(0.0, 0.5), ncol=1,
+                            frameon=False, fontsize=9, handlelength=1.8, labelspacing=0.35,
+                            handletextpad=0.6, borderaxespad=0.0)
+        ax_leg.set_frame_on(False)
+
+        # header, right cell (1/3 width): coordinates aligned to bottom legend entry
+        ax_coord.set_xticks([]); ax_coord.set_yticks([])
+        try:
+            fig.canvas.draw_idle()
+            # Get the display coordinate of the lowermost legend text item
+            renderer = fig.canvas.get_renderer()
+            last_text = leg.get_texts()[-1]
+            bbox_disp = last_text.get_window_extent(renderer=renderer)
+            y_disp = (bbox_disp.y0 + bbox_disp.y1) / 2.0
+            # Transform from display to ax_coord axes fraction
+            y_coord = ax_coord.transAxes.inverted().transform((0, y_disp))[1]
+        except Exception:
+            y_coord = 0.22
+        ax_coord.text(1.0, y_coord, coord_str, ha='right', va='center', fontsize=9,
+                      linespacing=1.4, transform=ax_coord.transAxes)
+        ax_coord.set_frame_on(False)
+        # data density bar ("climate stripes"): 12 monthly stripes per year
+        if ax_dens is not None and len(dens):
             cmap_obj = plt.get_cmap(density_cmap)
             ax_dens.set_facecolor(cmap_obj(0.0))
-            step = pd.Timedelta(days=cfg['step_days'])
-            edges = (tgt - step / 2).append(pd.DatetimeIndex([tgt[-1] + step / 2]))
-            # close small gaps (< one interval) to the year boundaries
-            if pd.Timedelta(0) <= (edges[0] - x0) < step:
-                edges = edges.delete(0).insert(0, x0)
-            if pd.Timedelta(0) <= (x1 - edges[-1]) < step:
-                edges = edges.delete(len(edges) - 1).insert(len(edges) - 1, x1)
-            ax_dens.pcolormesh(edges.values, [0, 1], dens[None, :], cmap=density_cmap,
+            ax_dens.pcolormesh(month_edges.values, [0, 1], dens[None, :], cmap=density_cmap,
                                vmin=0, vmax=dens_vmax, shading='flat',
                                edgecolor='face', linewidth=0.3)
             ax_dens.set_xlim(ax.get_xlim())
             ax_dens.set_ylim(0, 1)
             ax_dens.set_yticks([])
-            # year ticks/labels live on the bar (bottom of the figure); hide them on the data plot
-            ax_dens.tick_params(axis='x', bottom=True, labelbottom=True, width=LW, length=6)
-            # year ticks also on the lower edge of the data plot (pointing inwards)
-            ax.tick_params(axis='x', bottom=True, direction='in', labelbottom=False, width=LW, length=6)
-            # number of valid observation dates (NVO) per year, centred between the year ticks inside the main plot
+            ax_dens.tick_params(axis='x', bottom=False, labelbottom=False)
+            ax.tick_params(axis='x', bottom=False, labelbottom=False)
+            _frame(ax_dens)
+
+            # vertical dividing tick lines between years going across density bar
+            for y in years:
+                ax_dens.axvline(pd.Timestamp(f'{y}-01-01'), color='black', linewidth=LW)
+            # Label on the left side next to density subbox
+            ax_dens.text(-0.02, 0.5, 'Density', ha='right', va='center',
+                         fontsize=9, color='black', transform=ax_dens.transAxes)
+
+            # NVO bar: white box at bottom showing number of valid observations per year
+            ax_nvo.set_facecolor('white')
+            ax_nvo.set_xlim(ax.get_xlim())
+            ax_nvo.set_ylim(0, 1)
+            ax_nvo.set_yticks([])
+            # year ticks/labels live on the NVO count bar (bottom of the figure)
+            ax_nvo.tick_params(axis='x', bottom=True, labelbottom=True, width=LW, length=6)
+            for y in years:
+                ax_nvo.axvline(pd.Timestamp(f'{y}-01-01'), color='black', linewidth=LW)
             for y in range(x0.year, x1.year):
                 ya, yb = pd.Timestamp(f'{y}-01-01'), pd.Timestamp(f'{y + 1}-01-01')
                 n_valid = int((df_obs.index.year == y).sum())
-                ax.annotate(str(n_valid), xy=(ya + (yb - ya) / 2, 0.02), xycoords=('data', 'axes fraction'),
-                            ha='center', va='bottom', fontsize=8, color='black', annotation_clip=False)
-            _frame(ax_dens)
+                ax_nvo.text(ya + (yb - ya) / 2, 0.5, str(n_valid),
+                            ha='center', va='center', fontsize=9, color='black')
+            _frame(ax_nvo)
+            # Label on the left side next to count subbox
+            ax_nvo.text(-0.02, 0.5, 'Count', ha='right', va='center',
+                        fontsize=9, color='black', transform=ax_nvo.transAxes)
         if ax_corner is not None:
             ax_corner.set_xticks([]); ax_corner.set_yticks([])
             _frame(ax_corner)
@@ -1002,7 +1060,8 @@ def plot_tsi_timeseries(
     if own_fig and savepath:
         fig.savefig(savepath, bbox_inches='tight', dpi=300)
     if return_data:
-        return fig, ax, dict(valid=df_obs, masked=df_masked, tsi=df_tsi, density=pd.Series(dens, index=tgt))
+        m_index = pd.date_range(x0, x1, freq='MS')[:-1]
+        return fig, ax, dict(valid=df_obs, masked=df_masked, tsi=df_tsi, density=pd.Series(dens, index=m_index))
     return fig, ax
 
 # EOF
