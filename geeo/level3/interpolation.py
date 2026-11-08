@@ -319,7 +319,9 @@ from tqdm import tqdm
 # core RBF interpolation functions (used for images, arrays and dfs)
 
 def _rbf_build_target_times(times_np, step_days):
-    return np.arange(times_np.min(), times_np.max()+np.timedelta64(step_days,'D'), np.timedelta64(step_days,'D'))
+    t_min = times_np.min().astype('datetime64[D]')
+    t_max = times_np.max().astype('datetime64[D]')
+    return np.arange(t_min, t_max + np.timedelta64(step_days, 'D'), np.timedelta64(step_days, 'D')).astype('datetime64[ns]')
 
 def _rbf_build_weights(times_np, target_times_np, sigma, win):
     td = times_np.astype('datetime64[D]').astype(int)
@@ -395,8 +397,17 @@ def _rbf_interp_cube(data, weights_list, mask_list, mode, bw1, bw2):
 # DF RBF
 
 def _rbf_interpolate_timeseries(times_np, values_2d, mode,
-                                step_days, sigma1, win1, sigma2, win2, sigma3, win3, bw1, bw2):
-    target_times = _rbf_build_target_times(times_np, step_days)
+                                step_days, sigma1, win1, sigma2, win2, sigma3, win3, bw1, bw2,
+                                target_times=None):
+    if target_times is None:
+        target_times = _rbf_build_target_times(times_np, step_days)
+    else:
+        target_times = np.array(target_times, dtype='datetime64[ns]')
+
+    is_1d = (values_2d.ndim == 1)
+    if is_1d:
+        values_2d = values_2d[:, None]
+
     scales = [(sigma1, win1)]
     if mode in ('2RBF','3RBF'): scales.append((sigma2, win2))
     if mode == '3RBF': scales.append((sigma3, win3))
@@ -406,6 +417,8 @@ def _rbf_interpolate_timeseries(times_np, values_2d, mode,
         w, m = _rbf_build_weights(times_np, target_times, sigma, win)
         weights_list.append(w); mask_list.append(m)
     out = _rbf_interp_cube(values_2d, weights_list, mask_list, mode, bw1, bw2)  # shape (n_vars,T)
+    if is_1d:
+        out = out[0]
     return out, target_times
 
 def tsi_rbf_df(
@@ -419,6 +432,7 @@ def tsi_rbf_df(
     sigma2=32, win2=32,
     sigma3=64, win3=64,
     bw1=4, bw2=8,
+    target_times=None,
     nodata_value=-9999,
     drop_all_nan=True
 ):
@@ -427,49 +441,90 @@ def tsi_rbf_df(
     If group_col is None, interpolate all rows together.
     If date_col is None, the DataFrame index is used as datetime.
     """
+    if isinstance(value_cols, str):
+        value_cols = [value_cols]
+    elif value_cols is not None:
+        value_cols = list(value_cols)
+
     out_frames = []
     print('Interpolating DF ...')
     if group_col is not None:
         group_iter = df.groupby(group_col)
+        if value_cols is None:
+            exclude = {group_col}
+            if date_col is not None:
+                exclude.add(date_col)
+            value_cols = [c for c in df.columns if c not in exclude]
     else:
         group_iter = [(None, df)]
         if value_cols is None:
             raise ValueError("value_cols must be specified if group_col is None")
+
     for g, gdf in tqdm(group_iter):
+        if date_col is None:
+            times_raw = gdf.index
+            if not np.issubdtype(times_raw.dtype, np.datetime64):
+                try:
+                    times_raw = pd.to_datetime(times_raw)
+                except Exception as err:
+                    raise ValueError(f"Index must be datetime64 or convertible to datetime when date_col is None: {err}")
+        else:
+            if date_col not in gdf.columns:
+                raise ValueError(f"date_col '{date_col}' not found in DataFrame columns")
+            times_raw = gdf[date_col]
+            if not np.issubdtype(times_raw.dtype, np.datetime64):
+                try:
+                    times_raw = pd.to_datetime(times_raw)
+                except Exception as err:
+                    raise ValueError(f"date_col '{date_col}' must be datetime64 or convertible to datetime: {err}")
+
+        # Drop rows with null/NaT timestamps
+        valid_time_mask = pd.notna(times_raw)
+        if not valid_time_mask.all():
+            gdf = gdf.loc[valid_time_mask]
+            times_raw = times_raw[valid_time_mask]
+
+        if gdf.empty:
+            continue
+
         sub = gdf[value_cols].copy()
-        sub = sub.replace(nodata_value, np.nan)
+        if nodata_value is not None:
+            sub = sub.replace(nodata_value, np.nan)
+
         if drop_all_nan:
-            sub = sub.loc[sub.notna().any(axis=1)]
+            valid_val_mask = sub.notna().any(axis=1)
+            sub = sub.loc[valid_val_mask]
+            times_raw = times_raw[valid_val_mask]
+
         if sub.empty:
             continue
-        if date_col is None:
-            t_raw = gdf.loc[sub.index].index.values
-            # Ensure index is datetime64
-            if not np.issubdtype(t_raw.dtype, np.datetime64):
-                raise ValueError("Index must be datetime64 if date_col is None")
-            times_np = t_raw.astype('datetime64[ns]')
-        else:
-            t_raw = gdf.loc[sub.index, date_col].values
-            if np.issubdtype(gdf[date_col].dtype, np.datetime64):
-                times_np = t_raw.astype('datetime64[ns]')
-            else:
-                times_np = np.array([np.datetime64(datetime.strptime(str(d), "%Y%m%d")) for d in t_raw])
-        vals = sub.to_numpy(dtype='float32')  # (t,n)
-        arr = vals
-        out_arr, target_times = _rbf_interpolate_timeseries(
+
+        times_np = np.asarray(times_raw, dtype='datetime64[ns]')
+        arr = sub.to_numpy(dtype='float32')
+
+        # Ensure observations are in chronological order
+        if len(times_np) > 1 and not np.all(times_np[:-1] <= times_np[1:]):
+            order = np.argsort(times_np)
+            times_np = times_np[order]
+            arr = arr[order]
+
+        out_arr, grp_target_times = _rbf_interpolate_timeseries(
             times_np, arr, mode,
-            step_days, sigma1, win1, sigma2, win2, sigma3, win3, bw1, bw2
+            step_days, sigma1, win1, sigma2, win2, sigma3, win3, bw1, bw2,
+            target_times=target_times
         )
         data_dict = {col: out_arr[i] for i, col in enumerate(value_cols)}
-        tmp = pd.DataFrame(data_dict, index=pd.to_datetime(target_times))
+        tmp = pd.DataFrame(data_dict, index=pd.to_datetime(grp_target_times))
         if group_col is not None:
             tmp.insert(0, group_col, g)
         out_frames.append(tmp)
+
     if not out_frames:
         if group_col is not None:
             return pd.DataFrame(columns=[group_col, *value_cols])
         else:
             return pd.DataFrame(columns=value_cols)
+
     long_df = pd.concat(out_frames)
     long_df.index.name = 'time'
     return long_df

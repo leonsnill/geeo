@@ -3,7 +3,7 @@
 #       Geographic and Ecological Earth Observation (GEEO) PARAMETER FILE
 
 #                                   Version 1.0
-#                              (c) 2025, Leon Nill
+#                              (c) 2026, Leon Nill
 #                     Biogeography Lab / Earth Observation Lab
 #            Department of Geography | Humboldt-Universität zu Berlin
 #              mail: leon.nill@geo.hu-berlin.de | GitHub: leonsnill
@@ -108,7 +108,7 @@ BLUE_MAX_MASKING: null                   # Maximum blue reflectance to mask [0, 
 # BLU, GRN, RED, NIR, SW1, SW2 (Landsat+Sentinel-2)
 # LST (Landsat, if LST was processed for scene)
 # RE1, RE2, RE3, RE4 (Sentinel-2)
-# NDVI, EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR, DEM (Copernicus)
+# NDVI, EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR
 FEATURES:
 - BLU
 - GRN
@@ -135,16 +135,6 @@ CUSTOM_FORMULAS:                         # custom formulas (optional)
     formula: "MY_FORMULA/2"
     variable_map:
       MY_FORMULA: MY_FORMULA1
-
-# ------------------------------------
-#        Linear Unmixing (UMX)
-# ------------------------------------
-UMX: null                                # endmeber dictionary
-# {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
-# Unmixing settings
-UMX_SUM_TO_ONE: true                     # Sum to one constraint
-UMX_NON_NEGATIVE: true                   # Non-negative constraint
-UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
 
 
 # -------------------------------------------------------------------------------
@@ -184,7 +174,7 @@ FOLD_MONTH: false                        # Fold per month
 FOLD_CUSTOM: {
   year: null,                            # [YYYY-YYYY, ...] / [YYYY+-OFFSET, ...]
   month: null,                           # [MM-MM, ...] / [MM+-OFFSET, ...]
-  doy: null,                             # [DOY-DOY, ...] / [DOY+-OFFSET, ...
+  doy: null,                             # [DOY-DOY, ...] / [DOY+-OFFSET, ...]
   date: null                             # [YYYYMMDD-YYYYMMDD, ...] / [YYYYMMDD+-OFFSET, ...]
 }
 
@@ -195,6 +185,18 @@ FOLD_CUSTOM: {
 
 NVO: false
 NVO_FOLDING: false
+
+# -------------------------------------------------------------------------------
+#                        LINEAR SPECTRAL UNMIXING (UMX)
+# -------------------------------------------------------------------------------
+UMX: null                                # endmeber dictionary
+# {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
+UMX_BASE_IMGCOL: TSS
+
+# Unmixing settings
+UMX_SUM_TO_ONE: true                     # Sum to one constraint
+UMX_NON_NEGATIVE: true                   # Non-negative constraint
+UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
 
 
 # -------------------------------------------------------------------------------
@@ -303,18 +305,19 @@ NODATA_VALUE: -9999                      # Output no data value (for certain exp
 # -------------------------------------------------------------------------------
 #                            PRODUCTS TO EXPORT
 # -------------------------------------------------------------------------------
-
+# Choose if products should be exported as image and/or table (still requires specific product selection below)
 EXPORT_IMAGE: false                      # Export Image
-EXPORT_TABLE: true                      # Export Table 
+EXPORT_TABLE: true                      # Export Table
 
-EXPORT_TSS: true                        # Export TSS
-EXPORT_CIC: false                        # Export CIC 
-EXPORT_TSM: false                        # Export TSM
-EXPORT_NVO: false                        # Export NVO 
-EXPORT_TSI: false                        # Export TSI 
-EXPORT_STM: false                        # Export STM 
-EXPORT_PBC: false                        # Export PBC
-EXPORT_LSP: false                        # Export LSP
+# Choose which products to export (if EXPORT_IMAGE and/or EXPORT_TABLE = true)
+EXPORT_TSS: true                        # Export Time-Series-Stack (TSS)
+EXPORT_CIC: false                        # Export Custom Image Collection (CIC)
+EXPORT_TSM: false                        # Export Time-Series-Mosaic (TSM)
+EXPORT_NVO: false                        # Export Number of Valid Observations (NVO)
+EXPORT_TSI: false                        # Export Time-Series-Interpolation (TSI)
+EXPORT_STM: false                        # Export Spectral-Temporal-Metrics (STM)
+EXPORT_PBC: false                        # Export Pixel-Based-Composite (PBC)
+EXPORT_LSP: false                        # Export Land-Surface-Phenology (LSP)
 
 
 # -------------------------------------------------------------------------------
@@ -328,7 +331,7 @@ EXPORT_DESC_DETAIL_TIME: false           # Append detailed time description
 EXPORT_BANDNAMES_AS_CSV: false           # Soft requirement for n-bands > 100
 EXPORT_TABLE_FORMAT: CSV                 # CSV, GeoJSON, KML, KMZ, SHP, TFRecord
 EXPORT_TABLE_METHOD: reduceRegions       # 'reduceRegions' or 'reduceRegion'
-EXPORT_TABLE_TILE_SCALE: 16               # Compute tile size [0.1, 16]
+EXPORT_TABLE_TILE_SCALE: 16              # Compute tile size [0.1, 16]
 EXPORT_TABLE_BUFFER: null                # Buffer features before reduction (meters)
 EXPORT_TABLE_REDUCER: first              # Reducer used to extract values
 EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
