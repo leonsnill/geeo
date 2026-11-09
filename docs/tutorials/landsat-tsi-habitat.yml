@@ -195,7 +195,7 @@ UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
 #                         TIME SERIES INTERPOLATION (TSI)
 # -------------------------------------------------------------------------------
 
-TSI: 2RBF                                # (null, WLIN, 1RBF, 2RBF, 3RBF)  
+TSI: 1RBF                                # (null, WLIN, 1RBF, 2RBF, 3RBF)  
 TSI_BASE_IMGCOL: TSS                     # (TSS, TSM, CIC)
 
 # Interpolation settings
@@ -205,7 +205,7 @@ INIT_JANUARY_1ST: true                  # Initialize interval on Jan 1st
 SIGMA1: 16                               # Sigma1 of RBF function (in days)
 SIGMA2: 32                               # Sigma2 of RBF function (in days)
 SIGMA3: 64                               # Sigma3 of RBF function (in days)
-WIN1: 30                                 # Window1 for RBF (in days)
+WIN1: 64                                 # Window1 for RBF (in days)
 WIN2: 90                                 # Window2 for RBF (in days)
 WIN3: 64                                 # Window3 for RBF (in days)
 BW1: 4                                   # Weight for WIN1
