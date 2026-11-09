@@ -759,7 +759,7 @@ def _tss_to_df(imgcol, roi, feature, scale):
     return df[[feature]].astype(float).groupby(level=0).mean().sort_index()
 
 
-def plot_tsi_timeseries(
+def plot_tsi(
     source,
     roi=None,
     feature='NDVI',

@@ -21,7 +21,7 @@
 # -------------------------------------------------------------------------------
 
 # Global time settings
-YEAR_MIN: 2015                           # Minimum year
+YEAR_MIN: 2010                           # Minimum year
 YEAR_MAX: 2024                           # Maximum year
 MONTH_MIN: 1                             # Minimum month
 MONTH_MAX: 12                            # Maximum month
@@ -60,8 +60,9 @@ ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/sel
 SENSORS:                                 # Options: L9, L8, L7, L5, L4, S2, HLS, HLSL30, HLSS30
 - L9
 - L8
+- L7
 
-MAX_CLOUD: 75                            # Maximum (land) cloud cover percentage
+MAX_CLOUD: 50                            # Maximum (land) cloud cover percentage
 
 # ------------------------------------
 #          Masking
@@ -204,8 +205,8 @@ INIT_JANUARY_1ST: true                  # Initialize interval on Jan 1st
 SIGMA1: 16                               # Sigma1 of RBF function (in days)
 SIGMA2: 32                               # Sigma2 of RBF function (in days)
 SIGMA3: 64                               # Sigma3 of RBF function (in days)
-WIN1: 32                                 # Window1 for RBF (in days)
-WIN2: 64                                 # Window2 for RBF (in days)
+WIN1: 30                                 # Window1 for RBF (in days)
+WIN2: 90                                 # Window2 for RBF (in days)
 WIN3: 64                                 # Window3 for RBF (in days)
 BW1: 4                                   # Weight for WIN1
 BW2: 8                                   # Weight for WIN2
@@ -297,7 +298,7 @@ NODATA_VALUE: -9999                      # Output no data value (for certain exp
 #                            PRODUCTS TO EXPORT
 # -------------------------------------------------------------------------------
 # Choose if products should be exported as image and/or table (still requires specific product selection below)
-EXPORT_IMAGE: true                      # Export Image
+EXPORT_IMAGE: false                      # Export Image
 EXPORT_TABLE: false                      # Export Table
 
 # Choose which products to export (if EXPORT_IMAGE and/or EXPORT_TABLE = true)
