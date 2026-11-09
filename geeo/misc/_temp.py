@@ -26,23 +26,23 @@ roi = [6.453384, 44.44164]
 fig, ax = plot_tsi_timeseries(prm, roi=[6.453384, 44.44164], feature='NDVI', show_masked=True, figsize=(6, 3),
                               color='orangered', density_cmap='gray_r', title='Alpine grassland',
                               ylim=[0.1, 1], 
-                              savepath=r"C:\Users\leonx\Desktop\Fig-3_example-2_TSI_grassland.svg")
+                              savepath=r"")
 
 fig, ax = plot_tsi_timeseries(prm, roi=[6.367229, 44.603027], feature='NDVI', show_masked=True, figsize=(6, 3),
                               color='blue', density_cmap='gray_r', title='Forest-grassland ecotone',
                               ylim=[0.1, 1], 
-                              savepath=r"C:\Users\leonx\Desktop\Fig-3_example-2_TSI_woodland.svg")
+                              savepath=r"")
 
 roi_fire_2023 = [5.630965, 44.356215]
 fig, ax = plot_tsi_timeseries(prm, roi=roi_fire_2023, feature='NDVI', show_masked=True, figsize=(6, 3),
                               color='red', density_cmap='gray_r', title='Pine forest with fire disturbance',
                               ylim=[0.1, 1],
-                              savepath=r"C:\Users\leonx\Desktop\Fig-3_example-2_TSI_fire_2023.svg")
+                              savepath=r"")
 
 roi_selective_logging = [5.840892, 44.397064]
 fig, ax = plot_tsi_timeseries(prm, roi=roi_selective_logging, feature='NDVI', show_masked=True, figsize=(6, 3),
                               color='green', density_cmap='gray_r', title='Mixed forest with selective logging',
                               ylim=[0.1, 1],
-                              savepath=r"C:\Users\leonx\Desktop\Fig-3_example-2_TSI_selective_logging.svg")
+                              savepath=r"")
 
 
