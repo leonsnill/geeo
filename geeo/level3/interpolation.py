@@ -777,6 +777,7 @@ def plot_tsi_timeseries(
     density_cmap='gray_r',   # any matplotlib colormap name/object; default black (few) to white (many)
     figsize=None,          # (width, height) in inches; if None, defaults to (6.0, auto)
     coord_lines=1,         # 1 or 2 lines for coordinate label
+    title='',              # optional text (e.g. site name) placed above the coordinate label
     savepath=None,        # e.g. 'plot.pdf' (svg/png also work)
     return_data=False,
 ):
@@ -858,12 +859,23 @@ def plot_tsi_timeseries(
     df_obs = df_valid.dropna()
     df_tsi = tsi_rbf_df(df_obs, value_cols=feature, nodata_value=None, **cfg)
 
-    # x-axis boundaries snapped outwards to whole years (Jan 1st)
+    # x-axis boundaries: YEAR_MIN / YEAR_MAX of the prm (Jan 1st of YEAR_MIN to Jan 1st after YEAR_MAX);
+    # DATE_MIN/DATE_MAX take precedence if set; fall back to the TSI range snapped to whole years
     t_min, t_max = df_tsi.index.min(), df_tsi.index.max()
-    x0 = pd.Timestamp(f'{t_min.year}-01-01')
-    x1 = pd.Timestamp(f'{t_max.year}-01-01')
-    if t_max > x1:
-        x1 = pd.Timestamp(f'{t_max.year + 1}-01-01')
+    y_first = y_last = None
+    if prm:
+        if prm.get('DATE_MIN') and prm.get('DATE_MAX'):
+            y_first, y_last = int(str(prm['DATE_MIN'])[:4]), int(str(prm['DATE_MAX'])[:4])
+        elif prm.get('YEAR_MIN') is not None and prm.get('YEAR_MAX') is not None:
+            y_first, y_last = int(prm['YEAR_MIN']), int(prm['YEAR_MAX'])
+    if y_first is not None:
+        x0 = pd.Timestamp(f'{y_first}-01-01')
+        x1 = pd.Timestamp(f'{y_last + 1}-01-01')
+    else:
+        x0 = pd.Timestamp(f'{t_min.year}-01-01')
+        x1 = pd.Timestamp(f'{t_max.year}-01-01')
+        if t_max > x1:
+            x1 = pd.Timestamp(f'{t_max.year + 1}-01-01')
     years = [y for y in range(x0.year, x1.year + 1)
              if x0 <= pd.Timestamp(f'{y}-01-01') <= x1]
 
@@ -993,6 +1005,11 @@ def plot_tsi_timeseries(
             y_coord = 0.22
         ax_coord.text(1.0, y_coord, coord_str, ha='right', va='center', fontsize=9,
                       linespacing=1.4, transform=ax_coord.transAxes)
+        if title:
+            # sits directly above the coordinate label (offset depends on number of coordinate lines)
+            ax_coord.annotate(title, xy=(1.0, y_coord), xycoords='axes fraction',
+                              xytext=(0, 22 if coord_lines == 2 else 13), textcoords='offset points',
+                              ha='right', va='bottom', fontsize=9, fontweight='bold')
         ax_coord.set_frame_on(False)
         # data density bar ("climate stripes"): 12 monthly stripes per year
         if ax_dens is not None and len(dens):
