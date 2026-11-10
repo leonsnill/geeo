@@ -128,6 +128,46 @@ def preprocess_image(image):
 
 tss = landsat.map(preprocess_image).select(['TCG', 'TCB', 'TCW'])
 
+# subwindows (temporal folding) for STM and NVO calculation
+# filter collections
+march_to_may = tss.filter(ee.Filter.calendarRange(3, 5, 'month'))
+june_to_august = tss.filter(ee.Filter.calendarRange(6, 8, 'month'))
+sept_to_nov = tss.filter(ee.Filter.calendarRange(9, 11, 'month'))
+dec_to_feb = tss.filter(
+    ee.Filter.Or(
+        ee.Filter.calendarRange(12, 12, 'month'),
+        ee.Filter.calendarRange(1, 2, 'month')
+    )
+)
+
+# -----------------------------------------------------------------------------
+# number of valid observations (NVO)
+
+def calc_nvo(collection):
+    # count distinct, unmasked acquisition dates per pixel
+    def add_date(image):
+        date = ee.Number.parse(image.date().format('YYYYMMdd'))
+        date_band = (
+            ee.Image.constant(date).int().rename('DATE')
+            .updateMask(image.select(0).mask())
+        )
+        return image.addBands(date_band)
+    return (
+        collection.map(add_date)
+        .select('DATE')
+        .reduce(ee.Reducer.countDistinctNonNull())
+        .rename('NVO')
+    )
+
+
+# calculate NVO for the same subwindows as the STMs
+nvo_image = ee.Image.cat([
+    calc_nvo(march_to_may).rename('NVO_M03-05'),
+    calc_nvo(june_to_august).rename('NVO_M06-08'),
+    calc_nvo(sept_to_nov).rename('NVO_M09-11'),
+    calc_nvo(dec_to_feb).rename('NVO_M12-02')
+])
+
 # -----------------------------------------------------------------------------
 # habitat metrics: Spectral-Temporal-Metrics (STMs) 
 
@@ -139,17 +179,6 @@ stm_reducer = (
     .combine(ee.Reducer.stdDev(), sharedInputs=True)
 )
 
-# subwindows (temporal folding) for STM calculation
-# filter collections
-march_to_may = tss.filter(ee.Filter.calendarRange(3, 5, 'month'))
-june_to_august = tss.filter(ee.Filter.calendarRange(6, 8, 'month'))
-sept_to_nov = tss.filter(ee.Filter.calendarRange(9, 11, 'month'))
-dec_to_feb = tss.filter(
-    ee.Filter.Or(
-        ee.Filter.calendarRange(12, 12, 'month'),
-        ee.Filter.calendarRange(1, 2, 'month')
-    )
-)
 # calculate STMs for each subwindow
 stm_m03_05 = march_to_may.reduce(stm_reducer).rename([
     'TCG_p10_M03-05', 'TCG_p50_M03-05', 'TCG_p90_M03-05', 'TCG_stdDev_M03-05',
@@ -187,17 +216,17 @@ stm_image = ee.Image.cat([
 # export image as GeoTIFF
 
 # prepare image for export: resample, scale, set no data value, and convert to integer
-export_image = (
+export_image_stm = (
     stm_image
-    .multiply(10000) # scale continuous values to preserve decimals in integer format
+    .multiply(10000) # scale continuous values to preserve decimals in integer format (STMs only, not NVO)
     .unmask(-9999) # set no data value for masked pixels
     .toInt16() # cast to disc space efficient int16 format
 )
 
 task = ee.batch.Export.image.toDrive(
-    image=export_image,
-    description=export_description,
-    fileNamePrefix=export_description,
+    image=export_image_stm,
+    description=export_description + '_STM',
+    fileNamePrefix=export_description + '_STM',
     region=roi,
     crs=export_crs,
     scale=export_scale_m,
@@ -207,3 +236,25 @@ task = ee.batch.Export.image.toDrive(
 )
 
 task.start()
+
+export_image_nvo = (
+    nvo_image
+    .unmask(-9999) # set no data value for masked pixels
+    .toInt16() # cast to disc space efficient int16 format
+)
+
+task_nvo = ee.batch.Export.image.toDrive(
+    image=export_image_nvo,
+    description=export_description + '_NVO',
+    fileNamePrefix=export_description + '_NVO',
+    region=roi,
+    crs=export_crs,
+    scale=export_scale_m,
+    maxPixels=1e13,
+    fileFormat='GeoTIFF',
+    formatOptions={'noData': -9999},
+)
+
+task_nvo.start()
+
+# eof

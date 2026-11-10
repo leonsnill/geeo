@@ -3,7 +3,6 @@ ee.Initialize(project="eexnill")
 
 import geeo
 
-from geeo.level3.interpolation import plot_tsi
 
 
 prm = {'SENSORS': ['L7', 'L8', 'L9'], 
@@ -20,25 +19,21 @@ prm = {'SENSORS': ['L7', 'L8', 'L9'],
        'WIN2': 64,  # Window2 for RBF (in days)
 }
 
-fig, ax = plot_tsi(prm, roi=[6.453384, 44.44164], feature='NDVI', show_masked=True, figsize=(9, 3),
-                              color='orangered', density_cmap='gray_r', title='Alpine grassland',
-                              ylim=[-0.2, 1], 
-                              savepath=None)
+geeo.plot_tsi(prm, roi=[6.453384, 44.44164], feature='NDVI', show_masked=True, figsize=(9, 3),
+              color='orangered', title='Alpine grassland', ylim=[-0.2, 1])
 
-fig, ax = plot_tsi(prm, roi=[6.460557, 44.428797], feature='NDVI', show_masked=True, figsize=(9, 3),
-                              color='blue', density_cmap='gray_r', title='Forest-grassland ecotone',
-                              ylim=[-0.2, 1], 
-                              savepath=None)
+geeo.plot_tsi(prm, roi=[6.460557, 44.428797], feature='NDVI', show_masked=True, figsize=(9, 3),
+              color='blue', title='Forest-grassland ecotone', ylim=[-0.2, 1])
 
 
 roi_fire_2023 = [5.630965, 44.356215]
-fig, ax = plot_tsi(prm, roi=roi_fire_2023, feature='NDVI', show_masked=True, figsize=(6, 3),
+fig, ax = geeo.plot_tsi(prm, roi=roi_fire_2023, feature='NDVI', show_masked=True, figsize=(6, 3),
                               color='red', density_cmap='gray_r', title='Pine forest with fire disturbance',
                               ylim=[0.1, 1],
                               savepath=r"")
 
 roi_selective_logging = [5.840892, 44.397064]
-fig, ax = plot_tsi(prm, roi=roi_selective_logging, feature='NDVI', show_masked=True, figsize=(6, 3),
+fig, ax = geeo.plot_tsi(prm, roi=roi_selective_logging, feature='NDVI', show_masked=True, figsize=(6, 3),
                               color='green', density_cmap='gray_r', title='Mixed forest with selective logging',
                               ylim=[0.1, 1],
                               savepath=r"")

@@ -805,8 +805,17 @@ def plot_tsi(
     prm = None
     # ---- resolve input -> masked TSS (+ optional unmasked TSS) ---------------------------------
     if isinstance(source, str):
-        with open(source) as f:
-            source = json.load(f)
+        with open(source, encoding='utf-8') as f:
+            if source.lower().endswith(('.yml', '.yaml')):
+                import yaml
+                source = yaml.safe_load(f)
+            else:
+                try:
+                    source = json.load(f)
+                except json.JSONDecodeError:   # not JSON -> try YAML (superset of JSON)
+                    import yaml
+                    f.seek(0)
+                    source = yaml.safe_load(f)
 
     if isinstance(source, ee.ImageCollection):
         tss = source

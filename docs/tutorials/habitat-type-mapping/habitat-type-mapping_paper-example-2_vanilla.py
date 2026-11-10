@@ -1,60 +1,85 @@
 import ee
 ee.Authenticate()
-ee.Initialize(project='project-name')
+ee.Initialize(project='eexnill')  # replace with actual project name
 
 # -----------------------------------------------------------------------------
 # input
 
-roi = ee.Geometry.BBox(5.9, 44.5, 6.9, 45.3)
-export_description = 'TSI_HABITAT_S2_NDVI'
-export_crs = 'EPSG:3035'
-export_scale_m = 10
+roi = ee.Geometry.BBox(6.26, 44.35, 6.57, 44.58)
+year_min, year_max = 2010, 2024
+export_description = 'TSI_HABITAT_EU_150-X029-Y029_2010-2024_NDVI'
+export_scale_m = 30
 
-# -----------------------------------------------------------------------------
-# load Sentinel-2 Level-2A data
-
-sentinel2 = (
-    ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
-    .filterBounds(roi)
-    .filter(ee.Filter.calendarRange(2021, 2024, 'year'))
-    .filter(ee.Filter.lte('CLOUDY_PIXEL_PERCENTAGE', 75))
+# GLANCE Europe (Lambert Azimuthal Equal Area)
+export_crs = (
+    'PROJCS["BU MEaSUREs Lambert Azimuthal Equal Area - EU - V01",GEOGCS["GCS_WGS_1984",'
+    'DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],'
+    'UNIT["degree",0.0174532925199433]],PROJECTION["Lambert_Azimuthal_Equal_Area"],'
+    'PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],'
+    'PARAMETER["longitude_of_center",20],PARAMETER["latitude_of_center",55],UNIT["meter",1.0]]'
 )
 
-# link Cloud Score+ collection for masking
-cloud_score_plus = ee.ImageCollection('GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED')
-sentinel2 = sentinel2.linkCollection(cloud_score_plus, ['cs', 'cs_cdf'])
+# interpolation settings (1RBF)
+interval_days = 16
+sigma_days = 16
+window_days = 64
 
 # -----------------------------------------------------------------------------
-# preprocess Sentinel-2 data: rename, scale, mask, and calculate NDVI
+# load Landsat 7, 8, 9 Level-2 Collection 2 Tier 1 data
+
+# band names differ between Landsat 7 and Landsat 8/9
+bands_l7 = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7', 'QA_PIXEL', 'QA_RADSAT']
+bands_l89 = ['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7', 'QA_PIXEL', 'QA_RADSAT']
+bands_new = ['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2', 'QA_PIXEL', 'QA_RADSAT']
+
+def load_landsat(collection_id, bands):
+    return (
+        ee.ImageCollection(collection_id)
+        .filterBounds(roi)
+        .filter(ee.Filter.calendarRange(year_min, year_max, 'year'))
+        .filter(ee.Filter.lte('CLOUD_COVER_LAND', 50))
+        .filter(ee.Filter.gte('GROUND_CONTROL_POINTS_MODEL', 1))
+        .select(bands, bands_new)
+    )
+
+landsat = (
+    load_landsat('LANDSAT/LC09/C02/T1_L2', bands_l89)
+    .merge(load_landsat('LANDSAT/LC08/C02/T1_L2', bands_l89))
+    .merge(load_landsat('LANDSAT/LE07/C02/T1_L2', bands_l7))
+)
+
+# -----------------------------------------------------------------------------
+# preprocess Landsat data: scale, mask, and calculate NDVI
 
 def preprocess_image(image):
-    image = image.select(
-        ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B11', 'B12', 'QA60', 'SCL', 'cs', 'cs_cdf'],
-        ['AER', 'BLU', 'GRN', 'RED', 'RE1', 'RE2', 'RE3', 'NIR', 'RE4', 'WV', 'SW1', 'SW2', 'QA60', 'SCL', 'cs', 'cs_cdf']
-    )
-
     # scale to surface reflectance values
-    scaled_optical = (
-        image.select(['AER', 'BLU', 'GRN', 'RED', 'RE1', 'RE2', 'RE3', 'NIR', 'RE4', 'SW1', 'SW2'])
-        .multiply(0.0001)
-    )
-    image = image.addBands(scaled_optical, overwrite=True)
+    optical = image.select(['BLU', 'GRN', 'RED', 'NIR', 'SW1', 'SW2']).multiply(0.0000275).add(-0.2)
+    image = image.addBands(optical, overwrite=True)
 
-    # Cloud Score+ masking
-    mask = image.select('cs').gte(0.6)
+    # QA_PIXEL bits: 0 fill, 1 dilated cloud, 3 cloud, 4 cloud shadow
+    qa = image.select('QA_PIXEL')
+    mask = qa.bitwiseAnd(1 + 2 + 8 + 16).eq(0)
 
-    # NDVI
+    # cloud and cirrus confidence (bits 8-9 and 14-15) below medium
+    cloud_conf = qa.rightShift(8).bitwiseAnd(3).lt(2)
+    cirrus_conf = qa.rightShift(14).bitwiseAnd(3).lt(2)
+
+    # radiometric saturation and implausible reflectance values
+    saturation = image.select('QA_RADSAT').eq(0)
+    valid_min = optical.reduce(ee.Reducer.min()).gt(0)
+    valid_max = optical.reduce(ee.Reducer.max()).lt(1)
+
+    mask = mask.And(cloud_conf).And(cirrus_conf).And(saturation).And(valid_min).And(valid_max)
+
     ndvi = image.normalizedDifference(['NIR', 'RED']).rename('NDVI')
 
     return (
-        image
+        ndvi
         .updateMask(mask)
-        .resample('bilinear')
-        .addBands(ndvi)
         .copyProperties(image, image.propertyNames())
     )
 
-tss = sentinel2.map(preprocess_image).select(['NDVI']).sort('system:time_start')
+tss = landsat.map(preprocess_image).sort('system:time_start')
 
 # -----------------------------------------------------------------------------
 # create time series mosaic (i.e. duplicate observations due to scene/sensor/tile overlap)
@@ -72,7 +97,7 @@ def mosaic_imgcol(imgcol):
     newcol = ee.ImageCollection(
         ee.Join.saveAll('images').apply(
             primary=unique_dates, secondary=imgcol,
-            condition=ee.Filter.maxDifference(  
+            condition=ee.Filter.maxDifference(
                 difference=0.5*1000*60*60*24,  # 1/2 day to milliseconds
                 leftField='system:time_start', rightField='system:time_start'
             )
@@ -85,20 +110,16 @@ def mosaic_imgcol(imgcol):
 
 tsm = mosaic_imgcol(tss)
 
-
 # -----------------------------------------------------------------------------
 # helper functions for interpolation
 
 def days_to_milliseconds(days):
     return days * 1000 * 60 * 60 * 24
 
-def build_interpolation_dates(image_collection, interval_days):
-    first_image = ee.Image(image_collection.sort('system:time_start').first())
-    last_image = ee.Image(image_collection.sort('system:time_start', False).first())
-
-    first_date = ee.Date(first_image.get('system:time_start'))
-    start_date = ee.Date.fromYMD(first_date.get('year'), 1, 1)
-    end_date = ee.Date(last_image.get('system:time_start'))
+def build_interpolation_dates(interval_days):
+    # regular dates from January 1st of the first year until December 31st of the last year
+    start_date = ee.Date.fromYMD(year_min, 1, 1)
+    end_date = ee.Date.fromYMD(year_max, 12, 31)
 
     delta_days = end_date.difference(start_date, 'day')
     day_offsets = ee.List.sequence(0, delta_days, interval_days)
@@ -137,7 +158,8 @@ def join_window(target_collection, source_collection, window_days, join_key):
 
 def add_rbf_weight(image, sigma_days):
     '''
-    adds rbf weight to each band based on date difference to target date using a gaussian function
+    weights the image by a gaussian function of the date difference to the target date
+    and adds the weight as band (masked where the image is masked)
     '''
     rbf_weight = image.expression(
         'exp(-0.5 * pow(((delta / 86400000) / sigma), 2))',
@@ -145,50 +167,28 @@ def add_rbf_weight(image, sigma_days):
             'delta': ee.Number(image.get('delta')),
             'sigma': sigma_days
         }
-    ).rename('rbf_weight')
+    )
+    common_mask = image.mask().reduce(ee.Reducer.min())
+    rbf_weight = rbf_weight.updateMask(common_mask)
+    weighted = image.multiply(rbf_weight)
 
-    rbf_weight = rbf_weight.updateMask(image.select('NDVI').mask())
-    weighted_ndvi = image.select('NDVI').multiply(rbf_weight).rename('weighted_ndvi')
-
-    return image.addBands([rbf_weight, weighted_ndvi])
+    return weighted.addBands(rbf_weight.rename('rbf_weight'))
 
 
-def interpolate_2rbf(target_image):
+def interpolate_1rbf(target_image):
     '''
-    implements a double RBF interpolation where the result is a weighted blend of a narrower and a wider time window 
+    single RBF interpolation: weighted mean of all observations within the window
     '''
     target_image = ee.Image(target_image)
 
-    window1 = ee.ImageCollection.fromImages(target_image.get('window1')).map(
-        lambda image: add_rbf_weight(ee.Image(image), 20)
-    )
-    window2 = ee.ImageCollection.fromImages(target_image.get('window2')).map(
-        lambda image: add_rbf_weight(ee.Image(image), 40)
+    window = ee.ImageCollection.fromImages(target_image.get('window1')).map(
+        lambda image: add_rbf_weight(ee.Image(image), sigma_days)
     )
 
-    # first RBF interpolation
-    ndvi_window1 = (
-        window1.select('weighted_ndvi').reduce(ee.Reducer.sum())
-        .divide(window1.select('rbf_weight').reduce(ee.Reducer.sum()))
-        .rename('NDVI')
-    )
-
-    # second RBF interpolation
-    ndvi_window2 = (
-        window2.select('weighted_ndvi').reduce(ee.Reducer.sum())
-        .divide(window2.select('rbf_weight').reduce(ee.Reducer.sum()))
-        .rename('NDVI')
-    )
-
-    # adaptive blending based on image density in the narrower window
-    nonzero1 = window1.select('rbf_weight').reduce(ee.Reducer.count()).unmask(0)
-    weight1 = nonzero1.divide(4).clamp(0.0, 1.0)
-    weight2 = ee.Image(1).subtract(weight1)
-
+    reduced = window.reduce(ee.Reducer.sum())
     interpolated = (
-        ndvi_window1.multiply(weight1)
-        .unmask(0)
-        .add(ndvi_window2.multiply(weight2))
+        reduced.select('NDVI_sum')
+        .divide(reduced.select('rbf_weight_sum'))
         .rename('NDVI')
     )
 
@@ -197,15 +197,14 @@ def interpolate_2rbf(target_image):
 # -----------------------------------------------------------------------------
 # build regular interpolation dates and join source images to each target date
 
-interpolation_dates = build_interpolation_dates(tsm, interval_days=20) # 12
-interpolation_dates = join_window(interpolation_dates, tsm, window_days=20, join_key='window1')
-interpolation_dates = join_window(interpolation_dates, tsm, window_days=60, join_key='window2')
+interpolation_dates = build_interpolation_dates(interval_days)
+interpolation_dates = join_window(interpolation_dates, tsm, window_days, join_key='window1')
 
 # -----------------------------------------------------------------------------
-# apply 2RBF interpolation
+# apply 1RBF interpolation
 
 tsi_ndvi = ee.ImageCollection(
-    interpolation_dates.map(interpolate_2rbf)
+    interpolation_dates.map(interpolate_1rbf)
 ).sort('system:time_start')
 
 # -----------------------------------------------------------------------------
@@ -231,13 +230,10 @@ export_image = (
 task = ee.batch.Export.image.toDrive(
     image=export_image,
     description=export_description,
-    fileNamePrefix=export_description,
     region=roi,
     crs=export_crs,
     scale=export_scale_m,
     maxPixels=1e13,
-    fileFormat='GeoTIFF',
-    formatOptions={'noData': -9999},
 )
 
 task.start()
