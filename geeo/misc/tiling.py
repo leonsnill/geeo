@@ -141,7 +141,7 @@ def extract_tile_geom(grid, col, tile_id):
     # extract tile geometry and object
     if isinstance(grid, gpd.GeoDataFrame):
         tile_gdf = grid[grid[col] == tile_id]
-        roi_meta = create_roi(tile_gdf, simplify_geom_to_bbox=True)
+        roi_meta = create_roi(tile_gdf, simplify_geom_to_bbox=False)  # must align with actual bounds, so do not simplify to bbox
         return tile_gdf, roi_meta['roi_geom']
     else:
         tile_fc = grid.filter(ee.Filter.eq(col, tile_id))
@@ -181,9 +181,9 @@ def run_tiled(prm):
             if isinstance(target, ee.FeatureCollection) or (isinstance(target, str) and (target.startswith('projects/') or target.startswith('users/'))):
                 target_fc = target if isinstance(target, ee.FeatureCollection) else ee.FeatureCollection(target)
                 target_tile = target_fc.filterBounds(tile_geom)
-                my_size = target_tile.size().getInfo()
-                print(f"Tile {tile_id}: {my_size} features in target within tile.")
-                if target_tile.size().getInfo() == 0:
+                target_tile_size = target_tile.size().getInfo()
+                #print(f"Tile {tile_id}: {target_tile_size} features in target within tile.")
+                if target_tile_size == 0:
                     continue
                 prm_tile['ROI'] = target_tile
 

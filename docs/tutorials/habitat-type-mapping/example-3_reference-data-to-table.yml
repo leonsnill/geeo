@@ -37,7 +37,7 @@ DATE_MAX: null                           # YYYYMMDD
 # - Rectangle as [lon, lat, lon, lat]
 # - Polygon as [[lon1, lat1], [lon2, lat2], ..., [lon1, lat1]]
 # - Path / or geopandas object vector file (e.g. shapefile, geopackage, geojson)
-ROI: 'projects/eexnill/assets/geeo_public/landsat-tss/TSS_LUCAS_HARMO_V1_EO_LC_EU'
+ROI: 'projects/eexnill/assets/geeo_public/LUCAS_HARMO_V1_EO_LC'
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
 # Spatial Tiling
