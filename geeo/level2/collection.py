@@ -9,20 +9,7 @@ from geeo.misc.spacetime import create_roi
 
 def get_landsat_imgcol(roi, sensors=['L9', 'L8', 'L7','L5', 'L4'], cloudmax=75, time=None,
                        exclude_slc_off=False, gcp_filter=0):
-    """
-    Retrieves Landsat data from Google Earth Engine and applies data homogenisation: band names, scaling.
 
-    Args:
-        sensors (list, optional): List of Landsat sensors to retrieve data from. Defaults to ['L9', 'L8', 'L7','L5', 'L4'].
-        cloudmax (int, optional): Maximum cloud cover percentage allowed. Defaults to 75.
-        roi (ee.Geometry, optional): Region of Interest geometry. List of corner rectangle coordinates or server-side geometry. Defaults to None.
-        time (ee.Filter, optional): Temporal filter dictionary specifying the time range of the data to retrieve. Defaults to None.
-        exclude_slc_off (bool, optional): Whether to exclude SLC-off images for Landsat-7. Defaults to False.
-        gcp_filter (int, optional): Minimum number of ground control points required for the image. Defaults to 0.
-
-    Returns:
-        ee.ImageCollection: Landsat image collection after applying the specified routines.
-    """
     # check if time and roi are provided, otherwise set defaults
     if time is None:
         time = ee.Filter.date('1970-01-01', '2070-01-01')
@@ -187,17 +174,6 @@ def get_sentinel2_imgcol(roi, cloudmax=75, link_mask_collection='CPLUS', time=No
 # Copernicus DEM
 
 def get_copernicus_dem(roi=None, crs='EPSG:4326', crs_transform=None, scale=None, resample_method='bilinear'):
-    """
-    Retrieves the Copernicus DEM data from Google Earth Engine and applies data homogenisation: band names, scaling.
-
-    Args:
-        roi (ee.Geometry, optional): Region of Interest geometry. List of corner rectangle coordinates or server-side geometry. Defaults to None.
-        crs (str, optional): Coordinate Reference System (CRS) to use for the DEM. Defaults to 'EPSG:4326'.
-        crs_transform (list, optional): List of 6 numbers specifying the affine transformation to apply to the DEM. Defaults to None.
-
-    Returns:
-        ee.ImageCollection: DEM image collection after applying the specified routines.
-    """
     
     dem = ee.ImageCollection('COPERNICUS/DEM/GLO30').select('DEM')
 

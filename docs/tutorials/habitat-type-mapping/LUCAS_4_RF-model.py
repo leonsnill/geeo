@@ -61,7 +61,7 @@ rf = RandomForestClassifier(
     min_samples_split=5,
     min_samples_leaf=2,
     class_weight='balanced_subsample',
-    n_jobs=25,
+    n_jobs=4,
     random_state=30
 )
 
@@ -70,8 +70,8 @@ rfecv = RFECV(
     step=0.05,
     cv=StratifiedKFold(5, shuffle=True, random_state=30),
     scoring='balanced_accuracy',
-    n_jobs=5,
-    verbose=1
+    n_jobs=4,
+    verbose=10
 )
 
 rfecv.fit(X_train_full, y_train)
@@ -85,16 +85,25 @@ plt.figure(figsize=(10, 6))
 plt.bar(range(len(selected_features)), importances[indices], align="center")
 plt.xticks(range(len(selected_features)), np.array(selected_features)[indices], rotation=90)
 plt.tight_layout()
+plt.savefig('feature_importance.png', dpi=300)
 plt.show()
+plt.close()
 
 '''
 Resulting selected features:
 
-['summer_SW1_p95', 'summer_NIR_p95', 'summer_NBR_p5', 'summer_MDWI_p95', 'summer_NBR_stdDev', 'bio5', 'slope', 
-'full_NIR_p25', 'full_NBR_p5', 'DEM', 'full_NIR_p95', 'autumn_MDWI_p75', 'full_NBR_stdDev', 'summer_RED_stdDev', 
-'full_RED_p75', 'full_NBR_p75', 'full_NBR_p95', 'spring_NIR_p95', 'full_MDWI_p75', 'autumn_NBR_p25', 'bio9', 
-'autumn_SW1_p95', 'full_NIR_stdDev', 'bio6', 'bio18', 'autumn_NDVI_p25', 'spring_NDVI_p75', 
-'spring_MDWI_p25', 'full_NDVI_p25', 'full_SW2_stdDev', 'spring_MDWI_p50', 'spring_SW1_p95', 'spring_NDVI_p5']
+['full_RED_p75', 'full_NIR_p25', 'full_NIR_p95', 'full_NIR_stdDev',
+       'full_SW2_stdDev', 'full_MDWI_p75', 'full_NBR_p5', 'full_NBR_p75',
+       'full_NBR_p95', 'full_NBR_stdDev', 'full_NDVI_p25',
+       'full_NDVI_stdDev', 'winter_MDWI_p75', 'winter_NBR_p5',
+       'winter_NDVI_p95', 'spring_NIR_p95', 'spring_NIR_stdDev',
+       'spring_SW1_p95', 'spring_MDWI_p25', 'spring_MDWI_p50',
+       'spring_MDWI_p75', 'spring_NBR_p5', 'spring_NBR_p95',
+       'spring_NDVI_p5', 'spring_NDVI_p75', 'summer_RED_stdDev',
+       'summer_NIR_p95', 'summer_NIR_stdDev', 'summer_SW1_p95',
+       'summer_SW1_stdDev', 'summer_MDWI_p95', 'summer_NBR_p5',
+       'summer_NBR_stdDev', 'autumn_NIR_p95', 'autumn_SW1_p95',
+       'autumn_MDWI_p75', 'autumn_NBR_p25', 'autumn_NDVI_p25']
 '''
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -109,7 +118,7 @@ scores = []
 for n in n_estimators_range:
     rf_eval = RandomForestClassifier(
         n_estimators=n,
-        n_jobs=25,
+        n_jobs=10,
         random_state=30,
         max_samples=10000,
         class_weight='balanced_subsample'
@@ -122,7 +131,9 @@ plt.plot(n_estimators_range, scores)
 plt.xlabel('n_estimators')
 plt.ylabel('Balanced Accuracy')
 plt.title('Error Curve: Number of Trees')
+plt.savefig('error_curve_n_estimators.png', dpi=300)
 plt.show()
+plt.close()
 
 # number of samples (per tree) / instead of using n samples eqivalent to input sample size
 sample_sizes = [1000, 5000, 10000, 20000, 50000, 100000]
@@ -131,7 +142,7 @@ rng = np.random.default_rng(30)
 for s in sample_sizes:
     rf_lc = RandomForestClassifier(
         n_estimators=300,
-        n_jobs=50,
+        n_jobs=10,
         random_state=30,
         max_samples=s,
         min_samples_leaf=2,
@@ -147,7 +158,9 @@ plt.plot([min(s, len(X_train)) for s in sample_sizes], scores)
 plt.xlabel('Training Samples')
 plt.ylabel('Accuracy')
 plt.title('Learning Curve')
+plt.savefig('learning_curve.png', dpi=300)
 plt.show()
+plt.close()
 
 # ------------------------------------------------------------------------------------------------------------------
 # final model(s)
@@ -155,7 +168,7 @@ plt.show()
 # train and test
 rf_final = RandomForestClassifier(
     n_estimators=50,
-    n_jobs=50,
+    n_jobs=10,
     random_state=30,
     min_samples_leaf=2,
     min_samples_split=3,
@@ -170,10 +183,35 @@ print('Accuracy:', metrics.accuracy_score(y_test, y_pred))
 print('Balanced Accuracy:', metrics.balanced_accuracy_score(y_test, y_pred))
 print('Classification Report:\n', metrics.classification_report(y_test, y_pred))
 
+"""
+Final Model Performance:
+Accuracy: 0.71420821410716
+Balanced Accuracy: 0.5861784952792434
+Classification Report:
+               precision    recall  f1-score   support
+
+           0       0.62      0.71      0.66      2142
+           1       0.84      0.91      0.87     18516
+           2       0.50      0.29      0.37      1261
+           3       0.74      0.76      0.75     19243
+           4       0.68      0.73      0.71     12908
+           5       0.52      0.36      0.43      8202
+           6       0.50      0.51      0.51      6728
+           7       0.74      0.80      0.77     19239
+           8       0.56      0.23      0.33      2617
+           9       0.61      0.45      0.52      1390
+          10       0.83      0.78      0.81      1749
+          11       0.58      0.50      0.54        14
+
+    accuracy                           0.71     94009
+   macro avg       0.64      0.59      0.60     94009
+weighted avg       0.70      0.71      0.70     94009
+"""
+
 # all data for final model
 rf_final = RandomForestClassifier(
     n_estimators=50,
-    n_jobs=50,
+    n_jobs=10,
     random_state=30,
     min_samples_leaf=2,
     min_samples_split=3,
@@ -184,7 +222,7 @@ rf_final = RandomForestClassifier(
 rf_final.fit(df[selected_features].values, y)
 
 # save model
-with open('/data/Aldhani/users/nillleox/projects/geeo/habitat-mapping/RF-MODEL_LUCAS_NTREE-50.pkl', 'wb') as f:
+with open("RF-MODEL_TSS_LUCAS_NTREE-50.pkl", 'wb') as f:
     dill.dump(rf_final, f)
 
 # ------------------------------------------------------------------------------------------------------------------
@@ -194,53 +232,15 @@ ee.Authenticate()
 ee.Initialize(project='eexnill')
 from geeo.level4.model import dt_model_to_ee
 
-'''
-FEATURES (from above)
-
-['summer_SW1_p95',
- 'summer_NIR_p95',
- 'summer_NBR_p5',
- 'summer_MDWI_p95',
- 'summer_NBR_stdDev',
- 'bio5',
- 'slope',
- 'full_NIR_p25',
- 'full_NBR_p5',
- 'DEM',
- 'full_NIR_p95',
- 'autumn_MDWI_p75',
- 'full_NBR_stdDev',
- 'summer_RED_stdDev',
- 'full_RED_p75',
- 'full_NBR_p75',
- 'full_NBR_p95',
- 'spring_NIR_p95',
- 'full_MDWI_p75',
- 'autumn_NBR_p25',
- 'bio9',
- 'autumn_SW1_p95',
- 'full_NIR_stdDev',
- 'bio6',
- 'bio18',
- 'autumn_NDVI_p25',
- 'spring_NDVI_p75',
- 'spring_MDWI_p25',
- 'full_NDVI_p25',
- 'full_SW2_stdDev',
- 'spring_MDWI_p50',
- 'spring_SW1_p95',
- 'spring_NDVI_p5']
-'''
-
 # upload decision tree as strings to ee.FeatureCollection 
 my_model = dt_model_to_ee(tree_model=rf_final, features=selected_features, 
                           folder='projects/eexnill/assets/geeo_public', 
-                          upload_asset=True, name='RF-MODEL_LUCAS_NTREE-50', 
-                          overwrite_asset=True, n_jobs=50)
+                          upload_asset=True, name='RF-MODEL_TSS_LUCAS_NTREE-50', 
+                          overwrite_asset=False, n_jobs=1)
 
 # test if everything uploaded correctly
 # load table asset to model
-model = 'projects/eexnill/assets/geeo_public/RF-MODEL_LUCAS_NTREE-50' 
+model = 'projects/eexnill/assets/geeo_public/RF-MODEL_TSS_LUCAS_NTREE-50' 
 # geeo has a function to load the table asset to a model
 from geeo.level4.model import dt_table_asset_to_model
 rf = dt_table_asset_to_model(model)

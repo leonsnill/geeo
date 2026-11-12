@@ -40,7 +40,8 @@ DATE_MAX: null                           # YYYYMMDD
 ROI: [6.26, 44.35, 6.57, 44.58]
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
-ROI_TILES: False                        # Use features in ROI vector file as independent 'tiles' (ROI) 
+# Spatial Tiling
+ROI_TILES: false                        # false, true (features in ROI as tiles), preset ('EU_300'), or grid vector/asset
 ROI_TILES_ATTRIBUTE_COLUMN: null        # Attribute column (str) that contains unique IDs (appended to DESC)
 ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/select (null = all)
 

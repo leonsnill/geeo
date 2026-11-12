@@ -31,6 +31,7 @@ __all__ = [
 import sys
 from .utils import create_parameter_file, calculate_image_size, load_parameters, merge_parameters, load_blueprint
 from .main import run_param
+from .misc.tiling import run_tiled
 from geeo.level2.level2 import run_level2
 from geeo.level3.level3 import run_level3
 from geeo.level4.level4 import run_level4

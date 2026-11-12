@@ -828,6 +828,9 @@ def plot_tsi(
             prm['ROI'] = list(_to_lonlat(roi))
         roi = _to_lonlat(prm['ROI'])                           # must be a point for reduceRegions
         prm['ROI'] = list(roi)
+        # make sure no export is triggered as only a plot is requested
+        prm['EXPORT_IMAGE'] = False
+        prm['EXPORT_TABLE'] = False
         tss = run_param(prm)['TSS']
         if show_masked and unmasked is None:
             unmasked = run_param(_unmasked_prm(prm, roi))['TSS']

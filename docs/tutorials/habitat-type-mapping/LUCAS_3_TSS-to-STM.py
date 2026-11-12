@@ -163,18 +163,12 @@ df_lucas_stm = df_lucas_stm.merge(df_lucas[attr_lucas + [group_col_lucas]].drop_
 # write both to disc
 df_lucas_stm.to_csv('STM_LUCAS_HARMO_V1_EO_LC_EU.csv')
 
-# ---------------------------------------------------------------------------------------------------
-# merge with CHELSA + DEM data
+
 df_lucas_stm = pd.read_csv('STM_LUCAS_HARMO_V1_EO_LC_EU.csv')
-df_lucas_dem = pd.read_csv('LUCAS_HARMO_V1_EO_LC_CHELSA_DEM.csv')
-col_to_join = ['DEM', 'slope', 'northness', 'eastness'] + [f'bio{i}' for i in range(1, 20)]
-df_lucas_stm = df_lucas_stm.merge(df_lucas_dem[['id'] + col_to_join], on='id', how='left')
+
 
 cols_to_keep = [
-    'id', 'LC_ID', 'year', '.geo',
-    'DEM', 'slope', 'northness', 'eastness',
-    'bio1', 'bio2', 'bio3', 'bio4', 'bio5', 'bio6', 'bio7', 'bio8', 'bio9', 'bio10',
-    'bio11', 'bio12', 'bio13', 'bio14', 'bio15', 'bio16', 'bio17', 'bio18', 'bio19',
+    'id', 'LC_ID', 'year', '.geo'
 ]
 
 prefixes = ['full_', 'summer_', 'spring_', 'autumn_', 'winter_']
