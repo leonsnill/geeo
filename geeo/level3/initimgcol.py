@@ -117,8 +117,8 @@ def init_imgcol(imgcol, interval=5, interval_unit='day', day_offset=0,
                 if january_first:
                     time_start = ee.Date(ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=True).first()).get('system:time_start')).format("YYYY"))
                 else:
-                    time_start = ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=True).first()).get('system:time_start'))
-                time_end = ee.Date(ee.Image(imgcol.sort('system:time_start', ascending=False).first()).get('system:time_start'))
+                    time_start = ee.Date(imgcol.aggregate_min('system:time_start'))
+                time_end   = ee.Date(imgcol.aggregate_max('system:time_start'))
             else:
                 raise ValueError("No ImageCollection or date range provided to initialize from.")
     else:

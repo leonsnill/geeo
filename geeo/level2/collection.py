@@ -112,7 +112,7 @@ def get_landsat_imgcol(roi, sensors=['L9', 'L8', 'L7','L5', 'L4'], cloudmax=75, 
     if len(sensors) > 1:
         for i in range(len(sensors)-1):
             imgcol = imgcol.merge(dict_imgcols[sensors[i+1]])
-        imgcol = imgcol.sort("system:time_start")  # sorting is a very costly operation!
+        imgcol = imgcol#.sort("system:time_start")  # sorting is a very costly operation!
 
     return imgcol
     
@@ -247,7 +247,7 @@ def get_hls(roi, collection='HLS', cloudmax=75, time=None):
     if len(sensors) > 1:
         for i in range(len(sensors)-1):
             imgcol = imgcol.merge(dict_imgcols[sensors[i+1]])
-        imgcol = imgcol.sort("system:time_start")  # sorting is a very costly operation!
+        imgcol = imgcol#.sort("system:time_start")  # sorting is a very costly operation!
 
     return imgcol
 

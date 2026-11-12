@@ -502,7 +502,9 @@ def get_spatial_metadata(roi, px_res, crs=None, crs_transform=None, img_dimensio
 
 
 # convert ImageCollection to Image
-def imgcol_to_img(imgcol, date_to_bandname=True, date_format='YYYYMMdd'):
+def imgcol_to_img(imgcol, date_to_bandname=True, date_format='YYYYMMdd', sort_by_time=False):
+    if sort_by_time:
+        imgcol = imgcol.sort("system:time_start")
     img = ee.Image(imgcol.toBands())
     if date_to_bandname:
         bandnames = get_dates_with_bands_str(imgcol, format=date_format)
@@ -513,16 +515,22 @@ def imgcol_to_img(imgcol, date_to_bandname=True, date_format='YYYYMMdd'):
 # requires 'limiting' featcol into memory due to bug in EE, as descibed by N. Gorelick
 # https://gis.stackexchange.com/questions/478174/reduceregion-works-but-reduceregions-returns-null-values-for-all-reducer
 def reduce_regions_imgcol(featcol, scale=30, reducer=ee.Reducer.first(), tileScale=1, **kwargs):
+    featcol = featcol.limit(featcol.size())  # limit, see above
     def wrap(img):
         values = img.reduceRegions(
-            collection=featcol.limit(featcol.size()),  # limit
+            #collection=featcol.limit(featcol.size()),  # limit
+            collection=featcol,  # limit
             reducer=reducer,
             scale=scale,
             tileScale=tileScale, 
             **kwargs
-            ).map(
-                lambda x: x.set({'YYYYMMDD': img.date().format('YYYYMMdd')})
-        )
+            )
+        
+        # filter out null values
+        first_band = ee.List([img.bandNames().get(0)])
+        values = values.filter(ee.Filter.notNull(first_band))
+        
+        values = values.map(lambda x: x.set({'YYYYMMDD': img.date().format('YYYYMMdd')}))
         return values
     return wrap
 

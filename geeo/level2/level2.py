@@ -237,7 +237,7 @@ def run_level2(params):
     if sensors_landsat and sensors_sentinel2:
         imgcol = landsat.merge(sentinel2).set('satellite', 'LSS2')
         prm['SATELLITE'] = 'LSS2'
-        imgcol = imgcol.sort('system:time_start')
+        #imgcol = imgcol.sort('system:time_start')  # sorting is a very costly operation!
     elif sensors_landsat:
         imgcol = landsat.set('satellite', 'LSAT')
         prm['SATELLITE'] = 'LSAT'

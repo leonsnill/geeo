@@ -182,7 +182,7 @@ def run_tiled(prm):
                 target_fc = target if isinstance(target, ee.FeatureCollection) else ee.FeatureCollection(target)
                 target_tile = target_fc.filterBounds(tile_geom)
                 target_tile_size = target_tile.size().getInfo()
-                #print(f"Tile {tile_id}: {target_tile_size} features in target within tile.")
+                print(f"Tile {tile_id}: {target_tile_size} features in target within tile.")
                 if target_tile_size == 0:
                     continue
                 prm_tile['ROI'] = target_tile
