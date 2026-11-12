@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>GEEO Documentation</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">GEEO Documentation</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#geeo-parameter-documentation"
+id="toc-geeo-parameter-documentation">GEEO Parameter Documentation</a>
+<ul>
+<li><a href="#modules-and-settings-overview"
+id="toc-modules-and-settings-overview">Modules and Settings
+Overview</a></li>
+<li><a href="#level-2" id="toc-level-2">LEVEL-2</a>
+<ul>
+<li><a href="#space-and-time" id="toc-space-and-time">SPACE AND
+TIME</a></li>
+<li><a href="#sensor-and-data-quality-settings-time-series-stack---tss"
+id="toc-sensor-and-data-quality-settings-time-series-stack---tss">SENSOR
+AND DATA QUALITY SETTINGS (TIME SERIES STACK - TSS)</a></li>
+<li><a href="#bands-indices-features"
+id="toc-bands-indices-features">BANDS | INDICES | FEATURES</a></li>
+<li><a href="#custom-image-collection-cic"
+id="toc-custom-image-collection-cic">CUSTOM IMAGE COLLECTION
+(CIC)</a></li>
+<li><a href="#time-series-mosaic-tsm"
+id="toc-time-series-mosaic-tsm">TIME SERIES MOSAIC (TSM)</a></li>
+</ul></li>
+<li><a href="#level-3" id="toc-level-3">LEVEL-3</a>
+<ul>
+<li><a href="#temporal-subwindows-folding"
+id="toc-temporal-subwindows-folding">TEMPORAL SUBWINDOWS |
+FOLDING</a></li>
+<li><a href="#number-of-valid-observations-nvo"
+id="toc-number-of-valid-observations-nvo">NUMBER OF VALID OBSERVATIONS
+(NVO)</a></li>
+<li><a href="#linear-spectral-unmixing-umx"
+id="toc-linear-spectral-unmixing-umx">LINEAR SPECTRAL UNMIXING
+(UMX)</a></li>
+<li><a href="#time-series-interpolation-tsi"
+id="toc-time-series-interpolation-tsi">TIME SERIES INTERPOLATION
+(TSI)</a></li>
+<li><a href="#spectral-temporal-metrics-stm"
+id="toc-spectral-temporal-metrics-stm">SPECTRAL-TEMPORAL-METRICS
+(STM)</a></li>
+<li><a href="#pixel-based-composites-pbc"
+id="toc-pixel-based-composites-pbc">PIXEL-BASED COMPOSITES
+(PBC)</a></li>
+</ul></li>
+<li><a href="#level-4" id="toc-level-4">LEVEL-4</a>
+<ul>
+<li><a href="#land-surface-phenology-lsp"
+id="toc-land-surface-phenology-lsp">LAND SURFACE PHENOLOGY
+(LSP)</a></li>
+</ul></li>
+<li><a href="#export" id="toc-export">EXPORT</a>
+<ul>
+<li><a href="#image-settings" id="toc-image-settings">IMAGE
+SETTINGS</a></li>
+<li><a href="#products-to-export" id="toc-products-to-export">PRODUCTS
+TO EXPORT</a></li>
+<li><a href="#general-export-settings"
+id="toc-general-export-settings">GENERAL EXPORT SETTINGS</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="geeo-parameter-documentation">GEEO Parameter Documentation</h1>
+<p>Below is the detailed documentation of all available methods and
+parameter options for the main workflow of <strong>GEEO</strong>.</p>
+<p>For the documentation on how to start using and interacting with
+GEEO, please be referred to the <a
+href="../README.md#getting-started">Getting Started</a> and <a
+href="/docs/tutorials/tutorial_0_introducing-geeo.ipynb">Introduction</a>
+sections, accordingly.</p>
+<h2 id="modules-and-settings-overview">Modules and Settings
+Overview</h2>
+<p><a href="#level-2">Level-2</a> - <a href="#space-and-time">Space and
+Time</a> - <a
+href="#sensor-and-data-quality-settings-time-series-stack---tss">Sensor
+and Data Quality Settings (Time Series Stack - TSS)</a> - <a
+href="#bands--indices--features">Bands | Indices | Features</a> - <a
+href="#custom-image-collection-cic">Custom Image Collection (CIC)</a> -
+<a href="#time-series-mosaic-tsm">Time Series Mosaic (TSM)</a></p>
+<p><a href="#level-3">Level-3</a> - <a
+href="#temporal-subwindows--folding">Temporal Subwindows | Folding</a> -
+<a href="#number-of-valid-observations-nvo">Number of Valid Observations
+(NVO)</a> - <a href="#linear-spectral-unmixing-umx">Linear Spectral
+Unmixing (UMX)</a> - <a href="#time-series-interpolation-tsi">Time
+Series Interpolation (TSI)</a> - <a
+href="#spectral-temporal-metrics-stm">Spectral-Temporal-Metrics
+(STM)</a> - <a href="#pixel-based-composites-pbc">Pixel-Based Composites
+(PBC)</a></p>
+<p><a href="#level-4">Level-4</a> - <a
+href="#land-surface-phenology-lsp">Land Surface Phenology (LSP)</a></p>
+<p><a href="#export">Export</a> - <a href="#image-settings">Image
+Settings</a> - <a href="#products-to-export">Products to Export</a> - <a
+href="#general-export-settings">General Export Settings</a></p>
+<h2 id="level-2">LEVEL-2</h2>
+<p>The Level-2 module harmonises, standardises and merges the
+user-specified input image collections from the Earth Engine data
+catalogue.</p>
+<h3 id="space-and-time">SPACE AND TIME</h3>
+<p>These are the global spatial and temporal filters applied to the
+ImageCollections.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>YEAR_MIN</code></td>
+<td>int</td>
+<td>2023</td>
+<td>YYYY</td>
+<td>Start year (inclusive). Not used when DATE_MIN and DATE_MAX are
+set.</td>
+</tr>
+<tr class="even">
+<td><code>YEAR_MAX</code></td>
+<td>int</td>
+<td>2023</td>
+<td>YYYY</td>
+<td>End year (inclusive). Not used when DATE_MIN and DATE_MAX are
+set.</td>
+</tr>
+<tr class="odd">
+<td><code>MONTH_MIN</code></td>
+<td>int</td>
+<td>1</td>
+<td>[1, 12]</td>
+<td>Start month (inclusive). Can be greater than MONTH_MAX to wrap
+(e.g. 11→2).</td>
+</tr>
+<tr class="even">
+<td><code>MONTH_MAX</code></td>
+<td>int</td>
+<td>12</td>
+<td>[1, 12]</td>
+<td>End month (inclusive). Can be lower than MONTH_MIN to wrap
+(e.g. 11→2)</td>
+</tr>
+<tr class="odd">
+<td><code>DOY_MIN</code></td>
+<td>int</td>
+<td>1</td>
+<td>[1, 366]</td>
+<td>Start day-of-year (inclusive). Can be greater than DOY_MAX to wrap
+(e.g. 300→31).</td>
+</tr>
+<tr class="even">
+<td><code>DOY_MAX</code></td>
+<td>int</td>
+<td>366</td>
+<td>[1, 366]</td>
+<td>End day-of-year (inclusive). Can be lower than DOY_MIN to wrap
+(e.g. 300→31).</td>
+</tr>
+<tr class="odd">
+<td><code>DATE_MIN</code></td>
+<td>str</td>
+<td>null</td>
+<td>YYYYMMDD</td>
+<td>Start date. Overrides YEAR/MONTH/DOY when paired with DATE_MAX.</td>
+</tr>
+<tr class="even">
+<td><code>DATE_MAX</code></td>
+<td>str</td>
+<td>null</td>
+<td>YYYYMMDD</td>
+<td>End date. Overrides YEAR/MONTH/DOY when paired with DATE_MIN.</td>
+</tr>
+<tr class="odd">
+<td><code>ROI</code></td>
+<td>list / str / GeoDataFrame / ee object</td>
+<td>[12.9, 52.2, 13.9, 52.7]</td>
+<td>Point [lon, lat]; BBox [xmin, ymin, xmax, ymax]; path to .shp/.gpkg;
+GeoDataFrame; ee.Geometry / ee.FeatureCollection</td>
+<td>Region of Interest acting as primary spatial filter to
+ImageCollection.</td>
+</tr>
+<tr class="even">
+<td><code>ROI_SIMPLIFY_GEOM_TO_BBOX</code></td>
+<td>bool</td>
+<td>true</td>
+<td>true, false</td>
+<td>Simplifies input ROI to its bounding box for spatial filtering. This
+is usually desireable, since providing a complex collection as geometry
+argument may result in unnecessary poor performance. Note that a
+scenario where setting this to false makes sense if a simple geometry
+covers a large geographic area but the bounding box would include images
+outside the region of interest (for examle when a point dataset is used
+as ROI)</td>
+</tr>
+<tr class="odd">
+<td><code>ROI_TILES</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Use features in ROI vector as independent tiles (ROIs) for
+processing and export. Applies only when ROI is a vector file
+(shp/gpkg/GeoDataFrame). Requires ROI_TILES_ATTRIBUTE_COLUMN to be
+specified to append to output filenames.</td>
+</tr>
+<tr class="even">
+<td><code>ROI_TILES_ATTRIBUTE_COLUMN</code></td>
+<td>str</td>
+<td>null</td>
+<td>column name or null</td>
+<td>Attribute column containing unique per-feature IDs; appended to
+EXPORT_DESC for per-tile outputs; Also used for subsetting via
+ROI_TILES_ATTRIBUTE_LIST.</td>
+</tr>
+<tr class="odd">
+<td><code>ROI_TILES_ATTRIBUTE_LIST</code></td>
+<td>list</td>
+<td>null</td>
+<td>list of values or null</td>
+<td>ROI_TILES_ATTRIBUTE_LIST can be used if ROI_TILES is activated to
+select only the matching features found in ROI_TILES_ATTRIBUTE_COLUMN.
+The default (null) selects all features.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The <code>YEAR_*</code>, <code>MONTH_*</code>, and
+<code>DOY_*</code> parameters are combined to construct a logical
+<em>AND</em> filtering. Calendar year wrapping is considered for
+<code>MONTH_*</code>, and <code>DOY_*</code>,
+i.e. <code>MONTH_MIN</code> and <code>DOY_MIN</code> may be greater than
+<code>MONTH_MAX</code> and <code>DOY_MAX</code>, respectively (e.g. to
+only process imagery between November to February, set
+<code>MONTH_MIN: 11</code> and <code>MONTH_MAX: 2</code>).</li>
+<li>If <code>DATE_MIN</code> and <code>DATE_MAX</code> are specified,
+<code>YEAR_*</code>, <code>MONTH_*</code>, and <code>DOY_*</code> are
+ignored/overwritten.</li>
+<li>The Region-Of-Interest (<code>ROI</code>) can be specified as a
+simple list of coordinates (points, polygons), a client-side shp/gpkg
+file or GeoPandas GeoDataFrame, as well as a server-side ee.Geometry or
+ee.FeatureCollection. For the spatial filtering, it is recommended to
+set <code>ROI_SIMPLIFY_GEOM_TO_BBOX: true</code> since providing a
+complex vector file or FeatureCollection may result in poor
+performance.</li>
+</ul>
+<h3 id="sensor-and-data-quality-settings-time-series-stack---tss">SENSOR
+AND DATA QUALITY SETTINGS (TIME SERIES STACK - TSS)</h3>
+<p>The following settings concern the Time-Series-Stack (TSS). The TSS
+is the primary output and serves as initial input to subsequent
+algorithms. The TSS is an image collection consisting of individual
+images matching the spatial tiling schemes used by NASA (Landsat) and
+ESA (Sentinel-2) in which the spectral bands were named and scaled
+identically, the collections were spatially and temporally filtered to
+match the specified study area and time period (see <a
+href="#space-and-time">Space and Time</a>), the imagery was quality
+filtered according to user-specified criteria (e.g., cloud masking), and
+the desired spectral bands and spectral indices were calculated.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SENSORS</code></td>
+<td>list</td>
+<td>[L9, L8, L7, L5, L4]</td>
+<td>L9, L8, L7, L5, L4, S2, HLS, HLSL30, HLSS30</td>
+<td>The primary input ee.ImageCollections to be used for processing.
+<br> All available options are surface reflectance products:
+L9/L8/L7/L5/L4 -&gt; LANDSAT Collection 2 Tier 1 Surface Reflectance
+product (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC09_C02_T1_L2">LANDSAT/LXXX/C02/T1_L2</a>);
+S2 -&gt; Sentinel-2 (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_SR_HARMONIZED">COPERNICUS/S2_SR_HARMONIZED</a>).
+HLS/HLSL30/HLSS30 -&gt; Harmonized Landsat (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/NASA_HLS_HLSL30_v002">HLSL30</a>),
+Sentinel-2 (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/NASA_HLS_HLSS30_v002">HLSS30</a>)
+product, and combined (HLS) product. <br> L9/L8/L7/L5/L4 + S2 can be
+collectively selected to be merged into one TSS collection, e.g. [L9,
+L8, S2].</td>
+</tr>
+<tr class="even">
+<td><code>MAX_CLOUD</code></td>
+<td>int</td>
+<td>75</td>
+<td>0-100</td>
+<td>Maximum image scene cloud cover percentage for images to be included
+in processing. The metadata used for the sensors are “CLOUD_COVER_LAND”
+(L9/L8/L7/L5/L4), “CLOUDY_PIXEL_PERCENTAGE” for S2, and “CLOUD_COVERAGE”
+(HLS/HLSL30/HLSS30).</td>
+</tr>
+<tr class="odd">
+<td><code>EXCLUDE_SLCOFF</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Wether to exclude <a
+href="https://www.usgs.gov/faqs/what-landsat-7-etm-slc-data">Landsat-7
+ETM+ Scan Line Corrector (SLC)-off</a> scenes (i.e., L7 scenes after
+2003-05-30). These scenes have (stripy) data gaps but retain radiometric
+and geometric integrity as prior to SLC failure.</td>
+</tr>
+<tr class="even">
+<td><code>GCP_MIN_LANDSAT</code></td>
+<td>int</td>
+<td>1</td>
+<td>&gt;=1</td>
+<td>Minimum Ground Control Points (GCP) threshold for Landsat scenes to
+be included in processing. Minim threshold of 1 highly recommended since
+legacy images may be incorrectly georectified while still being included
+in the LANDSAT Collection 2 Tier 1 Surface Reflectance products (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC09_C02_T1_L2">LANDSAT/LXXX/C02/T1_L2</a>).</td>
+</tr>
+<tr class="odd">
+<td><code>MASKS_LANDSAT</code></td>
+<td>list</td>
+<td>[cloud, cshadow, snow, fill, dilated]</td>
+<td>(cloud, cshadow, snow, fill, dilated, saturated); null
+disables.</td>
+<td>The <a
+href="https://www.usgs.gov/landsat-missions/landsat-collection-2-quality-assessment-bands">Pixel
+Quality Assessment (QA_PIXEL) band</a> provided with the LANDSAT
+products allow to mask out pixels affected by (potentially) quality
+affecting issues, including clouds, cloud shadows, snow/ice, brightness
+saturation, or fill values. Affects [L9, L8, L7, L5, L4] under SENSORS
+setting. <br> See <a
+href="../geeo/level2/masking.py"><code>geeo/level2/masking.py</code></a>
+for implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>MASKS_LANDSAT_CONF</code></td>
+<td>str</td>
+<td>Medium</td>
+<td>Medium, High</td>
+<td>The Pixel Quality Assessment (QA_PIXEL) band of the LANDSAT data
+further allows setting a confidence level for the masking procedure.
+GEEO uses this setting for the cloud and cirrus cloud detection. The
+feault setting of Medium (compared to High) applies a more conservative,
+aggressive masking, where cloudy pixel-remnants after masking are less
+likely, hence favouring an error of commission (rather exclude a
+non-cloudy pixel than keeping a cloudy pixel) over an error of ommission
+(this is generally desireable over omitting clouds from masking).</td>
+</tr>
+<tr class="odd">
+<td><code>MASKS_S2</code></td>
+<td>str</td>
+<td>CPLUS</td>
+<td>null, CPLUS, PROB, SCL</td>
+<td>Settings for Sentinel‑2 (S2) cloud masking. Available options are
+Cloud Score Plus (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED#description">CPLUS</a>)
+(highly recommended), the s2cloudless-based cloud probability layer <a
+href="https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_CLOUD_PROBABILITY">PROB</a>
+(cloud probability), the Sentinel-2 product’s internal Scene
+Classification band (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_SR_HARMONIZED">SCL</a>),
+or no masking (null). <br> See <a
+href="../geeo/level2/masking.py"><code>geeo/level2/masking.py</code></a>
+for implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>MASKS_S2_CPLUS</code></td>
+<td>float</td>
+<td>0.6</td>
+<td>0-1</td>
+<td>Cloud Score Plus (<a
+href="https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_CLOUD_SCORE_PLUS_V1_S2_HARMONIZED#description">CPLUS</a>)
+threshold, where 0 represents “not clear” (occluded), while 1 represents
+“clear” (unoccluded) observations. For more information about the Cloud
+Score+ detection approach, see <a
+href="https://medium.com/google-earth/all-clear-with-cloud-score-bd6ee2e2235e">here</a>.</td>
+</tr>
+<tr class="odd">
+<td><code>MASKS_S2_PROB</code></td>
+<td>int</td>
+<td>30</td>
+<td>0-100</td>
+<td>Cloud probability (%) cutoff when using <a
+href="https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_CLOUD_PROBABILITY">PROB</a>.
+See <a
+href="https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_CLOUD_PROBABILITY">here</a>
+for MASKS_S2. 40-60% can be considered a balanced default.</td>
+</tr>
+<tr class="even">
+<td><code>MASKS_S2_NIR_THRESH_SHADOW</code></td>
+<td>float</td>
+<td>0.2</td>
+<td>0-1</td>
+<td>When using PROB cloud masking, cloud shadows are detected and
+matched to clouds by identifying dark objects in the NIR band using a
+reflectance value threshold. See <a
+href="https://developers.google.com/earth-engine/tutorials/community/sentinel-2-s2cloudless">here</a>
+for a Google tutorial.</td>
+</tr>
+<tr class="odd">
+<td><code>MASKS_HLS</code></td>
+<td>list</td>
+<td>[cloud, cshadow, snow]</td>
+<td>cloud, cshadow, snow, fill, dilated, saturated</td>
+<td>Same procedure as MASKS_LANDSAT. See also <a
+href="https://lpdaac.usgs.gov/documents/1698/HLS_User_Guide_V2.pdf">page
+17 in HLS Product User Guide</a> for details. <br> See <a
+href="../geeo/level2/masking.py"><code>geeo/level2/masking.py</code></a>
+for implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>ERODE_DILATE</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Option to apply morphological erosion and/or dilation to the
+specified MASK_*. Dilation adds pixels to the boundaries of the masked
+pixels in the image increasing the mask’s pixel area, while erosion
+removes pixels on the mask’s boundaries. This allows to (a) make sure
+that cloud borders are more likely excluded while small, individual
+pixels that are likely falsely masked are retained in the analysis. See
+Fig. 15 in <a href="https://doi.org/10.1016/j.rse.2019.05.024">Qiu et
+al. 2019</a> for a visual demonstration of cloud erosion and
+dilation.</td>
+</tr>
+<tr class="odd">
+<td><code>ERODE_RADIUS</code></td>
+<td>int</td>
+<td>60</td>
+<td>0-Inf</td>
+<td>Radius of the circular erosion kernel in meters. Can be set to 0
+while DILATE_RADIUS is &gt;0 to only dilate (and vice versa).</td>
+</tr>
+<tr class="even">
+<td><code>DILATE_RADIUS</code></td>
+<td>int</td>
+<td>120</td>
+<td>0-Inf</td>
+<td>Radius of the circular dilation kernel in meters. usually ≥ erosion
+radius. Can be set to 0 while ERODE_RADIUS is &gt;0 to only erode (and
+vice versa).</td>
+</tr>
+<tr class="odd">
+<td><code>ERODE_DILATE_SCALE</code></td>
+<td>int</td>
+<td>60</td>
+<td>meters</td>
+<td>Pixel scale at which to perform the erosion-dilation operation
+(larger value = faster, because coarser pixel grain). For this kind of
+operation the performance advantage of using 60-120 meter scale (even
+when working with Sentinel-2 10m data) is usually desirable and accurate
+enough.</td>
+</tr>
+<tr class="even">
+<td><code>BLUE_MAX_MASKING</code></td>
+<td>float</td>
+<td>null</td>
+<td>0-1</td>
+<td>Additional masking option which uses the blue reflectance band to
+exclude pixels that exceed the specified threshold (e.g. haze/glint).
+Option is ignored if null or set to 0.</td>
+</tr>
+</tbody>
+</table>
+<p>The masking settings are set to very typical defaults of only
+considering scenes with less than 75% cloud cover, masking clouds, cloud
+shadows, snow/ice, as well as fill values. As such, in practise, when
+having created a new parameter file or when operating with python
+dictionaries in interactive sessions, only setting the SENSORS setting
+is usually enough to guarantee a quality filtered Time-Series-Stack
+(TSS) output suitable for most analyses. Of course, however, we
+encourage being aware and explicit about the desired settings and
+adjusting accordingly. For example, including snow or ice pixels in the
+analyses might be of central interest to certain applications and should
+be considered when performing the masking.</p>
+<h3 id="bands-indices-features">BANDS | INDICES | FEATURES</h3>
+<p>In this section the user specifies the desired bands, indices and
+features to be included and/or calculated. Beyond the standard bands
+provided with the selected <code>SENSORS</code>, GEEO includes a range
+of predefined indices under the <code>FEATURES</code> paramater that can
+be selected. Additionally, users can specify
+<code>CUSTOM_FORMULAS</code> to calculate their own features.
+Furthermore, the spectal unmixing method provided in Earth Engine is
+accessible at this stage of processing.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FEATURES</code></td>
+<td>list</td>
+<td>[BLU, GRN, RED, NIR, SW1, SW2, NDVI]</td>
+<td>BLU, GRN, RED, NIR, SW1, SW2 (Landsat+Sentinel-2), LST (Landsat, if
+LST was processed for scene), RE1, RE2, RE3, RE4 (Sentinel-2), NDVI,
+EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR</td>
+<td>Bands / indices / custom formula outputs kept in pipeline; include
+DEM or unmixing outputs here for export.</td>
+</tr>
+<tr class="even">
+<td><code>CUSTOM_FORMULAS</code></td>
+<td>dict</td>
+<td>See parameter file</td>
+<td>For example: <br> INDEX_NAME: <br> formula: “(X-Y)/(X+Y)” <br>
+variable_map: {X: NIR, Y: RED}</td>
+<td>Users can specify <code>CUSTOM_FORMULAS</code> to calculate their
+own features. Users must provide a name to be used as bandname, the
+formula for calculating the feature, and the bands used within the
+formula matching existing bandnames in the TSS. Custom formulas can be
+used in chains, i.e. output (NAME) from previous formula may be called
+in subsequent formula. Note that to append the custom formula to the
+TSS, also add the name to the <code>FEATURES</code> list</td>
+</tr>
+</tbody>
+</table>
+<h3 id="custom-image-collection-cic">CUSTOM IMAGE COLLECTION (CIC)</h3>
+<p>A custom image collection (CIC) can be specified to be used for
+Level-3 and Level-4 analyses. Note that Level-2 routines, such as cloud
+masking, are specifically designed for the Time Series Stack (TSS) and
+are not compatible with a CIC. As such, filtering (spatially,
+temporally, quality, etc.) must be performed by the user beforehand.
+Using a CIC generally requires additional attention by the user and is
+ideally performed in interactive mode (see <a
+href="/docs/tutorials/tutorial_0_introducing-geeo.ipynb">Introduction</a>
+for interactive mode).</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>CIC</code></td>
+<td>str</td>
+<td>null</td>
+<td>ee.ImageCollection path</td>
+<td>Use specified ImageCollection (instead of constructing TSS).</td>
+</tr>
+<tr class="even">
+<td><code>CIC_FEATURES</code></td>
+<td>list</td>
+<td>null</td>
+<td>band names or null</td>
+<td>Optional band subset; null keeps all CIC bands.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="time-series-mosaic-tsm">TIME SERIES MOSAIC (TSM)</h3>
+<p>TSM generates a harmonized spatial mosaic from images acquired on the
+same day. Satellite data products like Landsat or Sentinel-2 are
+organized in tiling schemes where image scenes can overlap, meaning the
+same measurement may appear in multiple images for a given date. Using
+TSMs helps streamline time series exports, reducing the need for
+post-processing and preventing bias or errors in statistical
+calculations—such as double-counting the same measurement in image
+metrics.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TSM</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Build a single spatial mosaic per unique acquisition date found in
+TSS or CIC ImageCollections. The Time Series Mosaic is closely related
+to the Time Series Stack, but converts spatially overlapping, individual
+images into mosaics containing only a single image for each unique
+acquisition date. <br> See <a
+href="../geeo/level2/mosaic.py"><code>mosaic_imgcol()</code></a> for
+implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>TSM_BASE_IMGCOL</code></td>
+<td>str</td>
+<td>TSS</td>
+<td>TSS, CIC</td>
+<td>The source collection to be used for mosaicking.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="level-3">LEVEL-3</h2>
+<p>The Level-3 module contains algorithms to generate higher-level image
+products for downstream analyses that require spatial-temporal
+continuity. The products that can be generated on this level are the
+Time Series Interpolation (TSI), Spectral-Temporal-Metrics (STM),
+Pixel-Based Composites (PBC), and the metadata product Number of Valid
+Observations (NVO).</p>
+<h3 id="temporal-subwindows-folding">TEMPORAL SUBWINDOWS | FOLDING</h3>
+<p>Temporal folding is a setting that can be used for NVO, STM, and PBC.
+It allows to create temporal subwindows within the global time settings
+(SPACE AND TIME). For example, if the user wants a mean NDVI product (=
+STM) for each month, setting FOLD_MONTH to true allows to later create a
+STM for each month within the global time settings.</p>
+<p>Generally, all settings below will be combined into all possible
+unique combinations. For example, if the user specifies FOLD_YEAR=True,
+FOLD_MONTH=True, YEAR_MIN=2020, YEAR_MAX=2021, MONTH_MIN=1,
+MONTH_MAX=12, there are 2x12=24 subwindows created (each month for each
+year), for each of which a NVO, STM or PBC can be generated separately
+if specifed.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FOLD_YEAR</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Partition time series into yearly subwindows for each unique year
+from YEAR_MIN to YEAR_MAX.</td>
+</tr>
+<tr class="even">
+<td><code>FOLD_MONTH</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Partition into monthly subwindows for each unique month from
+MONTH_MIN to MONTH_MAX. (Jan..Dec across years).</td>
+</tr>
+<tr class="odd">
+<td><code>FOLD_CUSTOM</code></td>
+<td>dict</td>
+<td>{year: null, month: null, doy: null, date: null}</td>
+<td>year: [YYYY-YYYY, …] / [YYYY+-OFFSET, …]; month: [MM-MM, …] /
+[MM+-OFFSET, …]; doy: [DOY-DOY, …] / [DOY+-OFFSET, …]; date:
+[YYYYMMDD-YYYYMMDD, …] / [YYYYMMDD+-OFFSET, …]</td>
+<td>Custom windows via ranges or target±offset lists for years, months,
+and day-of-years. For example, {year: [2020-2021], doy: [192+-30,
+240+-30]}.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="number-of-valid-observations-nvo">NUMBER OF VALID OBSERVATIONS
+(NVO)</h3>
+<p>Determines the number of valid (unmasked) observations per pixel
+within a specified temporal window, providing a measure of the
+reliability and robustness of resulting data products. Since clouds,
+snow, and shadows are masked at the pixel level, it is important to
+evaluate data availability for each study area and time period
+individually (<a
+href="https://doi.org/10.1016/j.dib.2024.111054">Lewińska et al.,
+2024</a>). For instance, image features like STMs may not be reliable if
+they are based on only a small number of observations (<a
+href="https://doi.org/10.1016/j.rse.2023.113823">Frantz et al.,
+2023</a>).</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 8%" />
+<col style="width: 13%" />
+<col style="width: 36%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>NVO</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Compute per-pixel count of valid (unmasked) observations from TSS.
+<br> See <a href="../geeo/level3/nvo.py"><code>calc_nvo()</code></a> for
+implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>NVO_FOLDING</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>If true, the counts are produced per temporal fold (see <a
+href="#temporal-subwindows--folding">Temporal Subwindows | Folding</a>).
+Usefull to assess the number of observations that were used to generate
+STMs, for example. <br> See <a
+href="../geeo/level3/nvo.py"><code>folding_nvo()</code></a> for
+implementation details.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="linear-spectral-unmixing-umx">LINEAR SPECTRAL UNMIXING
+(UMX)</h3>
+<p>UMX estimates the fractional abundance of each endmember in every
+pixel by modelling its spectrum as a linear combination of the provided
+endmember spectra. It is based on Earth Engine’s <a
+href="https://developers.google.com/earth-engine/apidocs/ee-image-unmix"><code>ee.Image.unmix</code></a>
+implementation.</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 8%" />
+<col style="width: 13%" />
+<col style="width: 36%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>UMX</code></td>
+<td>dict</td>
+<td>null</td>
+<td>{‘Class1’: [100, 230, …, 123], ‘Class2’: [24, …], …}</td>
+<td>Order in endmember dictionary must match order defined in FEATURES.
+For example, if {‘PV’: [0.08, 0.1, 0.07, 0.24, 0.11, 0.08], ‘Soil’:
+[0.2, 0.3, 0.3, 0.4, 0.45, 0.55]} and FEATURES [BLU, GRN, RED, NIR, SW1,
+SW2], then corresponding feature-value combinations will be used
+(e.g. Soil 0.2 for BLU). Attention must be paid that values in UMX match
+scale of FEATURES. Wrapper for <a
+href="https://developers.google.com/earth-engine/apidocs/ee-image-unmix">ee.Image.unmix</a>.
+See also <a
+href="https://developers.google.com/earth-engine/guides/image_transforms#spectral-unmixing">unmixing
+example</a> from Earth Engine. <br> See <a
+href="../geeo/level2/indices.py"><code>unmix()</code></a> for
+implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>UMX_BASE_IMGCOL</code></td>
+<td>str</td>
+<td>TSS</td>
+<td>TSS, TSM, CIC</td>
+<td>Source collection to use for unmixing.</td>
+</tr>
+<tr class="odd">
+<td><code>UMX_SUM_TO_ONE</code></td>
+<td>bool</td>
+<td>true</td>
+<td>true, false</td>
+<td>Enforce abundance fractions sum to 1. See <a
+href="https://developers.google.com/earth-engine/apidocs/ee-image-unmix">ee.Image.unmix</a>.</td>
+</tr>
+<tr class="even">
+<td><code>UMX_NON_NEGATIVE</code></td>
+<td>bool</td>
+<td>true</td>
+<td>true, false</td>
+<td>Constrain abundance fractions to ≥ 0. See <a
+href="https://developers.google.com/earth-engine/apidocs/ee-image-unmix">ee.Image.unmix</a>.</td>
+</tr>
+<tr class="odd">
+<td><code>UMX_REMOVE_INPUT_FEATURES</code></td>
+<td>bool</td>
+<td>true</td>
+<td>true, false</td>
+<td>Keep only abundance (unmixed) bands if true; otherwise append.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="time-series-interpolation-tsi">TIME SERIES INTERPOLATION
+(TSI)</h3>
+<p>Many applications require spatial-temporal continuity, equidistant
+observations, and cannot deal with missing pixel values. TSI addresses
+this by applying interpolation techniques to generate a gap-free,
+equidistant time series from the TSS, TSM, or CIC. Users define the
+desired time interval (e.g., every 10 days) and select an interpolation
+method with relevant parameters. GEEO supports two interpolation
+approaches: weighted linear interpolation (based on proximity to the
+nearest observation) and Radial Basis Function (RBF, or ‘Gaussian’)
+interpolation. See <a
+href="../docs/tutorials/habitat-type-mapping_geeo.ipynb"><code>Example 2</code></a>
+for a worked example of Time Series Interpolation.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TSI</code></td>
+<td>str</td>
+<td>null</td>
+<td>null, WLIN, 1RBF, 2RBF, 3RBF</td>
+<td>Interpolation method: WLIN (weighted linear) or
+Radial-Basis-Function (RBF) using one to three Gaussian kernels; null
+disables. Up to three RBF kernels with different settings can be chosen,
+allowing the time series to be adaptively smoothed according to data
+availability (<a href="https://doi.org/10.3390/rs11091124">Frantz,
+2019</a>). See <a
+href="../docs/tutorials/habitat-type-mapping_geeo.ipynb"><code>Example 2</code></a>
+for a worked example and visual demonstration of Time Series
+Interpolation. <br> See <a
+href="../geeo/level3/interpolation.py"><code>geeo/level3/interpolation.py</code></a>
+for implementation details on WLIN and RBF.</td>
+</tr>
+<tr class="even">
+<td><code>TSI_BASE_IMGCOL</code></td>
+<td>str</td>
+<td>TSS</td>
+<td>TSS, TSM, CIC</td>
+<td>The collection for which to interpolate. While the TSM is a more
+accurate choice over the TSS (removal of multiple observations of the
+same date), the TSS is a much faster and efficient choice and
+differences are usually negligible.</td>
+</tr>
+<tr class="odd">
+<td><code>INTERVAL</code></td>
+<td>int</td>
+<td>16</td>
+<td>days</td>
+<td>Desired temporal spacing between interpolated timestamps.</td>
+</tr>
+<tr class="even">
+<td><code>INTERVAL_UNIT</code></td>
+<td>str</td>
+<td>day</td>
+<td>day, month, year</td>
+<td>Unit used for INTERVAL spacing.</td>
+</tr>
+<tr class="odd">
+<td><code>INIT_JANUARY_1ST</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Force interpolation to start Jan 1 (of YEAR_MIN).</td>
+</tr>
+<tr class="even">
+<td><code>SIGMA1</code></td>
+<td>int</td>
+<td>16</td>
+<td>days</td>
+<td>Width of the 1st RBF (Gaussian) kernel in days.</td>
+</tr>
+<tr class="odd">
+<td><code>SIGMA2</code></td>
+<td>int</td>
+<td>32</td>
+<td>days</td>
+<td>Width of the 2nd RBF (Gaussian) kernel in days (2RBF/3RBF
+only).</td>
+</tr>
+<tr class="even">
+<td><code>SIGMA3</code></td>
+<td>int</td>
+<td>64</td>
+<td>days</td>
+<td>Width of the 3nrd RBF (Gaussian) kernel in days (3RBF only).</td>
+</tr>
+<tr class="odd">
+<td><code>WIN1</code></td>
+<td>int</td>
+<td>16</td>
+<td>days</td>
+<td>+- of days of maximum offset for observations in TSI_BASE_IMGCOL to
+be included for each INTERVAL for the RBF1 kernel.</td>
+</tr>
+<tr class="even">
+<td><code>WIN2</code></td>
+<td>int</td>
+<td>32</td>
+<td>days</td>
+<td>+- of days of maximum offset for observations in TSI_BASE_IMGCOL to
+be included for each INTERVAL for the RBF2 kernel.</td>
+</tr>
+<tr class="odd">
+<td><code>WIN3</code></td>
+<td>int</td>
+<td>64</td>
+<td>days</td>
+<td>++- of days of maximum offset for observations in TSI_BASE_IMGCOL to
+be included for each INTERVAL for the RBF3 kernel.</td>
+</tr>
+<tr class="even">
+<td><code>BW1</code></td>
+<td>int</td>
+<td>4</td>
+<td></td>
+<td>Expected/ideal number of observations between two timesteps
+(e.g. within 16 days when INTERVAL=16) used to calculate the weight for
+2nd kernel (2RBF/3RBF) over the first. If there are enough observations
+to satisfy the ideal setting for a single kernel, the second kernel
+weight is set to zero, i.e. obervations further away do not impact the
+interpolation result. This allows to adaptively smooth the interpolation
+according to actual data availability: less original observations -&gt;
+larger kernel used vs. plenty of observations within window -&gt;
+smaller kernel used.</td>
+</tr>
+<tr class="odd">
+<td><code>BW2</code></td>
+<td>int</td>
+<td>8</td>
+<td></td>
+<td>Weight for 3rd kernel (3RBF), see BW1.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="spectral-temporal-metrics-stm">SPECTRAL-TEMPORAL-METRICS
+(STM)</h3>
+<p>STMs are a commonly applied dimensionality reduction in remote
+sensing, in which pixel-wise statistics across individual bands/features
+are calculated for a given set of imagery over time. They capture
+spectral information over time and can be retrieved for different
+temporal sub-windows (years, seasons, months, etc.). STMs are robust,
+spatially continuous, and can be efficiently calculated, and as such,
+underpin a huge amount of remote sensing products that are currently
+available. See <a
+href="../docs/tutorials/habitat-type-mapping_geeo.ipynb"><code>Example 1</code></a>
+for a worked example of Spectral Temporal Metrics (STMs).</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>STM</code></td>
+<td>list</td>
+<td>null</td>
+<td>mean, median, sum, min, max, stdDev, variance, p1, p5, p10, p15,
+p20, p25, p30, p35, p40, p45, p50, p55, p60, p65, p70, p75, p80, p85,
+p90, p95, p99, skew, kurtosis, count, first, last; For example: [mean,
+stdDev]</td>
+<td>Metrics to calculate for FEATURES and TIME (possibly FOLDING if
+STM_FOLDING set to True); null skips STM calculation.<br> See <a
+href="../geeo/level3/stm.py"><code>geeo/level3/stm.py</code></a> for
+implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>STM_BASE_IMGCOL</code></td>
+<td>str</td>
+<td>TSS</td>
+<td>TSS, TSM, TSI, CIC</td>
+<td>Collection to use for STM calculation.</td>
+</tr>
+<tr class="odd">
+<td><code>STM_FOLDING</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Whether to apply temporal folding for STM calculation, i.e., compute
+metrics for folds specified in FOLD_YEAR, FOLD_MONTH, or
+FOLD_CUSTOM.</td>
+</tr>
+<tr class="even">
+<td><code>STM_FOLDING_LIST_ITER</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Alternate per-fold implementation (list iteration). Use default
+(False) first. For some large area applications with few temporal folds,
+setting this to True might perform better. The original implementation
+for folding uses joins, i.e. creates an ee.ImageCollection for each
+desired fold, joins the images matching the temporal filter to the
+collection and then maps over the collection to perform the operations.
+Setting this to true will inesatd create a list of temporal filters, map
+over the list and filter the base imgcol iteratively. Usually, for many
+applications joins are way more efficient than list iterations (see <a
+href="https://developers.google.com/earth-engine/guides/best_practices#join_vs_map-filter">Coding
+Best Practices</a> in Earth Engine)!.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pixel-based-composites-pbc">PIXEL-BASED COMPOSITES (PBC)</h3>
+<p>PBC produces cloud-free, radiometrically, and potentially
+phenologically consistent imagery that is spatially continuous across
+large regions. Various parameters can be used to rank pixels by their
+suitability, guiding how the mosaic is assembled. A typical PBC method
+is maximum NDVI compositing, which selects imagery from periods of peak
+photosynthetic activity.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PBC</code></td>
+<td>str</td>
+<td>null</td>
+<td>null, BAP, MAX-RNB, NLCD, FEATURE</td>
+<td>Available compositing methods are: Best-Available-Pixel (BAP)
+compositing (<a
+href="https://doi.org/10.1109/JSTARS.2012.2228167">Griffiths et
+al. 2013</a>, see tutorial <a
+href="https://eol.pages.cms.hu-berlin.de/gcg_eo/04_baps.html">here</a>);
+MAX-RNB (<a href="https://doi.org/10.1016/j.rse.2022.113375">Qiu et
+al. 2023</a>); FEATURE (e.g. NDVI) (max value if not
+PBC_INVERT_QUALITY_METRIC); NLCD (quality-flag logic) (<a
+href="https://doi.org/10.34133/remotesensing.0022">Jin et al. 2023</a>);
+null disables. <br> See <a
+href="../geeo/level3/composite.py"><code>geeo/level3/composite.py</code></a>
+for implementation details.</td>
+</tr>
+<tr class="even">
+<td><code>PBC_BASE_IMGCOL</code></td>
+<td>str</td>
+<td>TSS</td>
+<td>TSS, TSM, TSI, CIC</td>
+<td>Source collection for compositing.</td>
+</tr>
+<tr class="odd">
+<td><code>PBC_FOLDING</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Whether to apply temporal folding for PBC calculation, i.e., output
+separate composites for each temporal fold.</td>
+</tr>
+<tr class="even">
+<td><code>PBC_INVERT_QUALITY_METRIC</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Appies for FEATURE composites and onverts the quality metric, i.e.,
+selecting the observations associated with the minimum (inverted) value
+instead of the maximum (-&gt; a maximum NDVI composite would become a
+minimum NDVI composite).</td>
+</tr>
+<tr class="odd">
+<td><code>PBC_BAP_DOY_EQ_YEAR</code></td>
+<td>int</td>
+<td>30</td>
+<td>days</td>
+<td>Only BAP: DOY offset where seasonal (DOY) score weight equals YEAR
+score. <br> See <a
+href="../geeo/level3/composite.py"><code>geeo/level3/composite.py -&gt; bap_score()</code></a>
+for implementation details and <a
+href="https://doi.org/10.1109/JSTARS.2012.2228167">Griffiths et
+al. 2013</a> and the tutorial <a
+href="https://eol.pages.cms.hu-berlin.de/gcg_eo/04_baps.html">here</a>
+for details on the algorithm.</td>
+</tr>
+<tr class="even">
+<td><code>PBC_BAP_MAX_CLOUDDISTANCE</code></td>
+<td>int</td>
+<td>500</td>
+<td>meters</td>
+<td>Only BAP: Cloud distance (m) giving CLOUD score = 1.</td>
+</tr>
+<tr class="odd">
+<td><code>PBC_BAP_MIN_CLOUDDISTANCE</code></td>
+<td>int</td>
+<td>0</td>
+<td>meters</td>
+<td>Only BAP: Cloud distance (m) giving CLOUD score = 0.</td>
+</tr>
+<tr class="even">
+<td><code>PBC_BAP_WEIGHT_DOY</code></td>
+<td>float</td>
+<td>0.6</td>
+<td>0-1</td>
+<td>Only BAP: Weight for DOY (seasonal proximity) component.</td>
+</tr>
+<tr class="odd">
+<td><code>PBC_BAP_WEIGHT_YEAR</code></td>
+<td>float</td>
+<td>0.2</td>
+<td>0-1</td>
+<td>Only BAP: Weight for YEAR (temporal recency) component.</td>
+</tr>
+<tr class="even">
+<td><code>PBC_BAP_WEIGHT_CLOUD</code></td>
+<td>float</td>
+<td>0.2</td>
+<td>0-1</td>
+<td>Only BAP: Weight for CLOUD (cloud distance) component.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="level-4">LEVEL-4</h2>
+<h3 id="land-surface-phenology-lsp">LAND SURFACE PHENOLOGY (LSP)</h3>
+<p>LSP metrics are intended to characterize seasonal events in
+vegetation life cycles. Typically, a vegetation index like NDVI is used
+to detect phenological stages - such as start-of-season or peak-season -
+by linking changes in the spectral curve over time to these stages,
+often through straightforward thresholding approaches. In the current
+version, GEEO implements the land surfave phenology retrieval developed
+by <a href="https://doi.org/10.3390/f11060606">Brooks et al. 2020</a>
+and fine-tuned to possible seasonal adjustments by <a
+href="https://doi.org/10.3390/rs14030597">Frantz et al. 2022</a>. For a
+concise, informative description of the algorithmic backhground, the
+reader is referred to section <em>“3.2.2. Land Surface Phenology for
+Vegetation Dynamics 2.0”</em> in Frantz et al.’s paper.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 8%" />
+<col style="width: 11%" />
+<col style="width: 30%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LSP</code></td>
+<td>str</td>
+<td>null</td>
+<td>null, POLAR</td>
+<td>Land Surface Phenology method. Currently, only POLAR is implemented.
+POLAR implements the polar-coordinates-based land surfave phenology
+retrieval developed by <a
+href="https://doi.org/10.3390/f11060606">Brooks et al. 2020</a> and
+fine-tuned to possible seasonal adjustments by <a
+href="https://doi.org/10.3390/rs14030597">Frantz et al. 2022</a>. For a
+concise description the reader is referred to section <em>“3.2.2. Land
+Surface Phenology for Vegetation Dynamics 2.0”</em> in Frantz et al.’s
+paper. <br> See <a
+href="../geeo/level4/lsp.py"><code>geeo/level4/lsp.py</code></a> for
+details on the code implementation.</td>
+</tr>
+<tr class="even">
+<td><code>LSP_BASE_IMGCOL</code></td>
+<td>str</td>
+<td>TSI</td>
+<td>TSI, CIC</td>
+<td>Source collection for LSP metric calculation (A gap-free and
+equidistant time series such as a RBF-interpolated TSI is highly
+recommended for unbiased results).</td>
+</tr>
+<tr class="odd">
+<td><code>LSP_BAND</code></td>
+<td>str</td>
+<td>NDVI</td>
+<td>Any feature band</td>
+<td>Band providing the (phenology) signal for phenometric calculation.
+Usually a vegetation index such as NDVI or EVI.</td>
+</tr>
+<tr class="even">
+<td><code>LSP_YEAR_MIN</code></td>
+<td>int</td>
+<td>null</td>
+<td>year or null</td>
+<td>Override global YEAR_MIN for phenometric calculation (null uses
+global). The approach by Brooks et al. (2020) as implemented here
+requires a bracketing year at the beginning or end of the time series
+for its metric calculation. As such, for instance, when the users
+desires phenometrics from 2015-2020, and sensor availability permits, it
+is best to set YEAR_MIN and YEAR_MAX to 2014 and 2021, and LSP_YEAR_MIN
+and LSP_YEAR_MAX to 2015 and 2020, accordingly.</td>
+</tr>
+<tr class="odd">
+<td><code>LSP_YEAR_MAX</code></td>
+<td>int</td>
+<td>null</td>
+<td>year or null</td>
+<td>Override global YEAR_MAX for phenometric calculation (null uses
+global). See LSP_YEAR_MIN for more details.</td>
+</tr>
+<tr class="even">
+<td><code>LSP_ADJUST_SEASONAL</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Enable per-year seasonal start/end DOY adjustment as introduced by
+<a href="https://doi.org/10.3390/rs14030597">Frantz et al. 2022</a>,
+i.e. instead of calcualting a fixed start- and end-of-season date per
+pixel, the start- and end-of-season are allowed to vary from
+phenological year to year within a reasonable maximum
+(LSP_ADJUST_SEASONAL_MAX_DAYS) range, resembling more closely the
+inter-annual variation of phenology in reality.</td>
+</tr>
+<tr class="odd">
+<td><code>LSP_ADJUST_SEASONAL_MAX_DAYS</code></td>
+<td>int</td>
+<td>40</td>
+<td>days</td>
+<td>Max ± days shift allowed when the seasonal adjustment
+(LSP_ADJUST_SEASONAL) is enabled.</td>
+</tr>
+</tbody>
+</table>
+<p>The output LSP metrics (bands) are currently:</p>
+<ul>
+<li>The long-term (entire time series) average vector pointing to the
+(average) DOY of peak season (<code>RAVG</code>), the long-term average
+vector pointing to the (average) DOY of the off season trough
+(<code>THETA</code>)</li>
+<li><code>t_start</code> and <code>t_end</code> (+
+<code>t_start_adj</code>; <code>t_end_adj</code> for seasonal
+adjustment) providing the start and end point for each phenological year
+in days since 1970-01-01.</li>
+<li>The LSP metrics: start-of-season (SOS; Number of days (or radial
+angle) corresponding to 15% of cumulative annual LSP_BAND),
+start-of-peak-season (SOP; 25% cum.), mid-of-season (MOS; 50% cum.),
+end-of-peak season (EOP; 75% cum.), and end-of-season (EOS; 80%
+cum.)</li>
+<li><code>valid_firstyear</code>: binary flag indicating validity of LSP
+metrics per pixel for first and last year. Set to 1 if first year has
+valid LSP metrics (then last year has not) for that pixel. 0 means that
+the valid LSP metrics start at y+1 and the last year has valid LSP
+metrics. For example: Consider a time series from 2020-2025. 0 means
+that valid LSP metrics were calculated for 2021-2025. 1 means that valid
+LSP metrics were calculated for 2020-2024. Varies on per-pixel
+basis.</li>
+</ul>
+<h2 id="export">EXPORT</h2>
+<p>Image or table export of the above products to Google Drive or as
+Earth Engine Asset. Allows to specify, and takes care of, spatial and
+image metadata, including projection, resampling method, data type and
+scale.</p>
+<h3 id="image-settings">IMAGE SETTINGS</h3>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PIX_RES</code></td>
+<td>int</td>
+<td>30</td>
+<td>meters</td>
+<td>Output pixel size in meters.</td>
+</tr>
+<tr class="even">
+<td><code>CRS</code></td>
+<td>str</td>
+<td>EPSG:4326</td>
+<td>(EPSG), (WKT-string), UTM; Mollweide; (GLANCE) AF, AS, NA, SA, OC,
+EU</td>
+<td>Target projection (EPSG code, WKT string, UTM (automatically finds
+UTM zone), Mollweide, or <a
+href="https://github.com/measures-glance/glance-grids">GLANCE</a>
+continent identifier (AF, AS, NA, SA, OC, EU)).</td>
+</tr>
+<tr class="odd">
+<td><code>CRS_TRANSFORM</code></td>
+<td>list</td>
+<td>null</td>
+<td>[xScale, xShearing, xTranslation, yShearing, yScale,
+yTranslation]</td>
+<td>Explicit affine transform (required if using IMG_DIMENSIONS).</td>
+</tr>
+<tr class="even">
+<td><code>IMG_DIMENSIONS</code></td>
+<td>str</td>
+<td>null</td>
+<td>WidthxHeight, e.g. 1000x1000</td>
+<td>Fixed pixel dimensions (requires CRS_TRANSFORM).</td>
+</tr>
+<tr class="odd">
+<td><code>RESAMPLING_METHOD</code></td>
+<td>str</td>
+<td>null</td>
+<td>null, bilinear, bicubic</td>
+<td>Optional resampling for all subsequent operations (null = nearest
+neighbour).</td>
+</tr>
+<tr class="even">
+<td><code>DATATYPE</code></td>
+<td>str</td>
+<td>int16</td>
+<td>uint8, int8, uint16, int16, uint32, int32, float, double</td>
+<td>Export datatype after applying DATATYPE_SCALE.</td>
+</tr>
+<tr class="odd">
+<td><code>DATATYPE_SCALE</code></td>
+<td>int</td>
+<td>10000</td>
+<td></td>
+<td>Multiplicative factor (e.g. reflectance * 10000 before casting).
+<strong>Attention</strong>! Must be compatible with datatype.</td>
+</tr>
+<tr class="even">
+<td><code>NODATA_VALUE</code></td>
+<td>int</td>
+<td>-9999</td>
+<td></td>
+<td>Fill value for masked pixels in exports.</td>
+</tr>
+</tbody>
+</table>
+<p>If the ROI, CRS and PIX_RES facilitate exact matching of the pixel
+grid, the ouput image will perfectly align with the specified spatial
+extent. See the Jupyter Notebook <a
+href="../docs/tutorials/tutorial_1_spatial-tiling-and-metadata.ipynb"><code>tutorial_1_spatial-tiling-and-metadata.ipynb</code></a>)
+for an example and further descriptions.</p>
+<h3 id="products-to-export">PRODUCTS TO EXPORT</h3>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>EXPORT_IMAGE</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export final image products in general. Still requires the desired
+products to be selected below.</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_TABLE</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export attribute/sample table (reduceRegions or reduceRegion).</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_TSS</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export preprocessed Time Series Stack (TSS).</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_CIC</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export custom ImageCollection (CIC).</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_TSM</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export Time Series Mosaic (TSM).</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_NVO</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export Number of Valid Observations (NVO).</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_TSI</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export interpolated time series (TSI).</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_STM</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export Spectral Temporal Metrics (STM).</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_PBC</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export pixel-based composites (PBC).</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_LSP</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export Land Surface Phenology (LSP).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="general-export-settings">GENERAL EXPORT SETTINGS</h3>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Allowed Values / Format</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>EXPORT_LOCATION</code></td>
+<td>str</td>
+<td>Drive</td>
+<td>Drive, Asset</td>
+<td>Destination: Google Drive folder or EE Asset collection.</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_DIRECTORY</code></td>
+<td>str</td>
+<td>null</td>
+<td></td>
+<td>Drive subfolder name or full asset ID folder; null =
+default/root.</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_DESC</code></td>
+<td>str</td>
+<td>GEEO</td>
+<td></td>
+<td>Prefix for export task &amp; filenames.</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_DESC_DETAIL_TIME</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Append detailed temporal window key to export names.</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_BANDNAMES_AS_CSV</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Also export CSV listing band names (useful for +100 band
+images).</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_TABLE_FORMAT</code></td>
+<td>str</td>
+<td>CSV</td>
+<td>CSV, GeoJSON, KML, etc.</td>
+<td>Output file format for table export.</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_TABLE_METHOD</code></td>
+<td>str</td>
+<td>reduceRegions</td>
+<td>reduceRegions, reduceRegion</td>
+<td>Multi-feature vs single-geometry reduction method. See <a
+href="https://developers.google.com/earth-engine/guides/best_practices#reduceregion_vs_reduceregions_vs_for-loop">Earth
+Engine docs</a> for more info.</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_TABLE_TILE_SCALE</code></td>
+<td>float</td>
+<td>1</td>
+<td>0.1-16</td>
+<td>Tile scale tuning: smaller tileScale -&gt; larger tiles, poentially
+faster but may run out of memory. Larger tileScale = smaller tiles, may
+enable computations that run out of memory with the default. If after
+setting this to 16, the export still runs out of memory, consider a less
+complex (smaller) ROI, smaller extent, shorter time series, etc. I.e.
+run in chunks.</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_TABLE_BUFFER</code></td>
+<td>int</td>
+<td>null</td>
+<td>meters</td>
+<td>Buffer distance applied to features before reduction.</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_TABLE_REDUCER</code></td>
+<td>str</td>
+<td>first</td>
+<td>first, …</td>
+<td>Reducer applied to intersecting pixels.</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_TABLE_DROP_NODATA</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Drop rows comprised entirely of nodata.</td>
+</tr>
+<tr class="even">
+<td><code>EXPORT_PER_FEATURE</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export separate image per feature / band
+(<strong>Attention</strong>: can result in many tasks).</td>
+</tr>
+<tr class="odd">
+<td><code>EXPORT_PER_TIME</code></td>
+<td>bool</td>
+<td>false</td>
+<td>true, false</td>
+<td>Export each timestamp image separately (<strong>Attention</strong>:
+can result in even more tasks).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</body>
+</html>
