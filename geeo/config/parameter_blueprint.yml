@@ -1,14 +1,10 @@
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 #       Geographic and Ecological Earth Observation (GEEO) PARAMETER FILE
-
 #                                   Version 1.0
 #                              (c) 2026, Leon Nill
 #                     Biogeography Lab / Earth Observation Lab
 #            Department of Geography | Humboldt-Universität zu Berlin
 #              mail: leon.nill@geo.hu-berlin.de | GitHub: leonsnill
-
-
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 
@@ -44,7 +40,6 @@ ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 ROI_TILES: false                        # false, true (features in ROI as tiles), preset ('EU_300'), or grid vector/asset
 ROI_TILES_ATTRIBUTE_COLUMN: null        # Attribute column (str) with tile IDs (auto-inferred for presets)
 ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/select (null = all)
-
 
 # -------------------------------------------------------------------------------
 #                            TIME SERIES STACK (TSS)
@@ -99,7 +94,6 @@ DILATE_RADIUS: 120                       # Dilation radius (meters)
 ERODE_DILATE_SCALE: 60                   # Pixel scale for erode/dilate operations
 BLUE_MAX_MASKING: null                   # Maximum blue reflectance to mask [0, 1]
 
-
 # -------------------------------------------------------------------------------
 #                           BANDS | INDICES | FEATURES
 # -------------------------------------------------------------------------------
@@ -137,7 +131,6 @@ CUSTOM_FORMULAS:                         # custom formulas (optional)
     variable_map:
       MY_FORMULA: MY_FORMULA1
 
-
 # -------------------------------------------------------------------------------
 #                           CUSTOM IMAGE COLLECTION (CIC)
 # -------------------------------------------------------------------------------
@@ -146,7 +139,6 @@ CUSTOM_FORMULAS:                         # custom formulas (optional)
 CIC: null                                # path to ee.ImageCollection in catalogue 
 #                                         (e.g GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL)
 CIC_FEATURES: null                       # bands of CIC to include (null = all)
-
 
 # -------------------------------------------------------------------------------
 #                             TIME SERIES MOSAIC (TSM)
@@ -179,7 +171,6 @@ FOLD_CUSTOM: {
   date: null                             # [YYYYMMDD-YYYYMMDD, ...] / [YYYYMMDD+-OFFSET, ...]
 }
 
-
 # -------------------------------------------------------------------------------
 #                       NUMBER of VALID OBSERVATIONS (NVO)
 # -------------------------------------------------------------------------------
@@ -190,6 +181,7 @@ NVO_FOLDING: false
 # -------------------------------------------------------------------------------
 #                        LINEAR SPECTRAL UNMIXING (UMX)
 # -------------------------------------------------------------------------------
+
 UMX: null                                # endmeber dictionary
 # {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
 UMX_BASE_IMGCOL: TSS
@@ -259,7 +251,6 @@ PBC_BAP_WEIGHT_DOY: 0.6                  # Weight for DOY-score (seasonal consis
 PBC_BAP_WEIGHT_YEAR: 0.2                 # Weight for YEAR-score (annual consistency)
 PBC_BAP_WEIGHT_CLOUD: 0.2                # Weight for CLOUD-score
 
-
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 #                                    LEVEL-4
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -277,7 +268,6 @@ LSP_YEAR_MAX: null                       # Maximum year for LSP calculation
 # seasonal LSP adjustment
 LSP_ADJUST_SEASONAL: false               # seasonal instead of global start/end DOYs
 LSP_ADJUST_SEASONAL_MAX_DAYS: 40         # maximum adjustment in days
-
 
 
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -302,7 +292,6 @@ DATATYPE: int16                          # uint8, int8, uint16, int16, uint32, i
 DATATYPE_SCALE: 10000                    # Scale factor (check DATATYPE)
 NODATA_VALUE: -9999                      # Output no data value (for certain exports like LSP not used)
 
-
 # -------------------------------------------------------------------------------
 #                            PRODUCTS TO EXPORT
 # -------------------------------------------------------------------------------
@@ -319,7 +308,6 @@ EXPORT_TSI: false                        # Export Time-Series-Interpolation (TSI
 EXPORT_STM: false                        # Export Spectral-Temporal-Metrics (STM)
 EXPORT_PBC: false                        # Export Pixel-Based-Composite (PBC)
 EXPORT_LSP: false                        # Export Land-Surface-Phenology (LSP)
-
 
 # -------------------------------------------------------------------------------
 #                           GENERAL EXPORT SETTINGS
@@ -340,4 +328,4 @@ EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
 EXPORT_PER_FEATURE: false                # Export separate img per feature/band
 EXPORT_PER_TIME: false                   # Export separate img per time (i.e., every img in imgcol)
 
-# EOF
+# ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

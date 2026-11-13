@@ -1,6 +1,6 @@
 import ee
 ee.Authenticate()
-ee.Initialize(project='eexnill')  # replace with actual project name
+ee.Initialize(project='project-name')  # replace with actual project name
 
 # -----------------------------------------------------------------------------
 # input

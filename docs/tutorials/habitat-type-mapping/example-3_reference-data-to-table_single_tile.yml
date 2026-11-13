@@ -290,7 +290,7 @@ LSP_ADJUST_SEASONAL_MAX_DAYS: 40         # maximum adjustment in days
 
 PIX_RES: 30                              # Pixel resolution (in meters)
 
-CRS: EU                                # EPSG code, WKT str, 'UTM', 'Mollweide', 
+CRS: null                                # EPSG code, WKT str, 'UTM', 'Mollweide', 
                                          # GLANCE continent (AF,AN,AS,EU,OC,NA,SA)
                                          # null = tries to infer from ROI or simply EPSG:4326
 CRS_TRANSFORM: null                      # [...] Affine transform to use for export        
