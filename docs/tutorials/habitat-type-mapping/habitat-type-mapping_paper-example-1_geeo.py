@@ -39,6 +39,8 @@ parameters_habitat_metrics = {
         'fill', 'dilated'
         ],
     'FEATURES': ['TCG', 'TCB', 'TCW'],      # Tasseled Cap greenness, brightness, and wetness
+    'TSM': True,                            # Time Series Mosaic (TSM); 
+                                            # spatial-temporal harmonisation of tiled imagery
     # temporal folds
     'FOLD_CUSTOM': {                        # custom time windows
             'month': ['3-5', 
@@ -51,7 +53,7 @@ parameters_habitat_metrics = {
     'NVO_FOLDING': True,                    # apply custom folds to NVO
     # habitat metrics
     'STM': ['p10', 'p50', 'p90', 'stdDev'], # percentiles and standard deviation
-    'STM_BASE_IMGCOL': 'TSS',               # derive metrics from the time series stack
+    'STM_BASE_IMGCOL': 'TSM',               # derive metrics from the time series stack
     'STM_FOLDING': True,                    # apply custom folds to metrics
     # export settings
     'PIX_RES': 30,                          # output resolution (m)

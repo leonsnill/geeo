@@ -37,7 +37,7 @@ DATE_MAX: null                           # YYYYMMDD
 # - Rectangle as [lon, lat, lon, lat]
 # - Polygon as [[lon1, lat1], [lon2, lat2], ..., [lon1, lat1]]
 # - Path / or geopandas object vector file (e.g. shapefile, geopackage, geojson)
-ROI: [6.26, 44.35, 6.57, 44.58]
+ROI: https://raw.githubusercontent.com/leonsnill/geeo/master/geeo/data/GLANCE_EU_150-X029-Y029.gpkg
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
 # Spatial Tiling
@@ -147,7 +147,7 @@ CIC_FEATURES: null                       # bands of CIC to include (null = all)
 # -------------------------------------------------------------------------------
 
 # Time Series Mosaic (TSM) create spatially-consistent mosaic for unique dates
-TSM: false                               # Time Series Mosaic (TSM)
+TSM: true                               # Time Series Mosaic (TSM)
 TSM_BASE_IMGCOL: TSS                     # (TSS, CIC)
 
 
@@ -223,7 +223,7 @@ STM: [p10, p50, p90, stdDev]             # null or list (min, p5, p10, p15, ...,
 #                                          p95, max, mean, median, stdDev, 
 #                                          variance, skew, kurtosis)
 # Collection to derive STMs from
-STM_BASE_IMGCOL: TSS                     # (TSS, TSM, TSI, CIC)
+STM_BASE_IMGCOL: TSM                     # (TSS, TSM, TSI, CIC)
 
 # Folding: temporal subwindows
 STM_FOLDING: true                       # use folding settings from above
