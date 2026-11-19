@@ -128,12 +128,37 @@ def preprocess_image(image):
 
 tss = landsat.map(preprocess_image).select(['TCG', 'TCB', 'TCW'])
 
+# -----------------------------------------------------------------------------
+# create time series mosaic (i.e. duplicate observations due to scene/sensor/tile overlap)
+
+# mosaic images in imgcol using joins (way more efficient than list iteration)
+def mosaic_imgcol(imgcol, date_format='YYYYMMdd'):
+    imgcol_dated = imgcol.map(
+        lambda img: img.set('date', img.date().format(date_format))
+    )
+    distinct_dates = imgcol_dated.distinct(['date'])
+    join = ee.Join.saveAll(matchesKey='images')
+    joined = join.apply(
+        primary=distinct_dates,
+        secondary=imgcol_dated,
+        condition=ee.Filter.equals(leftField='date', rightField='date')
+    )
+    mosaics = ee.ImageCollection(joined).map(
+        lambda img: ee.ImageCollection.fromImages(img.get('images'))
+                    .mosaic()
+                    .copyProperties(img, ['system:time_start', 'date'])
+    )
+    return mosaics
+
+tsm = mosaic_imgcol(tss)
+
+
 # subwindows (temporal folding) for STM and NVO calculation
 # filter collections
-march_to_may = tss.filter(ee.Filter.calendarRange(3, 5, 'month'))
-june_to_august = tss.filter(ee.Filter.calendarRange(6, 8, 'month'))
-sept_to_nov = tss.filter(ee.Filter.calendarRange(9, 11, 'month'))
-dec_to_feb = tss.filter(
+march_to_may = tsm.filter(ee.Filter.calendarRange(3, 5, 'month'))
+june_to_august = tsm.filter(ee.Filter.calendarRange(6, 8, 'month'))
+sept_to_nov = tsm.filter(ee.Filter.calendarRange(9, 11, 'month'))
+dec_to_feb = tsm.filter(
     ee.Filter.Or(
         ee.Filter.calendarRange(12, 12, 'month'),
         ee.Filter.calendarRange(1, 2, 'month')
@@ -256,5 +281,3 @@ task_nvo = ee.batch.Export.image.toDrive(
 )
 
 task_nvo.start()
-
-# eof

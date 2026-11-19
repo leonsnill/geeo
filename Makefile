@@ -11,10 +11,12 @@ docs-html:
 		-c https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css \
 		-o docs/documentation.html
 
-# 3 build html version
+# 3 build pdf version
 docs-pdf:
 	pandoc docs/documentation.md --pdf-engine=xelatex \
-		-V geometry:margin=2cm --toc \
+		-V geometry:margin=2cm \
+		-V geometry:landscape \
+		--toc \
 		-o docs/documentation.pdf
 
 # create both
