@@ -1,59 +1,28 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc 3.14" />
+  <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>GEEO Documentation</title>
   <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
+    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    em, em em em, em em em em em {
-      font-style: italic;
-    }
-    em em, em em em em {
-      font-style: normal;
-    }
-    div.columns{display: flex; gap: 1.5em;}
-    div.column{flex: auto;}
-    @media screen {
-    div.columns{gap: min(4vw, 1.5em);}
-    div.column{overflow-x: auto;}
-    }
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
+    ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
       width: 0.8em;
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    @media print {
-      html {
-        color-scheme: light only;
-      }
-      html, body, pre, code {
-        background-color: transparent;
-      }
-      body, a, a:visited, blockquote {
-        color: black;
-      }
-      pre, code {
-        padding: 0;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }  </style>
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
 </head>
 <body>
 <header id="title-block-header">
@@ -168,7 +137,7 @@ ImageCollections.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -177,7 +146,7 @@ ImageCollections.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>YEAR_MIN</code></td>
 <td>int</td>
 <td>2023</td>
@@ -185,7 +154,7 @@ ImageCollections.</p>
 <td>Start year (inclusive). Not used when DATE_MIN and DATE_MAX are
 set.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>YEAR_MAX</code></td>
 <td>int</td>
 <td>2023</td>
@@ -193,7 +162,7 @@ set.</td>
 <td>End year (inclusive). Not used when DATE_MIN and DATE_MAX are
 set.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>MONTH_MIN</code></td>
 <td>int</td>
 <td>1</td>
@@ -201,7 +170,7 @@ set.</td>
 <td>Start month (inclusive). Can be greater than MONTH_MAX to wrap
 (e.g. 11→2).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>MONTH_MAX</code></td>
 <td>int</td>
 <td>12</td>
@@ -209,7 +178,7 @@ set.</td>
 <td>End month (inclusive). Can be lower than MONTH_MIN to wrap
 (e.g. 11→2)</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>DOY_MIN</code></td>
 <td>int</td>
 <td>1</td>
@@ -217,7 +186,7 @@ set.</td>
 <td>Start day-of-year (inclusive). Can be greater than DOY_MAX to wrap
 (e.g. 300→31).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>DOY_MAX</code></td>
 <td>int</td>
 <td>366</td>
@@ -225,21 +194,21 @@ set.</td>
 <td>End day-of-year (inclusive). Can be lower than DOY_MIN to wrap
 (e.g. 300→31).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>DATE_MIN</code></td>
 <td>str</td>
 <td>null</td>
 <td>YYYYMMDD</td>
 <td>Start date. Overrides YEAR/MONTH/DOY when paired with DATE_MAX.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>DATE_MAX</code></td>
 <td>str</td>
 <td>null</td>
 <td>YYYYMMDD</td>
 <td>End date. Overrides YEAR/MONTH/DOY when paired with DATE_MIN.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>ROI</code></td>
 <td>list / str / GeoDataFrame / ee object</td>
 <td>[12.9, 52.2, 13.9, 52.7]</td>
@@ -248,7 +217,7 @@ GeoDataFrame; ee.Geometry / ee.FeatureCollection</td>
 <td>Region of Interest acting as primary spatial filter to
 ImageCollection.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>ROI_SIMPLIFY_GEOM_TO_BBOX</code></td>
 <td>bool</td>
 <td>true</td>
@@ -261,7 +230,7 @@ covers a large geographic area but the bounding box would include images
 outside the region of interest (for examle when a point dataset is used
 as ROI)</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>ROI_TILES</code></td>
 <td>bool / str / GeoDataFrame / ee object</td>
 <td>false</td>
@@ -275,7 +244,7 @@ is provided, it acts as an independent tiling grid to chunk the
 processing of <code>ROI</code>. Empty tiles are skipped
 automatically.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>ROI_TILES_ATTRIBUTE_COLUMN</code></td>
 <td>str</td>
 <td>null</td>
@@ -285,7 +254,7 @@ EXPORT_DESC for per-tile outputs; Also used for subsetting via
 ROI_TILES_ATTRIBUTE_LIST. Automatically inferred for GLANCE presets
 (e.g. ‘ID300’ for ‘EU_300’).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>ROI_TILES_ATTRIBUTE_LIST</code></td>
 <td>list</td>
 <td>null</td>
@@ -359,7 +328,7 @@ the desired spectral bands and spectral indices were calculated.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -368,7 +337,7 @@ the desired spectral bands and spectral indices were calculated.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>SENSORS</code></td>
 <td>list</td>
 <td>[L9, L8, L7, L5, L4]</td>
@@ -388,7 +357,7 @@ product, and combined (HLS) product. <br> L9/L8/L7/L5/L4 + S2 can be
 collectively selected to be merged into one TSS collection, e.g. [L9,
 L8, S2].</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>MAX_CLOUD</code></td>
 <td>int</td>
 <td>75</td>
@@ -398,7 +367,7 @@ in processing. The metadata used for the sensors are “CLOUD_COVER_LAND”
 (L9/L8/L7/L5/L4), “CLOUDY_PIXEL_PERCENTAGE” for S2, and “CLOUD_COVERAGE”
 (HLS/HLSL30/HLSS30).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXCLUDE_SLCOFF</code></td>
 <td>bool</td>
 <td>false</td>
@@ -409,7 +378,7 @@ ETM+ Scan Line Corrector (SLC)-off</a> scenes (i.e., L7 scenes after
 2003-05-30). These scenes have (stripy) data gaps but retain radiometric
 and geometric integrity as prior to SLC failure.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>GCP_MIN_LANDSAT</code></td>
 <td>int</td>
 <td>1</td>
@@ -420,7 +389,7 @@ legacy images may be incorrectly georectified while still being included
 in the LANDSAT Collection 2 Tier 1 Surface Reflectance products (<a
 href="https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC09_C02_T1_L2">LANDSAT/LXXX/C02/T1_L2</a>).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>MASKS_LANDSAT</code></td>
 <td>list</td>
 <td>[cloud, cshadow, snow, fill, dilated]</td>
@@ -436,7 +405,7 @@ setting. <br> See <a
 href="../geeo/level2/masking.py"><code>geeo/level2/masking.py</code></a>
 for implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>MASKS_LANDSAT_CONF</code></td>
 <td>str</td>
 <td>Medium</td>
@@ -450,7 +419,7 @@ likely, hence favouring an error of commission (rather exclude a
 non-cloudy pixel than keeping a cloudy pixel) over an error of ommission
 (this is generally desireable over omitting clouds from masking).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>MASKS_S2</code></td>
 <td>str</td>
 <td>CPLUS</td>
@@ -467,7 +436,7 @@ or no masking (null). <br> See <a
 href="../geeo/level2/masking.py"><code>geeo/level2/masking.py</code></a>
 for implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>MASKS_S2_CPLUS</code></td>
 <td>float</td>
 <td>0.6</td>
@@ -479,7 +448,7 @@ threshold, where 0 represents “not clear” (occluded), while 1 represents
 Score+ detection approach, see <a
 href="https://medium.com/google-earth/all-clear-with-cloud-score-bd6ee2e2235e">here</a>.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>MASKS_S2_PROB</code></td>
 <td>int</td>
 <td>30</td>
@@ -490,7 +459,7 @@ See <a
 href="https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_CLOUD_PROBABILITY">here</a>
 for MASKS_S2. 40-60% can be considered a balanced default.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>MASKS_S2_NIR_THRESH_SHADOW</code></td>
 <td>float</td>
 <td>0.2</td>
@@ -501,7 +470,7 @@ reflectance value threshold. See <a
 href="https://developers.google.com/earth-engine/tutorials/community/sentinel-2-s2cloudless">here</a>
 for a Google tutorial.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>MASKS_HLS</code></td>
 <td>list</td>
 <td>[cloud, cshadow, snow]</td>
@@ -512,7 +481,7 @@ href="https://lpdaac.usgs.gov/documents/1698/HLS_User_Guide_V2.pdf">page
 href="../geeo/level2/masking.py"><code>geeo/level2/masking.py</code></a>
 for implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>ERODE_DILATE</code></td>
 <td>bool</td>
 <td>false</td>
@@ -527,7 +496,7 @@ Fig. 15 in <a href="https://doi.org/10.1016/j.rse.2019.05.024">Qiu et
 al. 2019</a> for a visual demonstration of cloud erosion and
 dilation.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>ERODE_RADIUS</code></td>
 <td>int</td>
 <td>60</td>
@@ -535,7 +504,7 @@ dilation.</td>
 <td>Radius of the circular erosion kernel in meters. Can be set to 0
 while DILATE_RADIUS is &gt;0 to only dilate (and vice versa).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>DILATE_RADIUS</code></td>
 <td>int</td>
 <td>120</td>
@@ -544,7 +513,7 @@ while DILATE_RADIUS is &gt;0 to only dilate (and vice versa).</td>
 radius. Can be set to 0 while ERODE_RADIUS is &gt;0 to only erode (and
 vice versa).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>ERODE_DILATE_SCALE</code></td>
 <td>int</td>
 <td>60</td>
@@ -555,7 +524,7 @@ operation the performance advantage of using 60-120 meter scale (even
 when working with Sentinel-2 10m data) is usually desirable and accurate
 enough.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>BLUE_MAX_MASKING</code></td>
 <td>float</td>
 <td>null</td>
@@ -595,7 +564,7 @@ accessible at this stage of processing.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -604,7 +573,7 @@ accessible at this stage of processing.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>FEATURES</code></td>
 <td>list</td>
 <td>[BLU, GRN, RED, NIR, SW1, SW2, NDVI]</td>
@@ -614,7 +583,7 @@ EVI, NBR, NDMI, NDWI, MDWI, NDB, TCG, TCB, TCW, SWR</td>
 <td>Bands / indices / custom formula outputs kept in pipeline; include
 DEM or unmixing outputs here for export.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>CUSTOM_FORMULAS</code></td>
 <td>dict</td>
 <td>See parameter file</td>
@@ -649,7 +618,7 @@ for interactive mode).</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -658,14 +627,14 @@ for interactive mode).</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>CIC</code></td>
 <td>str</td>
 <td>null</td>
 <td>ee.ImageCollection path</td>
 <td>Use specified ImageCollection (instead of constructing TSS).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>CIC_FEATURES</code></td>
 <td>list</td>
 <td>null</td>
@@ -692,7 +661,7 @@ metrics.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -701,7 +670,7 @@ metrics.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>TSM</code></td>
 <td>bool</td>
 <td>false</td>
@@ -714,7 +683,7 @@ acquisition date. <br> See <a
 href="../geeo/level2/mosaic.py"><code>mosaic_imgcol()</code></a> for
 implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>TSM_BASE_IMGCOL</code></td>
 <td>str</td>
 <td>TSS</td>
@@ -751,7 +720,7 @@ if specifed.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -760,7 +729,7 @@ if specifed.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>FOLD_YEAR</code></td>
 <td>bool</td>
 <td>false</td>
@@ -768,7 +737,7 @@ if specifed.</p>
 <td>Partition time series into yearly subwindows for each unique year
 from YEAR_MIN to YEAR_MAX.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>FOLD_MONTH</code></td>
 <td>bool</td>
 <td>false</td>
@@ -776,7 +745,7 @@ from YEAR_MIN to YEAR_MAX.</td>
 <td>Partition into monthly subwindows for each unique month from
 MONTH_MIN to MONTH_MAX. (Jan..Dec across years).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>FOLD_CUSTOM</code></td>
 <td>dict</td>
 <td>{year: null, month: null, doy: null, date: null}</td>
@@ -811,7 +780,7 @@ href="https://doi.org/10.1016/j.rse.2023.113823">Frantz et al.,
 <col style="width: 19%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -820,7 +789,7 @@ href="https://doi.org/10.1016/j.rse.2023.113823">Frantz et al.,
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>NVO</code></td>
 <td>bool</td>
 <td>false</td>
@@ -829,7 +798,7 @@ href="https://doi.org/10.1016/j.rse.2023.113823">Frantz et al.,
 <br> See <a href="../geeo/level3/nvo.py"><code>calc_nvo()</code></a> for
 implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>NVO_FOLDING</code></td>
 <td>bool</td>
 <td>false</td>
@@ -859,7 +828,7 @@ implementation.</p>
 <col style="width: 19%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -868,7 +837,7 @@ implementation.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>UMX</code></td>
 <td>dict</td>
 <td>null</td>
@@ -886,14 +855,14 @@ example</a> from Earth Engine. <br> See <a
 href="../geeo/level2/indices.py"><code>unmix()</code></a> for
 implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>UMX_BASE_IMGCOL</code></td>
 <td>str</td>
 <td>TSS</td>
 <td>TSS, TSM, CIC</td>
 <td>Source collection to use for unmixing.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>UMX_SUM_TO_ONE</code></td>
 <td>bool</td>
 <td>true</td>
@@ -901,7 +870,7 @@ implementation details.</td>
 <td>Enforce abundance fractions sum to 1. See <a
 href="https://developers.google.com/earth-engine/apidocs/ee-image-unmix">ee.Image.unmix</a>.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>UMX_NON_NEGATIVE</code></td>
 <td>bool</td>
 <td>true</td>
@@ -909,7 +878,7 @@ href="https://developers.google.com/earth-engine/apidocs/ee-image-unmix">ee.Imag
 <td>Constrain abundance fractions to ≥ 0. See <a
 href="https://developers.google.com/earth-engine/apidocs/ee-image-unmix">ee.Image.unmix</a>.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>UMX_REMOVE_INPUT_FEATURES</code></td>
 <td>bool</td>
 <td>true</td>
@@ -940,7 +909,7 @@ for a worked example of Time Series Interpolation.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -949,7 +918,7 @@ for a worked example of Time Series Interpolation.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>TSI</code></td>
 <td>str</td>
 <td>null</td>
@@ -966,7 +935,7 @@ Interpolation. <br> See <a
 href="../geeo/level3/interpolation.py"><code>geeo/level3/interpolation.py</code></a>
 for implementation details on WLIN and RBF.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>TSI_BASE_IMGCOL</code></td>
 <td>str</td>
 <td>TSS</td>
@@ -976,35 +945,35 @@ accurate choice over the TSS (removal of multiple observations of the
 same date), the TSS is a much faster and efficient choice and
 differences are usually negligible.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>INTERVAL</code></td>
 <td>int</td>
 <td>16</td>
 <td>days</td>
 <td>Desired temporal spacing between interpolated timestamps.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>INTERVAL_UNIT</code></td>
 <td>str</td>
 <td>day</td>
 <td>day, month, year</td>
 <td>Unit used for INTERVAL spacing.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>INIT_JANUARY_1ST</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Force interpolation to start Jan 1 (of YEAR_MIN).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>SIGMA1</code></td>
 <td>int</td>
 <td>16</td>
 <td>days</td>
 <td>Width of the 1st RBF (Gaussian) kernel in days.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>SIGMA2</code></td>
 <td>int</td>
 <td>32</td>
@@ -1012,14 +981,14 @@ differences are usually negligible.</td>
 <td>Width of the 2nd RBF (Gaussian) kernel in days (2RBF/3RBF
 only).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>SIGMA3</code></td>
 <td>int</td>
 <td>64</td>
 <td>days</td>
 <td>Width of the 3nrd RBF (Gaussian) kernel in days (3RBF only).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>WIN1</code></td>
 <td>int</td>
 <td>16</td>
@@ -1027,7 +996,7 @@ only).</td>
 <td>+- of days of maximum offset for observations in TSI_BASE_IMGCOL to
 be included for each INTERVAL for the RBF1 kernel.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>WIN2</code></td>
 <td>int</td>
 <td>32</td>
@@ -1035,7 +1004,7 @@ be included for each INTERVAL for the RBF1 kernel.</td>
 <td>+- of days of maximum offset for observations in TSI_BASE_IMGCOL to
 be included for each INTERVAL for the RBF2 kernel.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>WIN3</code></td>
 <td>int</td>
 <td>64</td>
@@ -1043,7 +1012,7 @@ be included for each INTERVAL for the RBF2 kernel.</td>
 <td>++- of days of maximum offset for observations in TSI_BASE_IMGCOL to
 be included for each INTERVAL for the RBF3 kernel.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>BW1</code></td>
 <td>int</td>
 <td>4</td>
@@ -1058,7 +1027,7 @@ according to actual data availability: less original observations -&gt;
 larger kernel used vs. plenty of observations within window -&gt;
 smaller kernel used.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>BW2</code></td>
 <td>int</td>
 <td>8</td>
@@ -1088,7 +1057,7 @@ for a worked example of Spectral Temporal Metrics (STMs).</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -1097,7 +1066,7 @@ for a worked example of Spectral Temporal Metrics (STMs).</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>STM</code></td>
 <td>list</td>
 <td>null</td>
@@ -1110,14 +1079,14 @@ STM_FOLDING set to True); null skips STM calculation.<br> See <a
 href="../geeo/level3/stm.py"><code>geeo/level3/stm.py</code></a> for
 implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>STM_BASE_IMGCOL</code></td>
 <td>str</td>
 <td>TSS</td>
 <td>TSS, TSM, TSI, CIC</td>
 <td>Collection to use for STM calculation.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>STM_FOLDING</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1126,7 +1095,7 @@ implementation details.</td>
 metrics for folds specified in FOLD_YEAR, FOLD_MONTH, or
 FOLD_CUSTOM.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>STM_FOLDING_LIST_ITER</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1161,7 +1130,7 @@ photosynthetic activity.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -1170,7 +1139,7 @@ photosynthetic activity.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>PBC</code></td>
 <td>str</td>
 <td>null</td>
@@ -1188,14 +1157,14 @@ null disables. <br> See <a
 href="../geeo/level3/composite.py"><code>geeo/level3/composite.py</code></a>
 for implementation details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>PBC_BASE_IMGCOL</code></td>
 <td>str</td>
 <td>TSS</td>
 <td>TSS, TSM, TSI, CIC</td>
 <td>Source collection for compositing.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>PBC_FOLDING</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1203,7 +1172,7 @@ for implementation details.</td>
 <td>Whether to apply temporal folding for PBC calculation, i.e., output
 separate composites for each temporal fold.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>PBC_INVERT_QUALITY_METRIC</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1213,7 +1182,7 @@ selecting the observations associated with the minimum (inverted) value
 instead of the maximum (-&gt; a maximum NDVI composite would become a
 minimum NDVI composite).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>PBC_BAP_DOY_EQ_YEAR</code></td>
 <td>int</td>
 <td>30</td>
@@ -1227,35 +1196,35 @@ al. 2013</a> and the tutorial <a
 href="https://eol.pages.cms.hu-berlin.de/gcg_eo/04_baps.html">here</a>
 for details on the algorithm.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>PBC_BAP_MAX_CLOUDDISTANCE</code></td>
 <td>int</td>
 <td>500</td>
 <td>meters</td>
 <td>Only BAP: Cloud distance (m) giving CLOUD score = 1.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>PBC_BAP_MIN_CLOUDDISTANCE</code></td>
 <td>int</td>
 <td>0</td>
 <td>meters</td>
 <td>Only BAP: Cloud distance (m) giving CLOUD score = 0.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>PBC_BAP_WEIGHT_DOY</code></td>
 <td>float</td>
 <td>0.6</td>
 <td>0-1</td>
 <td>Only BAP: Weight for DOY (seasonal proximity) component.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>PBC_BAP_WEIGHT_YEAR</code></td>
 <td>float</td>
 <td>0.2</td>
 <td>0-1</td>
 <td>Only BAP: Weight for YEAR (temporal recency) component.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>PBC_BAP_WEIGHT_CLOUD</code></td>
 <td>float</td>
 <td>0.2</td>
@@ -1287,7 +1256,7 @@ Vegetation Dynamics 2.0”</em> in Frantz et al.’s paper.</p>
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -1296,7 +1265,7 @@ Vegetation Dynamics 2.0”</em> in Frantz et al.’s paper.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>LSP</code></td>
 <td>str</td>
 <td>null</td>
@@ -1313,7 +1282,7 @@ paper. <br> See <a
 href="../geeo/level4/lsp.py"><code>geeo/level4/lsp.py</code></a> for
 details on the code implementation.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>LSP_BASE_IMGCOL</code></td>
 <td>str</td>
 <td>TSI</td>
@@ -1322,7 +1291,7 @@ details on the code implementation.</td>
 equidistant time series such as a RBF-interpolated TSI is highly
 recommended for unbiased results).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>LSP_BAND</code></td>
 <td>str</td>
 <td>NDVI</td>
@@ -1330,7 +1299,7 @@ recommended for unbiased results).</td>
 <td>Band providing the (phenology) signal for phenometric calculation.
 Usually a vegetation index such as NDVI or EVI.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>LSP_YEAR_MIN</code></td>
 <td>int</td>
 <td>null</td>
@@ -1343,7 +1312,7 @@ desires phenometrics from 2015-2020, and sensor availability permits, it
 is best to set YEAR_MIN and YEAR_MAX to 2014 and 2021, and LSP_YEAR_MIN
 and LSP_YEAR_MAX to 2015 and 2020, accordingly.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>LSP_YEAR_MAX</code></td>
 <td>int</td>
 <td>null</td>
@@ -1351,7 +1320,7 @@ and LSP_YEAR_MAX to 2015 and 2020, accordingly.</td>
 <td>Override global YEAR_MAX for phenometric calculation (null uses
 global). See LSP_YEAR_MIN for more details.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>LSP_ADJUST_SEASONAL</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1364,7 +1333,7 @@ phenological year to year within a reasonable maximum
 (LSP_ADJUST_SEASONAL_MAX_DAYS) range, resembling more closely the
 inter-annual variation of phenology in reality.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>LSP_ADJUST_SEASONAL_MAX_DAYS</code></td>
 <td>int</td>
 <td>40</td>
@@ -1413,7 +1382,7 @@ scale.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -1422,14 +1391,14 @@ scale.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>PIX_RES</code></td>
 <td>int</td>
 <td>30</td>
 <td>meters</td>
 <td>Output pixel size in meters.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>CRS</code></td>
 <td>str</td>
 <td>EPSG:4326</td>
@@ -1440,7 +1409,7 @@ UTM zone), Mollweide, or <a
 href="https://github.com/measures-glance/glance-grids">GLANCE</a>
 continent identifier (AF, AS, NA, SA, OC, EU)).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>CRS_TRANSFORM</code></td>
 <td>list</td>
 <td>null</td>
@@ -1448,14 +1417,14 @@ continent identifier (AF, AS, NA, SA, OC, EU)).</td>
 yTranslation]</td>
 <td>Explicit affine transform (required if using IMG_DIMENSIONS).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>IMG_DIMENSIONS</code></td>
 <td>str</td>
 <td>null</td>
 <td>WidthxHeight, e.g. 1000x1000</td>
 <td>Fixed pixel dimensions (requires CRS_TRANSFORM).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>RESAMPLING_METHOD</code></td>
 <td>str</td>
 <td>null</td>
@@ -1463,14 +1432,14 @@ yTranslation]</td>
 <td>Optional resampling for all subsequent operations (null = nearest
 neighbour).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>DATATYPE</code></td>
 <td>str</td>
 <td>int16</td>
 <td>uint8, int8, uint16, int16, uint32, int32, float, double</td>
 <td>Export datatype after applying DATATYPE_SCALE.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>DATATYPE_SCALE</code></td>
 <td>int</td>
 <td>10000</td>
@@ -1478,7 +1447,7 @@ neighbour).</td>
 <td>Multiplicative factor (e.g. reflectance * 10000 before casting).
 <strong>Attention</strong>! Must be compatible with datatype.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>NODATA_VALUE</code></td>
 <td>int</td>
 <td>-9999</td>
@@ -1502,7 +1471,7 @@ for an example and further descriptions.</p>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -1511,7 +1480,7 @@ for an example and further descriptions.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_IMAGE</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1519,63 +1488,63 @@ for an example and further descriptions.</p>
 <td>Export final image products in general. Still requires the desired
 products to be selected below.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_TABLE</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export attribute/sample table (reduceRegions or reduceRegion).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_TSS</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export preprocessed Time Series Stack (TSS).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_CIC</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export custom ImageCollection (CIC).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_TSM</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export Time Series Mosaic (TSM).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_NVO</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export Number of Valid Observations (NVO).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_TSI</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export interpolated time series (TSI).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_STM</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export Spectral Temporal Metrics (STM).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_PBC</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Export pixel-based composites (PBC).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_LSP</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1594,7 +1563,7 @@ products to be selected below.</td>
 <col style="width: 37%" />
 </colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>Parameter</th>
 <th>Type</th>
 <th>Default</th>
@@ -1603,14 +1572,14 @@ products to be selected below.</td>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_LOCATION</code></td>
 <td>str</td>
 <td>Drive</td>
 <td>Drive, Asset</td>
 <td>Destination: Google Drive folder or EE Asset collection.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_DIRECTORY</code></td>
 <td>str</td>
 <td>null</td>
@@ -1618,21 +1587,21 @@ products to be selected below.</td>
 <td>Drive subfolder name or full asset ID folder; null =
 default/root.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_DESC</code></td>
 <td>str</td>
 <td>GEEO</td>
 <td></td>
 <td>Prefix for export task &amp; filenames.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_DESC_DETAIL_TIME</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Append detailed temporal window key to export names.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_BANDNAMES_AS_CSV</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1640,14 +1609,14 @@ default/root.</td>
 <td>Also export CSV listing band names (useful for +100 band
 images).</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_TABLE_FORMAT</code></td>
 <td>str</td>
 <td>CSV</td>
 <td>CSV, GeoJSON, KML, etc.</td>
 <td>Output file format for table export.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_TABLE_METHOD</code></td>
 <td>str</td>
 <td>reduceRegions</td>
@@ -1656,7 +1625,7 @@ images).</td>
 href="https://developers.google.com/earth-engine/guides/best_practices#reduceregion_vs_reduceregions_vs_for-loop">Earth
 Engine docs</a> for more info.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_TABLE_TILE_SCALE</code></td>
 <td>float</td>
 <td>1</td>
@@ -1668,28 +1637,28 @@ setting this to 16, the export still runs out of memory, consider a less
 complex (smaller) ROI, smaller extent, shorter time series, etc. I.e.
 run in chunks.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_TABLE_BUFFER</code></td>
 <td>int</td>
 <td>null</td>
 <td>meters</td>
 <td>Buffer distance applied to features before reduction.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_TABLE_REDUCER</code></td>
 <td>str</td>
 <td>first</td>
 <td>first, …</td>
 <td>Reducer applied to intersecting pixels.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_TABLE_DROP_NODATA</code></td>
 <td>bool</td>
 <td>false</td>
 <td>true, false</td>
 <td>Drop rows comprised entirely of nodata.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>EXPORT_PER_FEATURE</code></td>
 <td>bool</td>
 <td>false</td>
@@ -1697,7 +1666,7 @@ run in chunks.</td>
 <td>Export separate image per feature / band
 (<strong>Attention</strong>: can result in many tasks).</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>EXPORT_PER_TIME</code></td>
 <td>bool</td>
 <td>false</td>
