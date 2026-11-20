@@ -63,12 +63,12 @@ import geeo
 
 In the [docs folder](docs), you will find the **[documentation to the parameter settings](docs/documentation.md)**, the settings for instructing the core processing chain of geeo and their description. To become familiar with the module design and handling, you also find some example Jupyter Notebooks on how to instruct certain processing chains, visualize ouputs and request exports in the [docs folder](docs) - or access them using Colab:
 
-- Introducing geeo: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_0_introducing-geeo.ipynb)
-- Worked example on habitat mapping: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/habitat-type-mapping_geeo.ipynb) 
+- Introducing geeo: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorials/tutorial_0_introducing-geeo.ipynb)
+- Worked example on habitat mapping: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorials/habitat-type-mapping_geeo.ipynb) 
 
 Additional tutorials
-- Spatial tiling and metadata: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_1_spatial-tiling-and-metadata.ipynb)
-- Auxiliary exports: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorial_2_auxiliary-exports.ipynb)
+- Spatial tiling and metadata: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorials/tutorial_1_spatial-tiling-and-metadata.ipynb)
+- Auxiliary exports: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/leonsnill/geeo/blob/master/docs/tutorials/tutorial_2_auxiliary-exports.ipynb)
 
 More tutorials are in development and the list will be updated in the future.
 
