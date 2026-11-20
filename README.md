@@ -2,7 +2,7 @@
 **GEEO** is a processing pipeline and collection of algorithms that uses the [Google Earth Engine (GEE) Python API](https://developers.google.com/earth-engine/guides/python_install) for creating Analysis-Ready-Data (ARD) from optical imagery, including the Landsat and Sentinel-2 archives. The package is structured along hierarchical levels, emphasizing a standardized, reproducible and efficient workflow, covering the suite from image preprocessing, harmonization, and spatial organisation, to advanced feature generation and time series analyses. 
 Processing instructions are readily defined using a .yml-file or python dictionary, facilitating stand-alone use or interactive integration into processing workflows using GEE:
 
-![sample SVG image](geeo/data/fig/geeo_workflow_manuscript.svg)
+![Workflow figure](geeo/data/fig/geeo_workflow_manuscript.png)
 
 **GEEO** includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. 
 The processing modules are organized along different hierarchical levels:
