@@ -1,14 +1,10 @@
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 #       Geographic and Ecological Earth Observation (GEEO) PARAMETER FILE
-
-#                                   Version 1.0
-#                              (c) 2025, Leon Nill
+#                                  Version 1.1.0
+#                              (c) 2026, Leon Nill
 #                     Biogeography Lab / Earth Observation Lab
 #            Department of Geography | Humboldt-Universität zu Berlin
 #              mail: leon.nill@geo.hu-berlin.de | GitHub: leonsnill
-
-
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 
@@ -40,10 +36,10 @@ DATE_MAX: null                           # YYYYMMDD
 ROI: [12.9, 52.2, 13.9, 52.7]
 ROI_SIMPLIFY_GEOM_TO_BBOX: true         # Simplify geometry to bounding box
 
-ROI_TILES: False                        # Use features in ROI vector file as independent 'tiles' (ROI) 
-ROI_TILES_ATTRIBUTE_COLUMN: null        # Attribute column (str) that contains unique IDs (appended to DESC)
+# Spatial Tiling
+ROI_TILES: false                        # false, true (features in ROI as tiles), preset ('EU_300'), or grid vector/asset
+ROI_TILES_ATTRIBUTE_COLUMN: null        # Attribute column (str) with tile IDs (auto-inferred for presets)
 ROI_TILES_ATTRIBUTE_LIST: null          # List of attribute values to subset/select (null = all)
-
 
 # -------------------------------------------------------------------------------
 #                            TIME SERIES STACK (TSS)
@@ -98,7 +94,6 @@ DILATE_RADIUS: 120                       # Dilation radius (meters)
 ERODE_DILATE_SCALE: 60                   # Pixel scale for erode/dilate operations
 BLUE_MAX_MASKING: null                   # Maximum blue reflectance to mask [0, 1]
 
-
 # -------------------------------------------------------------------------------
 #                           BANDS | INDICES | FEATURES
 # -------------------------------------------------------------------------------
@@ -136,17 +131,6 @@ CUSTOM_FORMULAS:                         # custom formulas (optional)
     variable_map:
       MY_FORMULA: MY_FORMULA1
 
-# ------------------------------------
-#        Linear Unmixing (UMX)
-# ------------------------------------
-UMX: null                                # endmeber dictionary
-# {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
-# Unmixing settings
-UMX_SUM_TO_ONE: true                     # Sum to one constraint
-UMX_NON_NEGATIVE: true                   # Non-negative constraint
-UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
-
-
 # -------------------------------------------------------------------------------
 #                           CUSTOM IMAGE COLLECTION (CIC)
 # -------------------------------------------------------------------------------
@@ -155,7 +139,6 @@ UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
 CIC: null                                # path to ee.ImageCollection in catalogue 
 #                                         (e.g GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL)
 CIC_FEATURES: null                       # bands of CIC to include (null = all)
-
 
 # -------------------------------------------------------------------------------
 #                             TIME SERIES MOSAIC (TSM)
@@ -188,13 +171,25 @@ FOLD_CUSTOM: {
   date: null                             # [YYYYMMDD-YYYYMMDD, ...] / [YYYYMMDD+-OFFSET, ...]
 }
 
-
 # -------------------------------------------------------------------------------
 #                       NUMBER of VALID OBSERVATIONS (NVO)
 # -------------------------------------------------------------------------------
 
 NVO: false
 NVO_FOLDING: false
+
+# -------------------------------------------------------------------------------
+#                        LINEAR SPECTRAL UNMIXING (UMX)
+# -------------------------------------------------------------------------------
+
+UMX: null                                # endmeber dictionary
+# {'Class1': [100, 230, ..., 123], 'Class2': [24, ...], ...} must match FEATURES
+UMX_BASE_IMGCOL: TSS
+
+# Unmixing settings
+UMX_SUM_TO_ONE: true                     # Sum to one constraint
+UMX_NON_NEGATIVE: true                   # Non-negative constraint
+UMX_REMOVE_INPUT_FEATURES: true          # Keep only unmixing features
 
 
 # -------------------------------------------------------------------------------
@@ -256,7 +251,6 @@ PBC_BAP_WEIGHT_DOY: 0.6                  # Weight for DOY-score (seasonal consis
 PBC_BAP_WEIGHT_YEAR: 0.2                 # Weight for YEAR-score (annual consistency)
 PBC_BAP_WEIGHT_CLOUD: 0.2                # Weight for CLOUD-score
 
-
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 #                                    LEVEL-4
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -274,7 +268,6 @@ LSP_YEAR_MAX: null                       # Maximum year for LSP calculation
 # seasonal LSP adjustment
 LSP_ADJUST_SEASONAL: false               # seasonal instead of global start/end DOYs
 LSP_ADJUST_SEASONAL_MAX_DAYS: 40         # maximum adjustment in days
-
 
 
 # ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -299,7 +292,6 @@ DATATYPE: int16                          # uint8, int8, uint16, int16, uint32, i
 DATATYPE_SCALE: 10000                    # Scale factor (check DATATYPE)
 NODATA_VALUE: -9999                      # Output no data value (for certain exports like LSP not used)
 
-
 # -------------------------------------------------------------------------------
 #                            PRODUCTS TO EXPORT
 # -------------------------------------------------------------------------------
@@ -308,15 +300,14 @@ EXPORT_IMAGE: false                      # Export Image
 EXPORT_TABLE: false                      # Export Table
 
 # Choose which products to export (if EXPORT_IMAGE and/or EXPORT_TABLE = true)
-EXPORT_TSS: false                        # Export TSS
-EXPORT_CIC: false                        # Export CIC 
-EXPORT_TSM: false                        # Export TSM
-EXPORT_NVO: false                        # Export NVO 
-EXPORT_TSI: false                        # Export TSI 
-EXPORT_STM: false                        # Export STM 
-EXPORT_PBC: false                        # Export PBC
-EXPORT_LSP: false                        # Export LSP
-
+EXPORT_TSS: false                        # Export Time-Series-Stack (TSS)
+EXPORT_CIC: false                        # Export Custom Image Collection (CIC)
+EXPORT_TSM: false                        # Export Time-Series-Mosaic (TSM)
+EXPORT_NVO: false                        # Export Number of Valid Observations (NVO)
+EXPORT_TSI: false                        # Export Time-Series-Interpolation (TSI)
+EXPORT_STM: false                        # Export Spectral-Temporal-Metrics (STM)
+EXPORT_PBC: false                        # Export Pixel-Based-Composite (PBC)
+EXPORT_LSP: false                        # Export Land-Surface-Phenology (LSP)
 
 # -------------------------------------------------------------------------------
 #                           GENERAL EXPORT SETTINGS
@@ -337,4 +328,4 @@ EXPORT_TABLE_DROP_NODATA: false          # Drop nodata rows from table
 EXPORT_PER_FEATURE: false                # Export separate img per feature/band
 EXPORT_PER_TIME: false                   # Export separate img per time (i.e., every img in imgcol)
 
-# EOF
+# ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

@@ -65,11 +65,6 @@ def run_level2(params):
     BLUE_MAX_MASKING = prm.get('BLUE_MAX_MASKING')
     FEATURES = prm.get('FEATURES')
     CUSTOM_FORMULAS = prm.get('CUSTOM_FORMULAS')
-    # UNMX
-    UMX = prm.get('UMX')
-    UMX_SUM_TO_ONE = prm.get('UMX_SUM_TO_ONE')
-    UMX_NON_NEGATIVE = prm.get('UMX_NON_NEGATIVE')
-    UMX_REMOVE_INPUT_FEATURES = prm.get('UMX_REMOVE_INPUT_FEATURES')
     # CIC
     CIC = prm.get('CIC')
     CIC_FEATURES = prm.get('CIC_FEATURES')
@@ -152,6 +147,9 @@ def run_level2(params):
                 mask_function = mask_landsat(MASKS_LANDSAT, conf=MASKS_LANDSAT_CONF)
             # apply masking function to the Landsat ImageCollection
             landsat = landsat.map(mask_function)
+        else:
+            # append constant valid mask to all images in the collection
+            landsat = landsat.map(lambda img: img.addBands(ee.Image(1).rename('mask')))
 
         # additional masking based on blue band reflectance
         if BLUE_MAX_MASKING is not None:
@@ -199,6 +197,9 @@ def run_level2(params):
                 sentinel2 = sentinel2.map(mask_sentinel2_prob_shadow(
                     nir_drk_thresh=MASKS_S2_NIR_THRESH_SHADOW,
                     cld_prj_dst=5, proj_scale=120))
+        else:
+            # append constant valid mask to all images in the collection
+            sentinel2 = sentinel2.map(lambda img: img.addBands(ee.Image(1).rename('mask')))
 
         # additional masking based on blue band reflectance
         if BLUE_MAX_MASKING is not None:
@@ -223,6 +224,9 @@ def run_level2(params):
                 mask_function = mask_hls(MASKS_HLS)
             # apply masking function to the HLS ImageCollection
             hls = hls.map(mask_function)
+        else:
+            # append constant valid mask to all images in the collection
+            hls = hls.map(lambda img: img.addBands(ee.Image(1).rename('mask')))
 
         # additional masking based on blue band reflectance
         if BLUE_MAX_MASKING is not None:
@@ -233,7 +237,7 @@ def run_level2(params):
     if sensors_landsat and sensors_sentinel2:
         imgcol = landsat.merge(sentinel2).set('satellite', 'LSS2')
         prm['SATELLITE'] = 'LSS2'
-        imgcol = imgcol.sort('system:time_start')
+        #imgcol = imgcol.sort('system:time_start')  # sorting is a very costly operation!
     elif sensors_landsat:
         imgcol = landsat.set('satellite', 'LSAT')
         prm['SATELLITE'] = 'LSAT'
@@ -264,37 +268,6 @@ def run_level2(params):
 
     # subset to selected features
     imgcol = imgcol.select(FEATURES + ['mask'])
-
-    # DEM for now not easily addable, rather move to external export
-    '''
-    # check if DEM is requested
-    if DEM:
-        # Digitial Elevation Model (DEM): Copernicus DEM
-        copernicus_dem = get_copernicus_dem(roi=ROI_GEOM, crs=CRS, crs_transform=CRS_TRANSFORM, scale=PIX_RES, resample_method=RESAMPLING_METHOD)
-        imgcol = imgcol.map(lambda img: img.addBands(copernicus_dem))
-        SPECIAL_FEATURES = ['DEM']
-    else:
-        SPECIAL_FEATURES = []
-    prm['SPECIAL_FEATURES'] = SPECIAL_FEATURES
-    '''
-    SPECIAL_FEATURES = []
-
-    # UNMIXING (UMX)
-    if UMX:
-        UMX_VALUES = list(UMX.values())
-        UMX_NAMES = list(UMX.keys())
-        imgcol = imgcol.map(unmix(bands=FEATURES, 
-                                  endmember_values=UMX_VALUES, 
-                                  endmember_names=UMX_NAMES, 
-                                  sumToOne=UMX_SUM_TO_ONE, 
-                                  nonNegative=UMX_NON_NEGATIVE))
-        if UMX_REMOVE_INPUT_FEATURES:
-            FEATURES = UMX_NAMES
-            imgcol = imgcol.select(FEATURES+['mask']+SPECIAL_FEATURES)
-        else:
-            FEATURES = FEATURES + UMX_NAMES
-        # return updated feature names
-        prm['FEATURES'] = FEATURES
 
     # return preprocessed time-series stack (TSS) ImageCollection
     TSS = imgcol

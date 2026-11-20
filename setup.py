@@ -13,7 +13,7 @@ setup(
                       'pandas', 'geopandas', 'matplotlib', 'tqdm',
                       'ipyleaflet', 'ipywidgets', 'gdal', 'scikit-learn',
                       'eerepr', 'geemap'],
-    version='1.0',
+    version='1.1.0',
     license='MIT',
     description='GEEO is a processing pipeline and collection of algorithms for obtaining Analysis-Ready-Data (ARD) using the Google Earth Engine Python API.',
     #long_description=open('README.md').read(),

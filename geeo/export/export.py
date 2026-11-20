@@ -446,7 +446,7 @@ def run_export(params):
                 # user requested separate export for each feature
                 if EXPORT_PER_FEATURE:
                     for feature in FEATURES:
-                        img = imgcol_to_img(TSS.select(feature), date_to_bandname=False)  # False, because duplicate feature+date exist in TSS 
+                        img = imgcol_to_img(TSS.select(feature), date_to_bandname=False, sort_by_time=True)  # date_to_bandname= False, because duplicate feature+date exist in TSS 
                         outfile = 'TSS_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                         print("->  "+outfile)
                         export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
@@ -466,7 +466,7 @@ def run_export(params):
                 
                 # user requested single export for entire TSS
                 else:
-                    img = imgcol_to_img(TSS, date_to_bandname=False) # False, because duplicate feature+date exist in TSS 
+                    img = imgcol_to_img(TSS, date_to_bandname=False, sort_by_time=True) # date_to_bandname= False, because duplicate feature+date exist in TSS 
                     outfile = 'TSS_' + desc + time_desc + '_' + SATELLITE
                     print("->  "+outfile)
                     export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
@@ -496,7 +496,7 @@ def run_export(params):
                     # user requested separate export for each feature
                     if EXPORT_PER_FEATURE:
                         for feature in FEATURES:
-                            img = imgcol_to_img(TSM.select(feature))
+                            img = imgcol_to_img(TSM.select(feature), sort_by_time=True)
                             outfile = 'TSM_' + desc + time_desc + '_' + SATELLITE + '_' + feature
                             print("->  "+outfile)
                             export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 
@@ -515,7 +515,7 @@ def run_export(params):
                                 scale=DATATYPE_SCALE, dtype=DATATYPE, export_bandnames=EXPORT_BANDNAMES_AS_CSV)
                     
                     else:
-                        img = imgcol_to_img(TSM)
+                        img = imgcol_to_img(TSM, sort_by_time=True)
                         outfile = 'TSM_' + desc + time_desc + '_' + SATELLITE
                         print("->  "+outfile)
                         export_img(img=img, region=ROI_BBOX, outname=outfile, out_location=EXPORT_LOCATION, out_dir=EXPORT_DIRECTORY, 

@@ -31,6 +31,7 @@ __all__ = [
 import sys
 from .utils import create_parameter_file, calculate_image_size, load_parameters, merge_parameters, load_blueprint
 from .main import run_param
+from .misc.tiling import run_tiled
 from geeo.level2.level2 import run_level2
 from geeo.level3.level3 import run_level3
 from geeo.level4.level4 import run_level4
@@ -41,7 +42,7 @@ from geeo.misc.spacetime import vector_to_chunks, create_glance_tiles, create_ti
 from .misc.vis import VisMap, plot_rbf_interpolation, plot_getRegion
 from geeo.level4.lsp import lsp
 from geeo.misc.postprocess import process_ee_files
-from geeo.level3.interpolation import tsi_rbf_array, tsi_rbf_tif, tsi_rbf_df
+from geeo.level3.interpolation import tsi_rbf_array, tsi_rbf_tif, tsi_rbf_df, plot_tsi
 
 # set attributes for top-level access
 setattr(sys.modules[__name__], 'create_parameter_file', create_parameter_file)
@@ -50,6 +51,7 @@ setattr(sys.modules[__name__], 'merge_parameters', merge_parameters)
 setattr(sys.modules[__name__], 'VisMap', VisMap)
 setattr(sys.modules[__name__], 'plot_rbf_interpolation', plot_rbf_interpolation)
 setattr(sys.modules[__name__], 'plot_getRegion', plot_getRegion)
+setattr(sys.modules[__name__], 'plot_tsi', plot_tsi)
 setattr(sys.modules[__name__], 'run_param', run_param)
 setattr(sys.modules[__name__], 'run_level2', run_level2)
 setattr(sys.modules[__name__], 'run_level3', run_level3)
