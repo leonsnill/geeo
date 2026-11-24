@@ -1,10 +1,10 @@
 # Geographical and Ecological Earth Observation (geeo)
-**GEEO** is a processing pipeline and collection of algorithms that uses the [Google Earth Engine (GEE) Python API](https://developers.google.com/earth-engine/guides/python_install) for creating Analysis-Ready-Data (ARD) from optical imagery, including the Landsat and Sentinel-2 archives. The package is structured along hierarchical levels, emphasizing a standardized, reproducible and efficient workflow, covering the suite from image preprocessing, harmonization, and spatial organisation, to advanced feature generation and time series analyses. 
+**geeo** is a processing pipeline and collection of algorithms that uses the [Google Earth Engine (GEE) Python API](https://developers.google.com/earth-engine/guides/python_install) for creating Analysis-Ready-Data (ARD) from optical imagery, including the Landsat and Sentinel-2 archives. The package is structured along hierarchical levels, emphasizing a standardized, reproducible and efficient workflow, covering the suite from image preprocessing, harmonization, and spatial organisation, to advanced feature generation and time series analyses. 
 Processing instructions are readily defined using a .yml-file or python dictionary, facilitating stand-alone use or interactive integration into processing workflows using GEE:
 
 ![Workflow figure](geeo/data/fig/geeo_workflow_manuscript.png)
 
-**GEEO** includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. 
+**geeo** includes processing routines frequently applied in geographical and ecological studies that use satellite remote sensing. 
 The processing modules are organized along different hierarchical levels:
 
 - LEVEL-2 (`geeo/level2`): Preprocessed, harmonized, spatio-temporally subsetted surface reflectance time series stacks (TSS) and mosaics (TSM)   
@@ -21,7 +21,7 @@ The selection of routines is primarily influenced by work conducted in the [Biog
 You need to have [access to Google Earth Engine](https://developers.google.com/earth-engine/guides/access) and its [Python API](https://developers.google.com/earth-engine/guides/python_install). Read the following sections how to set up the latter for your local Python environment or by using a Jupyter Notebook hosted on Google Colab.  
 
 ## Local Python environment
-Make sure you have a Python 3 distribution of our choice installed (e.g., [install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install)). Prior to installing **GEEO**, you preferably want to set up a new environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing **GEEO**):
+Make sure you have a Python 3 distribution of our choice installed (e.g., [install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install)). Prior to installing **geeo**, you preferably want to set up a new environment and also install the package's dependencies using `conda` (alternatively the dependencies are installed automatically when `pip` installing **geeo**):
 
 ```bash
 conda create -n geeo_env -c conda-forge python=3.12 ipykernel earthengine-api pyyaml pandas geopandas matplotlib tqdm ipyleaflet ipywidgets gdal scikit-learn eerepr geemap
@@ -37,7 +37,7 @@ pip install git+https://github.com/leonsnill/geeo.git
 ## Google Colab
 You can also directly get started using [Google Colab](https://colab.research.google.com/) for hosting a Jupyter Notebook.
 
-In a new .ipynb-notebook, simply install **GEEO** in the first code chunk like so:
+In a new .ipynb-notebook, simply install **geeo** in the first code chunk like so:
 
 ```python
 !pip install git+https://github.com/leonsnill/geeo.git
@@ -45,7 +45,7 @@ In a new .ipynb-notebook, simply install **GEEO** in the first code chunk like s
 
 ## Import after installation
 
-Import, authenticate and initialize the Earth Engine python API, then import **GEEO**. Make sure to set the Earth Engine eligible Google Cloud project name when initializing.
+Import, authenticate and initialize the Earth Engine python API, then import **geeo**. Make sure to set the Earth Engine eligible Google Cloud project name when initializing.
 
 ```python
 # Google cloud project name with Earth Engine API enabled
@@ -75,7 +75,7 @@ More tutorials are in development and the list will be updated in the future.
 
 ### Getting started
 
-Import, authenticate and initialize the Earth Engine python API, then import **GEEO**:
+Import, authenticate and initialize the Earth Engine python API, then import **geeo**:
 
 ```python
 gcloud_project_name = ''
@@ -101,7 +101,7 @@ run = geeo.run_param('new_param_file.yml')
 The `run` variable (dictionary) will contain all parameter settings and newly calculated products. If exports are requested, they will be printed to console and run in the [Earth Engine Task Manager](https://code.earthengine.google.com/tasks). 
 
 #### Option 2) Dictionary 
-**GEEO** also allows for giving processing instructions using a python dictionary directly as input:
+**geeo** also allows for giving processing instructions using a python dictionary directly as input:
 
 ```python
 # specify key-value pair matching parameter names

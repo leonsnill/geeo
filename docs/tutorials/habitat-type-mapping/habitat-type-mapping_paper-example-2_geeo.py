@@ -17,11 +17,11 @@ geeo.create_parameter_file(prm)
 
 # create plot for two selected sites to assess the interpolation results and data availability
 geeo.plot_tsi(prm, roi=[6.453384, 44.44164], feature='NDVI', show_masked=True, 
-              color='orangered', title='Alpine grassland', ylim=[-0.2, 1], figsize=(9, 3), savepath=r"C:\Users\leonx\Desktop\example-2_time-series-interpolation_alpine-grassland.svg")
+              color='orangered', title='Alpine grassland', ylim=[-0.2, 1], figsize=(9, 3))
 
 geeo.plot_tsi(prm, roi=[6.460557, 44.428797], 
               feature='NDVI', show_masked=True, color='blue', title='Forest-grassland ecotone', 
-              ylim=[-0.2, 1], figsize=(9, 3), savepath=r"C:\Users\leonx\Desktop\example-2_time-series-interpolation_forest-grassland-ecotone.svg")
+              ylim=[-0.2, 1], figsize=(9, 3))
 
 # 3) run pipeline with parameter file as input
 run_pipeline = geeo.run_param(prm)

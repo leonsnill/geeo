@@ -31,7 +31,7 @@
 <nav id="TOC" role="doc-toc">
 <ul>
 <li><a href="#geeo-parameter-documentation"
-id="toc-geeo-parameter-documentation">GEEO Parameter Documentation</a>
+id="toc-geeo-parameter-documentation">geeo Parameter Documentation</a>
 <ul>
 <li><a href="#modules-and-settings-overview"
 id="toc-modules-and-settings-overview">Modules and Settings
@@ -90,11 +90,11 @@ id="toc-general-export-settings">GENERAL EXPORT SETTINGS</a></li>
 </ul></li>
 </ul>
 </nav>
-<h1 id="geeo-parameter-documentation">GEEO Parameter Documentation</h1>
+<h1 id="geeo-parameter-documentation">geeo Parameter Documentation</h1>
 <p>Below is the detailed documentation of all available methods and
-parameter options for the main workflow of <strong>GEEO</strong>.</p>
+parameter options for the main workflow of <strong>geeo</strong>.</p>
 <p>For the documentation on how to start using and interacting with
-GEEO, please be referred to the <a
+geeo, please be referred to the <a
 href="../README.md#getting-started">Getting Started</a> and <a
 href="/docs/tutorials/tutorial_0_introducing-geeo.ipynb">Introduction</a>
 sections, accordingly.</p>
@@ -412,7 +412,7 @@ for implementation details.</td>
 <td>Medium, High</td>
 <td>The Pixel Quality Assessment (QA_PIXEL) band of the LANDSAT data
 further allows setting a confidence level for the masking procedure.
-GEEO uses this setting for the cloud and cirrus cloud detection. The
+geeo uses this setting for the cloud and cirrus cloud detection. The
 feault setting of Medium (compared to High) applies a more conservative,
 aggressive masking, where cloudy pixel-remnants after masking are less
 likely, hence favouring an error of commission (rather exclude a
@@ -549,7 +549,7 @@ be considered when performing the masking.</p>
 <h3 id="bands-indices-features">BANDS | INDICES | FEATURES</h3>
 <p>In this section the user specifies the desired bands, indices and
 features to be included and/or calculated. Beyond the standard bands
-provided with the selected <code>SENSORS</code>, GEEO includes a range
+provided with the selected <code>SENSORS</code>, geeo includes a range
 of predefined indices under the <code>FEATURES</code> paramater that can
 be selected. Additionally, users can specify
 <code>CUSTOM_FORMULAS</code> to calculate their own features.
@@ -894,7 +894,7 @@ observations, and cannot deal with missing pixel values. TSI addresses
 this by applying interpolation techniques to generate a gap-free,
 equidistant time series from the TSS, TSM, or CIC. Users define the
 desired time interval (e.g., every 10 days) and select an interpolation
-method with relevant parameters. GEEO supports two interpolation
+method with relevant parameters. geeo supports two interpolation
 approaches: weighted linear interpolation (based on proximity to the
 nearest observation) and Radial Basis Function (RBF, or ‘Gaussian’)
 interpolation. See <a
@@ -1240,7 +1240,7 @@ vegetation life cycles. Typically, a vegetation index like NDVI is used
 to detect phenological stages - such as start-of-season or peak-season -
 by linking changes in the spectral curve over time to these stages,
 often through straightforward thresholding approaches. In the current
-version, GEEO implements the land surfave phenology retrieval developed
+version, geeo implements the land surfave phenology retrieval developed
 by <a href="https://doi.org/10.3390/f11060606">Brooks et al. 2020</a>
 and fine-tuned to possible seasonal adjustments by <a
 href="https://doi.org/10.3390/rs14030597">Frantz et al. 2022</a>. For a
